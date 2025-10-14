@@ -27,17 +27,17 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 // 🔹 Link definitions with permission keys
 const links = [
   { to: "/admin", label: "Dashboard", icon: <RiDashboardFill /> },
-  {
-    to: "/admin/item-details",
-    label: "Item Details",
-    icon: <FaBox />,
-    key: "isItemDetails",
-  },
-  {
-    to: "/admin/purchase",
-    label: "Purchase",
-    icon: <FaShoppingCart />,
-  },
+  // {
+  //   to: "/admin/item-details",
+  //   label: "Item Details",
+  //   icon: <FaBox />,
+  //   key: "isItemDetails",
+  // },
+  // {
+  //   to: "/admin/purchase",
+  //   label: "Purchase",
+  //   icon: <FaShoppingCart />,
+  // },
 
   {
     to: "/admin/sales",
@@ -49,38 +49,38 @@ const links = [
     label: "Fbr Integration ",
     icon: <MdOutlineIntegrationInstructions  />,
   },
-  {
-    to: "/admin/sales-invoice",
-    label: "Sales Invoice",
-    icon: <FaReceipt />,
-    key: "isSales",
-  },
-  {
-    to: "/admin/customers",
-    label: "Customers",
-    icon: <FaUsers />,
-    key: "isCustomer",
-  },
-  {
-    to: "/admin/customers-booking",
-    label: "Booking Customer",
-    icon: <FaUsers />,
-    key: "isBookingCustomer",
-  },
-  {
-    to: "/admin/item-barcode",
-    label: "Item Barcode",
-    icon: <FaBarcode />,
-    key: "isInventory",
-  },
-  { to: "/admin/open-balance", label: "Opening Balance", icon: <FaBarcode /> },
-  {
-    to: "/admin/expiry-tags",
-    label: "Expiry Tags",
-    icon: <FaTags />,
-    key: "isSettings",
-  },
-  { to: "/admin/report", label: "Report", icon: <FaChartBar />, key: "isReports" },
+  // {
+  //   to: "/admin/sales-invoice",
+  //   label: "Sales Invoice",
+  //   icon: <FaReceipt />,
+  //   key: "isSales",
+  // },
+  // {
+  //   to: "/admin/customers",
+  //   label: "Customers",
+  //   icon: <FaUsers />,
+  //   key: "isCustomer",
+  // },
+  // {
+  //   to: "/admin/customers-booking",
+  //   label: "Booking Customer",
+  //   icon: <FaUsers />,
+  //   key: "isBookingCustomer",
+  // },
+  // {
+  //   to: "/admin/item-barcode",
+  //   label: "Item Barcode",
+  //   icon: <FaBarcode />,
+  //   key: "isInventory",
+  // },
+  // { to: "/admin/open-balance", label: "Opening Balance", icon: <FaBarcode /> },
+  // {
+  //   to: "/admin/expiry-tags",
+  //   label: "Expiry Tags",
+  //   icon: <FaTags />,
+  //   key: "isSettings",
+  // },
+  // { to: "/admin/report", label: "Report", icon: <FaChartBar />, key: "isReports" },
   {
     label: "Setup",
     icon: <FaCogs />,
