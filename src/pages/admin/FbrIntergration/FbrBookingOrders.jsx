@@ -94,7 +94,8 @@ const FbrBookingOrders = () => {
   const [totalAmount, setTotalAmount] = useState(0);
   const [remarks, setRemarks] = useState("");
   const [editingOrder, setEditingOrder] = useState(null);
-  
+  const [qty, setQty] = useState(null);
+
   const [errors, setErrors] = useState({});
   const [customerList, setCustomerList] = useState([
     {
@@ -861,7 +862,6 @@ const FbrBookingOrders = () => {
                       )}
                     </div>
                   </div>
-                 
 
                   <div className="flex gap-4">
                     <div className="flex-1 min-w-0">
@@ -960,9 +960,9 @@ const FbrBookingOrders = () => {
                       </label>
                       <input
                         type="number"
-                        min="1"
-                        value="1"
-                        readOnly
+                        value={qty}
+                       onChange={(e)=>setQty(e.target.value)}
+                       
                         className="w-full p-3 border border-gray-300 rounded-md bg-gray-100"
                         placeholder="Qty"
                       />
@@ -984,7 +984,8 @@ const FbrBookingOrders = () => {
 
                   {/* Line 2: In Stock, Specification, Add Button */}
                   <div className="flex gap-4 items-end">
-                    <div className="flex-1 min-w-0">
+                    {/* 🔹 In Stock - smaller width */}
+                    <div className="w-[150px]">
                       <label className="block text-gray-700 font-medium mb-2">
                         In Stock
                       </label>
@@ -996,6 +997,8 @@ const FbrBookingOrders = () => {
                         placeholder="In Stock"
                       />
                     </div>
+
+                    {/* 🔹 Specifications - takes remaining space */}
                     <div className="flex-1 min-w-0">
                       <label className="block text-gray-700 font-medium mb-2">
                         Specifications
@@ -1008,6 +1011,8 @@ const FbrBookingOrders = () => {
                         placeholder="Specifications"
                       />
                     </div>
+
+                    {/* 🔹 Add button */}
                     <div className="flex items-end">
                       <button
                         type="button"
@@ -1028,8 +1033,6 @@ const FbrBookingOrders = () => {
                           <th className="px-4 py-2 border-b">Sr #</th>
                           <th className="px-4 py-2 border-b">Item</th>
                           <th className="px-4 py-2 border-b">Specifications</th>
-                          <th className="px-4 py-2 border-b">Weight</th>
-                          <th className="px-4 py-2 border-b">Packing</th>
                           <th className="px-4 py-2 border-b">Stock</th>
                           <th className="px-4 py-2 border-b">Qty</th>
                           <th className="px-4 py-2 border-b">Rate</th>
@@ -1049,12 +1052,6 @@ const FbrBookingOrders = () => {
                             </td>
                             <td className="px-4 py-2 border-b text-center">
                               {item.specification}
-                            </td>
-                            <td className="px-4 py-2 border-b text-center">
-                              {item.weight}
-                            </td>
-                            <td className="px-4 py-2 border-b text-center">
-                              {item.packing}
                             </td>
                             <td className="px-4 py-2 border-b text-center">
                               {item.inStock}
@@ -1082,34 +1079,7 @@ const FbrBookingOrders = () => {
                     </table>
                   </div>
                 )}
-                {itemsList.length > 0 && (
-                  <div className="flex gap-4">
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Total Weight
-                      </label>
-                      <input
-                        type="text"
-                        value={totalWeight}
-                        readOnly
-                        className="w-full p-3 border border-gray-300 rounded-md bg-gray-100"
-                        placeholder="Total Weight"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Total Amount
-                      </label>
-                      <input
-                        type="text"
-                        value={totalAmount}
-                        readOnly
-                        className="w-full p-3 border border-gray-300 rounded-md bg-gray-100"
-                        placeholder="Total Amount"
-                      />
-                    </div>
-                  </div>
-                )}
+
                 <div>
                   <label className="block text-gray-700 font-medium mb-2">
                     Remarks

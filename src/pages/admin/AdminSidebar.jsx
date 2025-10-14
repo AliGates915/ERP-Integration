@@ -23,6 +23,7 @@ import { MdOutlineIntegrationInstructions } from "react-icons/md";
 import { FcSalesPerformance } from "react-icons/fc";
 import { RiLogoutBoxRLine, RiDashboardFill } from "react-icons/ri";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { BiPurchaseTagAlt } from "react-icons/bi";
 
 // 🔹 Link definitions with permission keys
 const links = [
@@ -39,15 +40,15 @@ const links = [
   //   icon: <FaShoppingCart />,
   // },
 
-  {
-    to: "/admin/sales",
-    label: "Sales ",
-    icon: <FcSalesPerformance color="#1d4ed8"/>,
-  },
+  // {
+  //   to: "/admin/sales",
+  //   label: "Sales ",
+  //   icon: <FcSalesPerformance color="#1d4ed8"/>,
+  // },
    {
     to: "/admin/fbr-integration",
-    label: "Fbr Integration ",
-    icon: <MdOutlineIntegrationInstructions  />,
+    label: "Sales ",
+    icon: <BiPurchaseTagAlt  color="black"/>,
   },
   // {
   //   to: "/admin/sales-invoice",
