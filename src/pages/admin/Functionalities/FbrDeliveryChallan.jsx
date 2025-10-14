@@ -3,99 +3,29 @@ import { SquarePen, Trash2, CheckCircle, XCircle, X } from "lucide-react";
 import CommanHeader from "../../../components/CommanHeader";
 import TableSkeleton from "../Skeleton";
 import Swal from "sweetalert2";
+import { api } from "../../../context/ApiService";
 
 const FbrDeliveryChallan = () => {
-  const [deliveryChallans, setDeliveryChallans] = useState([
-    {
-      _id: "1",
-      dcNo: "DC-001",
-      date: "2025-10-01",
-      orderNo: "ORD-001",
-      orderDate: "2025-09-25",
-      orderDetails: {
-        customer: "Acme Corp",
-        person: "John Smith",
-        phone: "123-456-7890",
-        address: "123 Main St",
-        orderType: "Standard",
-        mode: "Truck",
-        deliveryAddress: "456 Elm St",
-        deliveryDate: "2025-10-05",
-        totalWeight: 500,
-      },
-      vehicleDetails: {
-        truckNo: "TRK-001",
-        driverName: "Mike Johnson",
-        father: "Robert Johnson",
-        cnic: "12345-6789012-3",
-        mobileNo: "987-654-3210",
-        containerNo1: "CNT-001",
-        batchNo1: "BAT-001",
-        forLocation1: "Warehouse A",
-        containerNo2: "CNT-002",
-        batchNo2: "BAT-002",
-        forLocation2: "Warehouse B",
-        firstWeight: 450,
-        weightBridgeName: "City Weigh",
-        weightBridgeSlipNo: "WBS-001",
-      },
-      remarks: "Handle with care",
-      approvalRemarks: "Approved by manager",
-      status: "Approved",
-    },
-    {
-      _id: "2",
-      dcNo: "DC-002",
-      date: "2025-10-02",
-      orderNo: "ORD-002",
-      orderDate: "2025-09-26",
-      orderDetails: {
-        customer: "Beta Inc",
-        person: "Sarah Brown",
-        phone: "234-567-8901",
-        address: "789 Oak St",
-        orderType: "Express",
-        mode: "Van",
-        deliveryAddress: "101 Pine St",
-        deliveryDate: "2025-10-06",
-        totalWeight: 300,
-      },
-      vehicleDetails: {
-        truckNo: "TRK-002",
-        driverName: "Tom Wilson",
-        father: "James Wilson",
-        cnic: "23456-7890123-4",
-        mobileNo: "876-543-2109",
-        containerNo1: "CNT-003",
-        batchNo1: "BAT-003",
-        forLocation1: "Warehouse C",
-        containerNo2: "",
-        batchNo2: "",
-        forLocation2: "",
-        firstWeight: 280,
-        weightBridgeName: "North Weigh",
-        weightBridgeSlipNo: "WBS-002",
-      },
-      remarks: "Urgent delivery",
-      approvalRemarks: "Pending review",
-      status: "Pending",
-    },
-  ]);
+  const [deliveryChallans, setDeliveryChallans] = useState([]);
 
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dcNo, setDcNo] = useState("");
+  const [availableProducts, setAvailableProducts] = useState([]);
+
   const [date, setDate] = useState("");
   const [productList, setProductList] = useState([]);
   const [product, setProduct] = useState("");
   const [rate, setRate] = useState("");
   const [inStock, setInStock] = useState("");
+  const [bookingOrders, setBookingOrders] = useState([]);
   const [specification, setSpecification] = useState("");
   const [itemsList, setItemsList] = useState([]);
-  const [totalWeight, setTotalWeight] = useState("");
-  const [totalAmount, setTotalAmount] = useState("");
+
   const [qty, setQty] = useState(1);
   const [total, setTotal] = useState(0);
+  const timeoutRef = useRef(null);
+
 
   const handleAddItem = () => {
     if (!product) return;
@@ -160,12 +90,18 @@ const FbrDeliveryChallan = () => {
   const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
 
   // Simulate fetching delivery challans
+  const headers = {
+    Authorization: `Bearer ${userInfo?.token}`,
+  };
+  // fetch delivery challans
   const fetchDeliveryChallans = useCallback(async () => {
     try {
       setLoading(true);
-      // Static data already set in state
+      const response = await api.get("/delivery-challan");
+      setDeliveryChallans(response.data);
+      console.log({ deliveryChallans: response.data });
     } catch (error) {
-      console.error("Failed to fetch delivery challans", error);
+      console.error("Failed to fetch booking orders", error);
     } finally {
       setTimeout(() => {
         setLoading(false);
@@ -177,35 +113,53 @@ const FbrDeliveryChallan = () => {
     fetchDeliveryChallans();
   }, [fetchDeliveryChallans]);
 
+  // fetch booking orders
+  const fetchBookingOrders = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/booking-order/DC-Order");
+      setBookingOrders(response.data);
+    } catch (error) {
+      console.error("Failed to fetch booking orders", error);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+    }
+  }, []);
+
   useEffect(() => {
-    const totalValue = (parseFloat(rate) || 0) * (parseInt(qty) || 0);
-    setTotal(totalValue.toFixed(2));
-  }, [rate, qty]);
+    fetchBookingOrders();
+  }, [fetchBookingOrders]);
+
+  console.log({ bookingOrders });
+
+
 
   // Delivery challan search
-  useEffect(() => {
-    if (!searchTerm || !searchTerm.startsWith("DC-")) {
-      fetchDeliveryChallans();
-      return;
-    }
+  // useEffect(() => {
+  //   if (!searchTerm || !searchTerm.startsWith("DC-")) {
+  //     fetchDeliveryChallans();
+  //     return;
+  //   }
 
-    const delayDebounce = setTimeout(() => {
-      try {
-        setLoading(true);
-        const filtered = deliveryChallans.filter((challan) =>
-          challan.dcNo.toUpperCase().includes(searchTerm.toUpperCase())
-        );
-        setDeliveryChallans(filtered);
-      } catch (error) {
-        console.error("Search delivery challan failed:", error);
-        setDeliveryChallans([]);
-      } finally {
-        setLoading(false);
-      }
-    }, 1000);
+  //   const delayDebounce = setTimeout(() => {
+  //     try {
+  //       setLoading(true);
+  //       const filtered = deliveryChallans.filter((challan) =>
+  //         challan.dcNo.toUpperCase().includes(searchTerm.toUpperCase())
+  //       );
+  //       setDeliveryChallans(filtered);
+  //     } catch (error) {
+  //       console.error("Search delivery challan failed:", error);
+  //       setDeliveryChallans([]);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }, 1000);
 
-    return () => clearTimeout(delayDebounce);
-  }, [searchTerm, fetchDeliveryChallans, deliveryChallans]);
+  //   return () => clearTimeout(delayDebounce);
+  // }, [searchTerm, fetchDeliveryChallans, deliveryChallans]);
 
   // Generate next DC No
   useEffect(() => {
@@ -494,6 +448,36 @@ const FbrDeliveryChallan = () => {
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
+  // 🟢 Handle Product Selection
+  const handleProductSelect = (selectedName) => {
+    setProduct(selectedName);
+
+    // Find selected product details
+    const selectedProd = availableProducts.find((p) => p.name === selectedName);
+    console.log("Selected product:", selectedProd);
+
+    if (selectedProd) {
+      // 🕒 Wait 2 seconds before filling fields
+      setTimeout(() => {
+        // Auto-fill fields
+        setSpecification(selectedProd.details || "");
+
+        // Use remainingQty (if available), otherwise orderedQty or 1
+        const initialQty = selectedProd.orderedQty || 1;
+        setQty(initialQty);
+
+        // Auto-calc total
+        setTotal(selectedProd.total || 0);
+      },500);
+    } else {
+      // Reset fields
+      setSpecification("");
+      setRate("");
+      setInStock("");
+      setQty(1);
+      setTotal("0");
+    }
+  };
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
@@ -531,8 +515,8 @@ const FbrDeliveryChallan = () => {
                 <div>Order No</div>
                 <div>Customer</div>
                 <div>Delivery Date</div>
-                <div>Total Weight</div>
-                <div>Truck No</div>
+                <div>Total Amount</div>
+                <div>Delivery Address</div>
                 <div>Status</div>
                 <div>Actions</div>
               </div>
@@ -554,22 +538,57 @@ const FbrDeliveryChallan = () => {
                       key={challan._id}
                       className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
+                      {/* DC No */}
                       <div className="text-gray-600">{challan.dcNo}</div>
-                      <div className="text-gray-600">{challan.date}</div>
-                      <div className="text-gray-600">{challan.orderNo}</div>
+
+                      {/* DC Date */}
                       <div className="text-gray-600">
-                        {challan.orderDetails.customer}
+                        {new Date(challan.dcDate).toLocaleDateString()}
                       </div>
+
+                      {/* Order No */}
                       <div className="text-gray-600">
-                        {challan.orderDetails.deliveryDate}
+                        {challan.bookingOrder?.orderNo || "-"}
                       </div>
+
+                      {/* Customer */}
                       <div className="text-gray-600">
-                        {challan.orderDetails.totalWeight}
+                        {challan.bookingOrder?.customer?.customerName || "-"}
                       </div>
+
+                      {/* Delivery Date */}
                       <div className="text-gray-600">
-                        {challan.vehicleDetails.truckNo}
+                        {new Date(
+                          challan.bookingOrder?.deliveryDate
+                        ).toLocaleDateString()}
                       </div>
-                      <div className="text-gray-600">{challan.status}</div>
+
+                      {/* Total Amount */}
+                      <div className="text-gray-600">
+                        {challan.products
+                          ?.reduce((sum, item) => sum + (item.total || 0), 0)
+                          .toLocaleString()}
+                      </div>
+
+                      {/* Delivery Address */}
+                      <div className="text-gray-600">
+                        {challan.bookingOrder?.deliveryAddress || "-"}
+                      </div>
+
+                      {/* Status */}
+                      <div
+                        className={`font-semibold ${
+                          challan.status === "Pending"
+                            ? "text-yellow-600"
+                            : challan.status === "Approved"
+                            ? "text-green-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {challan.status}
+                      </div>
+
+                      {/* Actions */}
                       <div className="flex gap-3 justify-start">
                         <button
                           onClick={() => handleEditClick(challan)}
@@ -687,7 +706,7 @@ const FbrDeliveryChallan = () => {
 
                     <div className="flex-1">
                       <label className="block text-gray-700 font-medium mb-2">
-                        Date <span className="text-red-500">*</span>
+                        DC Date <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="date"
@@ -705,12 +724,43 @@ const FbrDeliveryChallan = () => {
                       </label>
                       <select
                         value={orderNo}
-                        onChange={(e) => setOrderNo(e.target.value)}
+                        onChange={(e) => {
+                          const selectedId = e.target.value;
+                          setOrderNo(selectedId);
+
+                          const selectedOrder = bookingOrders.find(
+                            (order) => order._id === selectedId
+                          );
+
+                          if (selectedOrder) {
+                            // 🟢 Set order date automatically
+                            setOrderDate(selectedOrder.orderDate.split("T")[0]);
+
+                            // 🟢 Populate available products for this order
+                            setAvailableProducts(selectedOrder.products || []);
+
+                            // 🟢 Also auto-fill customer & delivery info
+                            setOrderDetails((prev) => ({
+                              ...prev,
+                              customer:
+                                selectedOrder.customer?.customerName || "",
+                              phone: selectedOrder.customer?.phoneNumber || "",
+                              address: selectedOrder.customer?.address || "",
+                              deliveryAddress:
+                                selectedOrder.deliveryAddress || "",
+                            }));
+                          } else {
+                            setAvailableProducts([]);
+                          }
+                        }}
                         className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
                       >
                         <option value="">Select Booking Order</option>
-                        <option value="001">001</option>
-                        <option value="002">002</option>
+                        {bookingOrders.map((order) => (
+                          <option key={order._id} value={order._id}>
+                            {order.orderNo}
+                          </option>
+                        ))}
                       </select>
                     </div>
 
@@ -744,6 +794,7 @@ const FbrDeliveryChallan = () => {
                             customer: e.target.value,
                           })
                         }
+                        readOnly
                         className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
                       />
                     </div>
@@ -761,6 +812,7 @@ const FbrDeliveryChallan = () => {
                             phone: e.target.value,
                           })
                         }
+                        readOnly
                         className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
                       />
                     </div>
@@ -780,6 +832,7 @@ const FbrDeliveryChallan = () => {
                             address: e.target.value,
                           })
                         }
+                        readOnly
                         className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
                         placeholder="Enter address"
                       />
@@ -799,6 +852,7 @@ const FbrDeliveryChallan = () => {
                             deliveryAddress: e.target.value,
                           })
                         }
+                        readOnly
                         className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
                         placeholder="Enter delivery address"
                       />
@@ -816,16 +870,18 @@ const FbrDeliveryChallan = () => {
                       </label>
                       <select
                         value={product}
-                        onChange={(e) => setProduct(e.target.value)}
+                        onChange={(e) => handleProductSelect(e.target.value)}
                         className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
                       >
                         <option value="">Select Product</option>
-                        <option value="Laptop">Laptop</option>
-                        <option value="Mobile">Mobile</option>
+                        {availableProducts.map((p, idx) => (
+                          <option key={idx} value={p.name}>
+                            {p.name} — Remaining:{" "}
+                            {p.remainingQty ?? p.orderedQty ?? 0}
+                          </option>
+                        ))}
                       </select>
                     </div>
-
-                
 
                     <div className="flex-1">
                       <label className="block text-gray-700 font-medium mb-2">
@@ -846,8 +902,9 @@ const FbrDeliveryChallan = () => {
                         Total
                       </label>
                       <input
-                        type="text"
+                        type="number"
                         value={total}
+                        onChange={(e) => setTotal(e.target.value)}
                         readOnly
                         className="w-full p-3 border border-gray-300 rounded-md bg-gray-100"
                       />
@@ -856,8 +913,6 @@ const FbrDeliveryChallan = () => {
 
                   {/* Line 2 */}
                   <div className="flex gap-4 items-end">
-                  
-
                     <div className="flex-1">
                       <label className="block text-gray-700 font-medium mb-2">
                         Specifications
@@ -954,8 +1009,6 @@ const FbrDeliveryChallan = () => {
                       rows="3"
                     />
                   </div>
-
-                 
                 </div>
 
                 {/* SUBMIT BUTTON */}
