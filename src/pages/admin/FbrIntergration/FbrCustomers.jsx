@@ -1,0 +1,705 @@
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { HashLoader } from "react-spinners";
+import gsap from "gsap";
+import axios from "axios";
+import { toast } from "react-toastify";
+import Swal from "sweetalert2";
+import CommanHeader from "../../../components/CommanHeader";
+import { SquarePen, Trash2 } from "lucide-react";
+import TableSkeleton from "../Skeleton";
+
+const FbrCustomers = () => {
+  const [customerList, setCustomerList] = useState([
+    // {
+    //   _id: "cust1",
+    //   customerName: "Prime Retail",
+    //   contactPerson: "Alice Johnson",
+    //   email: "alice@primeretail.com",
+    //   address: "789 Market St, Los Angeles, CA",
+    //   phoneNumber: "+1-213-555-9876",
+    //   mobileNumber: "03005678901",
+    //   designation: "Purchasing Manager",
+    //   ntn: "NTN456789123",
+    //   gst: "27DEFGH5678J2K4",
+    //   paymentTerms: "Credit",
+    //   creditLimit: "150000",
+    //   creditTime: "45",
+    //   status: true,
+    // },
+    // {
+    //   _id: "cust2",
+    //   customerName: "Urban Buyers",
+    //   contactPerson: "Bob Wilson",
+    //   email: "bob@urbanbuyers.com",
+    //   address: "321 Oak Ave, Miami, FL",
+    //   phoneNumber: "+1-305-555-4321",
+    //   mobileNumber: "03008765432",
+    //   designation: "Store Manager",
+    //   ntn: "NTN654321987",
+    //   gst: "27KLMNO9876P3Q2",
+    //   paymentTerms: "Cash",
+    //   status: false,
+    // },
+  ]);
+  const [isSliderOpen, setIsSliderOpen] = useState(false);
+  const [customerName, setCustomerName] = useState("");
+  const [contactPerson, setContactPerson] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [paymentTerms, setPaymentTerms] = useState("");
+  const [status, setStatus] = useState(true);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
+  const [designation, setDesignation] = useState("");
+  const [ntn, setNtn] = useState("");
+  const [gst, setGst] = useState("");
+  const [creditLimit, setCreditLimit] = useState("");
+  const [creditTime, setCreditTime] = useState("");
+  const [isEdit, setIsEdit] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const sliderRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+
+  // GSAP Animation for Modal
+  useEffect(() => {
+    if (isSliderOpen) {
+      if (sliderRef.current) {
+        sliderRef.current.style.display = "block";
+      }
+      gsap.fromTo(
+        sliderRef.current,
+        { scale: 0.7, opacity: 0, y: -50 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }
+      );
+    } else {
+      gsap.to(sliderRef.current, {
+        scale: 0.7,
+        opacity: 0,
+        y: -50,
+        duration: 0.4,
+        ease: "power3.in",
+        onComplete: () => {
+          if (sliderRef.current) {
+            sliderRef.current.style.display = "none";
+          }
+        },
+      });
+    }
+  }, [isSliderOpen]);
+
+  const API_URL = `${import.meta.env.VITE_API_BASE_URL}/customers`;
+
+  const fetchCustomersList = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${API_URL}`);
+      setCustomerList(res.data);
+    
+    } catch (error) {
+      console.error("Failed to fetch Customers", error);
+    } finally {
+      setTimeout(() => setLoading(false), 1000);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCustomersList();
+  }, [fetchCustomersList]);
+
+  // Handlers
+  const handleAddCustomer = () => {
+    setIsSliderOpen(true);
+    setIsEdit(false);
+    setEditId(null);
+    setCustomerName("");
+    setContactPerson("");
+    setEmail("");
+    setAddress("");
+    setPaymentTerms("");
+    setPhoneNumber("");
+    setMobileNumber("");
+    setDesignation("");
+    setNtn("");
+    setGst("");
+    setCreditLimit("");
+    setCreditTime("");
+    setStatus(true);
+  };
+
+  const validateEmail = (email) => {
+    const re = /^\S+@\S+\.\S+$/;
+    return re.test(email);
+  };
+
+  // Save or Update Customer
+  const handleSave = async () => {
+    if (
+      paymentTerms === "CreditCard" &&
+      status &&
+      (!creditLimit || creditLimit > 5000000)
+    ) {
+      toast.error("❌ Credit limit is required and must not exceed 50 lac");
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    const formData = {
+      customerName,
+      email,
+      contactPerson,
+      address,
+      mobileNumber,
+      phoneNumber,
+      designation,
+      ntn,
+      gst,
+      paymentTerms: paymentTerms === "CreditCard" ? "Credit" : paymentTerms,
+      creditTime: paymentTerms === "CreditCard" ? creditTime : undefined,
+      creditLimit: paymentTerms === "CreditCard" ? creditLimit : undefined,
+      status,
+    };
+
+    try {
+      const { token } = userInfo || {};
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      };
+      let res;
+      if (isEdit && editId) {
+        res = await axios.put(`${API_URL}/${editId}`, formData, { headers });
+        toast.success("Customer updated successfully");
+      } else {
+        res = await axios.post(`${API_URL}`, formData, { headers });
+        setCustomerList([...customerList, res.data]);
+        toast.success("Customer added successfully");
+      }
+      fetchCustomersList();
+      setCustomerName("");
+      setContactPerson("");
+      setEmail("");
+      setAddress("");
+      setPaymentTerms("");
+      setPhoneNumber("");
+      setDesignation("");
+      setNtn("");
+      setGst("");
+      setCreditLimit("");
+      setCreditTime("");
+      setStatus(true);
+      setIsSliderOpen(false);
+      setIsEdit(false);
+      setEditId(null);
+    } catch (error) {
+      console.error(error);
+      toast.error(error?.response?.data?.message || "Something went wrong");
+    }
+  };
+
+  // Edit Customer
+  const handleEdit = (customer) => {
+    setIsEdit(true);
+    setEditId(customer._id);
+    setCustomerName(customer.customerName);
+    setContactPerson(customer.contactPerson);
+    setEmail(customer.email);
+    setAddress(customer.address);
+    setPhoneNumber(customer.phoneNumber || "");
+    setMobileNumber(customer.mobileNumber || "");
+    setDesignation(customer.designation || "");
+    setNtn(customer.ntn || "");
+    setGst(customer.gst || "");
+    setPaymentTerms(
+      customer.paymentTerms === "Credit"
+        ? "CreditCard"
+        : customer.paymentTerms || ""
+    );
+    setCreditLimit(customer.creditLimit || "");
+    setCreditTime(customer.creditTime || "");
+    setStatus(customer.status);
+    setIsSliderOpen(true);
+  };
+
+  // Delete Customer
+  const handleDelete = async (id) => {
+    const swalWithTailwindButtons = Swal.mixin({
+      customClass: {
+        actions: "space-x-2",
+        confirmButton:
+          "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300",
+        cancelButton:
+          "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300",
+      },
+      buttonsStyling: false,
+    });
+
+    swalWithTailwindButtons
+      .fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, delete it!",
+        cancelButtonText: "No, cancel!",
+        reverseButtons: true,
+      })
+      .then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            await axios.delete(`${API_URL}/${id}`, {
+              headers: {
+                Authorization: `Bearer ${userInfo?.token}`,
+              },
+            });
+            setCustomerList(customerList.filter((c) => c._id !== id));
+            swalWithTailwindButtons.fire(
+              "Deleted!",
+              "Customer deleted successfully.",
+              "success"
+            );
+          } catch (error) {
+            console.error("Delete error:", error);
+            swalWithTailwindButtons.fire(
+              "Error!",
+              "Failed to delete customer.",
+              "error"
+            );
+          }
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+          swalWithTailwindButtons.fire(
+            "Cancelled",
+            "Customer is safe 🙂",
+            "error"
+          );
+        }
+      });
+  };
+
+  return (
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <CommanHeader />
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-newPrimary">
+            Customers List
+          </h1>
+          <p className="text-gray-500 text-sm">
+            Manage your customer details
+          </p>
+        </div>
+        <button
+          className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-newPrimary/90"
+          onClick={handleAddCustomer}
+        >
+          + Add Customer
+        </button>
+      </div>
+
+      <div className="rounded-xl border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <div className="min-w-[1100px]">
+            <div className="hidden lg:grid grid-cols-[100px_1.5fr_1fr_1.5fr_2fr_1fr_1fr_100px_auto] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+              <div>ID</div>
+              <div>Name</div>
+              <div>Contact</div>
+              <div>Email</div>
+              <div>Address</div>
+              <div>Phone</div>
+              <div>Payment</div>
+              <div>Status</div>
+              {userInfo?.isAdmin && <div className="text-right">Actions</div>}
+            </div>
+
+            <div className="flex flex-col divide-y divide-gray-100 max-h-[400px] overflow-y-auto">
+              {loading ? (
+                <TableSkeleton
+                  rows={customerList.length > 0 ? customerList.length : 5}
+                  cols={userInfo?.isAdmin ? 9 : 8}
+                  className="lg:grid-cols-[100px_1.5fr_1fr_1.5fr_2fr_1fr_1fr_100px_auto]"
+                />
+              ) : customerList.length === 0 ? (
+                <div className="text-center py-4 text-gray-500 bg-white">
+                  No customers found.
+                </div>
+              ) : (
+                customerList?.map((c) => (
+                  <>
+                    <div
+                      key={c._id}
+                      className="hidden lg:grid grid-cols-[100px_1.5fr_1fr_1.5fr_2fr_1fr_1fr_100px_auto] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                    >
+                      <div className="font-medium text-gray-900">
+                        {c._id?.slice(0, 6)}
+                      </div>
+                      <div className="text-gray-700">{c.customerName}</div>
+                      <div className="text-gray-600">{c.contactPerson}</div>
+                      <div className="text-gray-600">{c.email}</div>
+                      <div className="text-gray-600 truncate">{c.address}</div>
+                      <div className="text-gray-600">{c.phoneNumber}</div>
+                      <div className="text-gray-600">
+                        {c.paymentTerms}
+                        {c.paymentTerms === "Credit" && c.creditLimit
+                          ? ` (${c.creditLimit})`
+                          : ""}
+                      </div>
+                      <div className="font-semibold">
+                        {c.status ? (
+                          <span className="text-green-600 bg-green-50 px-3 py-1 rounded-[5px]">
+                            Active
+                          </span>
+                        ) : (
+                          <span className="text-red-600 bg-red-50 px-3 py-1 rounded-[5px]">
+                            Inactive
+                          </span>
+                        )}
+                      </div>
+                      {userInfo?.isAdmin && (
+                        <div className="flex justify-end gap-3">
+                          <button
+                            onClick={() => handleEdit(c)}
+                            className="text-blue-600 hover:underline"
+                          >
+                            <SquarePen size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(c._id)}
+                            className="text-red-600 hover:underline"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div
+                      key={`mobile-${c._id}`}
+                      className="lg:hidden bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4"
+                    >
+                      <h3 className="font-semibold text-gray-800">
+                        {c.customerName}
+                      </h3>
+                      <p className="text-sm text-gray-600">{c.contactPerson}</p>
+                      <p className="text-sm text-gray-600">{c.email}</p>
+                      <p className="text-sm text-gray-600">{c.phoneNumber}</p>
+                      <p className="text-sm text-gray-600 truncate">
+                        {c.address}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {c.paymentTerms}{" "}
+                        {c.paymentTerms === "Credit" && c.creditLimit
+                          ? `(Limit: ${c.creditLimit})`
+                          : ""}
+                      </p>
+                      <p
+                        className={`text-sm font-semibold ${
+                          c.status ? "text-green-600" : "text-red-600"
+                        }`}
+                      >
+                        {c.status ? "Active" : "Inactive"}
+                      </p>
+
+                      {userInfo?.isAdmin && (
+                        <div className="mt-3 flex justify-end gap-3">
+                          <button
+                            className="text-blue-500"
+                            onClick={() => handleEdit(c)}
+                          >
+                            <SquarePen size={18} />
+                          </button>
+                          <button
+                            className="text-red-500"
+                            onClick={() => handleDelete(c._id)}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {isSliderOpen && (
+        <div className="fixed inset-0 bg-gray-600/50 flex items-center justify-center z-50">
+          <div
+            ref={sliderRef}
+            className="w-full md:w-[800px] bg-white rounded-2xl shadow-2xl overflow-y-auto max-h-[90vh]"
+          >
+            <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white rounded-t-2xl">
+              <h2 className="text-xl font-bold text-newPrimary">
+                {isEdit ? "Update a Customer" : "Add a New Customer"}
+              </h2>
+              <button
+                className="w-8 h-8 bg-newPrimary text-white rounded-full flex items-center justify-center hover:bg-newPrimary/70"
+                onClick={() => {
+                  setIsSliderOpen(false);
+                  setIsEdit(false);
+                  setEditId(null);
+                  setCustomerName("");
+                  setContactPerson("");
+                  setEmail("");
+                  setAddress("");
+                  setPaymentTerms("");
+                  setPhoneNumber("");
+                  setDesignation("");
+                  setNtn("");
+                  setGst("");
+                  setCreditLimit("");
+                  setCreditTime("");
+                  setStatus(true);
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4 p-4 md:p-6">
+              <div className="flex gap-4">
+                <div className="flex-1 min-w-0">
+                  <label className="block text-gray-700 font-medium">
+                    Customer Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={customerName}
+                    required
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <label className="block text-gray-700 font-medium">
+                    Phone Number <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={phoneNumber}
+                    required
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="w-full p-2 border rounded"
+                    placeholder="e.g. +1-213-555-9876"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-1 min-w-0">
+                  <label className="block text-gray-700 font-medium">
+                    Mobile Number <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={mobileNumber}
+                    required
+                    onChange={(e) => setMobileNumber(e.target.value)}
+                    className="w-full p-2 border rounded"
+                    placeholder="e.g. 03005678901"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <label className="block text-gray-700 font-medium">
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    required
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-1 min-w-0">
+                  <label className="block text-gray-700 font-medium">
+                    Contact Person <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={contactPerson}
+                    required
+                    onChange={(e) => setContactPerson(e.target.value)}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <label className="block text-gray-700 font-medium">
+                    Designation <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={designation}
+                    required
+                    onChange={(e) => setDesignation(e.target.value)}
+                    className="w-full p-2 border rounded"
+                    placeholder="e.g. Purchasing Manager"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-gray-700 font-medium">
+                  Address <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={address}
+                  required
+                  onChange={(e) => setAddress(e.target.value)}
+                  className="w-full p-2 border rounded"
+                />
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-1 min-w-0">
+                  <label className="block text-gray-700 font-medium">
+                    NTN <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={ntn}
+                    required
+                    onChange={(e) => setNtn(e.target.value)}
+                    className="w-full p-2 border rounded"
+                    placeholder="e.g. NTN456789123"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <label className="block text-gray-700 font-medium">
+                    GST <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={gst}
+                    required
+                    onChange={(e) => setGst(e.target.value)}
+                    className="w-full p-2 border rounded"
+                    placeholder="e.g. 27DEFGH5678J2K4"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-gray-700 font-medium">
+                  Payment Terms <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      value="CreditCard"
+                      checked={paymentTerms === "CreditCard"}
+                      onChange={(e) => setPaymentTerms(e.target.value)}
+                      className="form-radio"
+                    />
+                    Credit
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      value="Cash"
+                      checked={paymentTerms === "Cash"}
+                      onChange={(e) => setPaymentTerms(e.target.value)}
+                      className="form-radio"
+                    />
+                    Cash
+                  </label>
+                </div>
+              </div>
+              {paymentTerms === "CreditCard" && (
+                <div className="flex gap-4">
+                  <div className="w-1/2">
+                    <label className="block text-gray-700 font-medium">
+                      Credit Time Limit{" "}
+                      <span className="text-newPrimary">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={creditTime}
+                      onChange={(e) => setCreditTime(e.target.value)}
+                      className="w-full p-2 border rounded"
+                      placeholder="Enter time limit (days)"
+                    />
+                  </div>
+                  <div className="w-1/2">
+                    <label className="block text-gray-700 font-medium">
+                      Credit Cash Limit{" "}
+                      <span className="text-newPrimary">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={creditLimit}
+                      onChange={(e) => setCreditLimit(e.target.value)}
+                      className="w-full p-2 border rounded"
+                      placeholder="Enter cash limit"
+                    />
+                  </div>
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <label className="text-gray-700 font-medium">Status</label>
+                <button
+                  type="button"
+                  onClick={() => setStatus(!status)}
+                  className={`w-14 h-7 flex items-center rounded-full p-1 transition-colors duration-300 ${
+                    status ? "bg-green-500" : "bg-gray-300"
+                  }`}
+                >
+                  <div
+                    className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${
+                      status ? "translate-x-7" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+                <span>{status ? "Active" : "Inactive"}</span>
+              </div>
+              <button
+                className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-newPrimary/80 w-full"
+                onClick={handleSave}
+              >
+                Save Customer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        .table-container {
+          max-width: 100%;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #edf2f7;
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #a0aec0;
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #718096;
+        }
+        @media (max-width: 1024px) {
+          .grid-cols-[100px_1.5fr_1fr_1.5fr_2fr_1fr_1fr_100px_auto] {
+            grid-template-columns: 1fr 1.5fr 1fr 1.5fr 2fr 1fr 1fr 0.8fr 0.5fr;
+          }
+        }
+        @media (max-width: 640px) {
+          .grid-cols-[100px_1.5fr_1fr_1.5fr_2fr_1fr_1fr_100px_auto] {
+            grid-template-columns: 1fr 1.5fr 1fr 1.5fr 2fr 1fr 1fr 0.8fr 0.5fr;
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default FbrCustomers;

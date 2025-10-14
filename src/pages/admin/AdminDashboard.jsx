@@ -1,0 +1,808 @@
+import React, { useEffect, useState, useRef } from "react";
+import axios from "axios";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "../../components/ui/table";
+import { HashLoader } from "react-spinners";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Line,
+  Legend,
+  LineChart,
+} from "recharts";
+
+import {
+  Users,
+  Package,
+  UserCheck,
+  Calendar,
+  CreditCard,
+  DollarSign,
+  PieChart as PieChartIcon,
+  Bell,
+  X,
+  Sun,
+  Moon,
+  Cloud,
+} from "lucide-react";
+import CommanHeader from "../../components/CommanHeader";
+
+import HeaderSkeleton from "./HeaderSkeleton";
+import SummaryCardSkeleton from "./SummaryCardSkeleton";
+import ChartSkeleton from "./ChartSkeleton";
+import DasboardTableSkelton from "./DasboardTableSkelton";
+
+const AdminDashboard = () => {
+  const [customers, setCustomers] = useState(0);
+  const [items, setItems] = useState(0);
+  const [booking, setBooking] = useState(0);
+  const [users, setUsers] = useState(0);
+  const [sales, setSales] = useState(0);
+  const [bookingCompleted, setBookingCompleted] = useState(0);
+  const [bookingPending, setBookingPending] = useState(0);
+  const [bookingRejected, setBookingRejected] = useState(0);
+  const [revenue, setRevenue] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [chartData, setChartData] = useState([]);
+  const [recentCustomer, setRecentCustomer] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const dropdownRef = useRef(null);
+  const [search, setSearch] = useState("");
+  const dummyBookings = [
+    {
+      id: 1,
+      customerName: "John Doe",
+      mobileNo: "123-456-7890",
+      address: "123 Main St, New York",
+      items: ["Pizza", "Burger"],
+      total: 1200,
+      paymentMethod: "Credit Card",
+      status: "Approved",
+    },
+    {
+      id: 2,
+      customerName: "Alexander Pierce",
+      mobileNo: "555-111-2222",
+      address: "456 Elm St, Los Angeles",
+      items: ["Pasta", "Salad"],
+      total: 800,
+      paymentMethod: "Cash",
+      status: "Pending",
+    },
+    {
+      id: 3,
+      customerName: "Bob Doe",
+      mobileNo: "987-654-3210",
+      address: "789 Oak St, Chicago",
+      items: ["Sushi", "Noodles"],
+      total: 1500,
+      paymentMethod: "PayPal",
+      status: "Approved",
+    },
+    {
+      id: 4,
+      customerName: "Mike Doe",
+      mobileNo: "444-222-3333",
+      address: "321 Pine St, Houston",
+      items: ["Sandwich", "Juice"],
+      total: 600,
+      paymentMethod: "Debit Card",
+      status: "Denied",
+    },
+    {
+      id: 5,
+      customerName: "Mike Doe",
+      mobileNo: "444-222-3333",
+      address: "321 Pine St, Houston",
+      items: ["Sandwich", "Juice"],
+      total: 600,
+      paymentMethod: "Debit Card",
+      status: "Denied",
+    },
+    {
+      id: 6,
+      customerName: "Mike Doe",
+      mobileNo: "444-222-3333",
+      address: "321 Pine St, Houston",
+      items: ["Sandwich", "Juice"],
+      total: 600,
+      paymentMethod: "Debit Card",
+      status: "Denied",
+    },
+    {
+      id: 7,
+      customerName: "Mike Doe",
+      mobileNo: "444-222-3333",
+      address: "321 Pine St, Houston",
+      items: ["Sandwich", "Juice"],
+      total: 600,
+      paymentMethod: "Debit Card",
+      status: "Denied",
+    },
+  ];
+  const filteredData = dummyBookings.filter(
+    (booking) =>
+      booking.customerName.toLowerCase().includes(search.toLowerCase()) ||
+      booking.mobileNo.toLowerCase().includes(search.toLowerCase())
+  );
+  const abortRef = useRef(null);
+  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+
+  const base = import.meta.env.VITE_API_BASE_URL;
+  const statusColor = {
+    Approved: "bg-green-100 text-green-800",
+    Pending: "bg-amber-100 text-amber-800",
+    Denied: "bg-rose-100 text-rose-800",
+  };
+
+  // Update time every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    const fetchCustomers = async () => {
+      try {
+        const res = await axios.get(`${base}/customers/count`, {
+          signal: controller.signal,
+        });
+        setCustomers(res.data?.totalCustomers ?? 0);
+      } catch (err) {
+        if (!axios.isCancel(err)) console.error("Customer fetch failed:", err);
+      }
+    };
+
+    const fetchItems = async () => {
+      try {
+        const res = await axios.get(`${base}/item-details/count`, {
+          signal: controller.signal,
+        });
+        setItems(res.data?.count ?? 0);
+      } catch (err) {
+        if (!axios.isCancel(err)) console.error("Items fetch failed:", err);
+      }
+    };
+
+    const fetchUsers = async () => {
+      try {
+        const res = await axios.get(`${base}/company-users/count`, {
+          signal: controller.signal,
+        });
+        setUsers(res.data?.len ?? 0);
+      } catch (err) {
+        if (!axios.isCancel(err)) console.error("Users fetch failed:", err);
+      }
+    };
+
+    const fetchBookings = async () => {
+      try {
+        const res = await axios.get(`${base}/bookings/count`, {
+          signal: controller.signal,
+        });
+        setBooking(res.data?.total ?? 0);
+      } catch (err) {
+        if (!axios.isCancel(err)) console.error("Bookings fetch failed:", err);
+      }
+    };
+    const fetchNotifcations = async () => {
+      try {
+        const res = await axios.get(`${base}/notifications`, {
+          headers: {
+            Authorization: `Bearer ${userInfo.token}`,
+          },
+          signal: controller.signal,
+        });
+        setNotifications(res.data);
+      } catch (err) {
+        if (!axios.isCancel(err)) console.error("Bookings fetch failed:", err);
+      }
+    };
+
+    const fetchBookingRecent = async () => {
+      try {
+        const res = await axios.get(`${base}/bookings/recent`, {
+          signal: controller.signal,
+        });
+        setRecentCustomer(res.data);
+      } catch (err) {
+        if (!axios.isCancel(err)) console.error("Bookings fetch failed:", err);
+      }
+    };
+
+    const fetchBookingCompleted = async () => {
+      try {
+        const res = await axios.get(`${base}/bookings/completed`, {
+          signal: controller.signal,
+        });
+        setBookingCompleted(res.data?.total ?? 0);
+      } catch (err) {
+        if (!axios.isCancel(err)) console.error("Bookings fetch failed:", err);
+      }
+    };
+
+    const fetchBookingPending = async () => {
+      try {
+        const res = await axios.get(`${base}/bookings/pending`, {
+          signal: controller.signal,
+        });
+        setBookingPending(res.data?.total ?? 0);
+      } catch (err) {
+        if (!axios.isCancel(err)) console.error("Bookings fetch failed:", err);
+      }
+    };
+
+    const fetchBookingRejected = async () => {
+      try {
+        const res = await axios.get(`${base}/bookings/rejected`, {
+          signal: controller.signal,
+        });
+        setBookingRejected(res.data?.total ?? 0);
+      } catch (err) {
+        if (!axios.isCancel(err)) console.error("Bookings fetch failed:", err);
+      }
+    };
+
+    const fetchSales = async () => {
+      try {
+        const res = await axios.get(`${base}/saleInvoices/count`, {
+          signal: controller.signal,
+        });
+        setSales(res.data?.total ?? 0);
+      } catch (err) {
+        if (!axios.isCancel(err)) console.error("Sales fetch failed:", err);
+      }
+    };
+
+    const fetchRevenue = async () => {
+      try {
+        const res = await axios.get(`${base}/saleInvoices/total-revenue`, {
+          signal: controller.signal,
+        });
+        setRevenue(res.data?.totalRevenue ?? 0);
+      } catch (err) {
+        if (!axios.isCancel(err)) console.error("Revenue fetch failed:", err);
+      }
+    };
+
+    const fetchAll = async () => {
+      setLoading(true);
+      await Promise.allSettled([
+        fetchCustomers(),
+        fetchItems(),
+        fetchUsers(),
+        fetchBookings(),
+        fetchBookingCompleted(),
+        fetchBookingPending(),
+        fetchSales(),
+        fetchRevenue(),
+        fetchNotifcations(),
+        fetchBookingRejected(),
+        fetchBookingRecent(),
+      ]);
+      // Add a slight delay to show loading animation
+      setTimeout(() => setLoading(false), 1000);
+    };
+
+    fetchAll();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    fetchSalesChart("weekly");
+  });
+
+  const fetchSalesChart = async (period = "daily") => {
+    try {
+      const res = await axios.get(
+        `${base}/saleInvoices/chart?period=${period}`
+      );
+
+      const transformedData = res.data.map((item) => {
+        const date = new Date(item._id);
+        let name;
+
+        if (period === "daily" || period === "weekly") {
+          const month = date.toLocaleString("default", { month: "short" });
+          const day = date.getDate();
+          name = `${month} ${day}`;
+        } else if (period === "monthly") {
+          name = date.toLocaleString("default", {
+            month: "short",
+            year: "numeric",
+          });
+        } else if (period === "yearly") {
+          name = date.getFullYear();
+        }
+
+        return {
+          name,
+          sales: item.count,
+          revenue: item.totalAmount || (Math.random() * 1000).toFixed(2),
+        };
+      });
+
+      setChartData(transformedData);
+    } catch (err) {
+      console.error("Sales chart fetch failed:", err);
+    }
+  };
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // ✅ Mark single notification as read
+  const clearNotification = async (id) => {
+    try {
+      await axios.put(`${base}/notifications/${id}/read`);
+      setNotifications((prev) => prev.filter((n) => n._id !== id));
+    } catch (err) {
+      console.error("Clear failed:", err);
+    }
+  };
+
+  // ✅ Mark all notifications as read
+  const clearAll = async () => {
+    try {
+      await axios.put(`${base}/notifications/mark-all`, {
+        headers: {
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+      });
+      setNotifications([]);
+    } catch (err) {
+      console.error("Clear all failed:", err);
+    }
+  };
+
+  // Format time for display
+  const formatTime = (date) => {
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
+  // Format date for display
+  const formatDate = (date) => {
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  // Get greeting based on time of day
+  const getGreeting = () => {
+    const hour = currentTime.getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    return "Good Evening";
+  };
+
+  // Get appropriate icon based on time of day
+  const getGreetingIcon = () => {
+    const hour = currentTime.getHours();
+    if (hour < 12) return <Sun className="text-amber-500" size={24} />;
+    if (hour < 17) return <Cloud className="text-blue-400" size={24} />;
+    return <Moon className="text-indigo-500" size={24} />;
+  };
+  const data = [
+    { day: "22th", thisWeek: 100, lastWeek: 60 },
+    { day: "23th", thisWeek: 120, lastWeek: 80 },
+    { day: "24th", thisWeek: 160, lastWeek: 70 },
+    { day: "25th", thisWeek: 155, lastWeek: 65 },
+    { day: "26th", thisWeek: 170, lastWeek: 75 },
+    { day: "27th", thisWeek: 177, lastWeek: 77 },
+    { day: "28th", thisWeek: 150, lastWeek: 90 },
+  ];
+
+  const summaryData = [
+    {
+      name: "Total Customers",
+      value: customers,
+      icon: <Users size={24} />,
+      change: "+12%",
+      color: "bg-blue-100 text-blue-600",
+      border: "border-l-4 border-blue-700",
+    },
+    {
+      name: "Total Products",
+      value: items,
+      icon: <Package size={24} />,
+      change: "+5%",
+      color: "bg-green-100 text-green-600",
+      border: "border-l-4 border-green-400",
+    },
+    {
+      name: "Total Staff",
+      value: users,
+      icon: <UserCheck size={24} />,
+      change: "+2%",
+      color: "bg-purple-100 text-purple-600",
+      border: "border-l-4 border-purple-400",
+    },
+    {
+      name: "Total Sales",
+      value: sales,
+      icon: <CreditCard size={24} />,
+      change: "+18%",
+      color: "bg-amber-100 text-amber-600",
+      border: "border-l-4 border-amber-500",
+    },
+    {
+      name: "Total Revenue",
+      value: `$${revenue.toLocaleString()}`,
+      icon: <DollarSign size={24} />,
+      change: "+15%",
+      color: "bg-emerald-100 text-emerald-600",
+      border: "border-l-4 border-emerald-500",
+    },
+    {
+      name: "Bookings",
+      value: booking,
+      icon: <Calendar size={24} />,
+      change: "-3%",
+      color: "bg-rose-100 text-rose-600",
+      border: "border-l-4 border-rose-400",
+    },
+  ];
+
+  const pieData = [
+    { month: "JUN", thisYear: 1000, lastYear: 600 },
+    { month: "JUL", thisYear: 2000, lastYear: 1800 },
+    { month: "AUG", thisYear: 3000, lastYear: 2800 },
+    { month: "SEP", thisYear: 2500, lastYear: 2000 },
+    { month: "OCT", thisYear: 2700, lastYear: 1900 },
+    { month: "NOV", thisYear: 2600, lastYear: 1500 },
+    { month: "DEC", thisYear: 3000, lastYear: 2000 },
+  ];
+  const statusColors = {
+    Completed: "bg-green-100 text-green-800",
+    Pending: "bg-amber-100 text-amber-800",
+    Refunded: "bg-rose-100 text-rose-800",
+  };
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 shadow rounded text-sm">
+          <p className="font-semibold">{label}</p>
+          <p style={{ color: "#2563eb" }}>High - 2023: {payload[0]?.value}</p>
+          <p style={{ color: "#6b7280" }}>Low - 2023: {payload[1]?.value}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // if (loading) {
+  //   return (
+  //     <div className="flex flex-col justify-center items-center h-[80vh]">
+  //       <HashLoader color="#84CF16" />
+  //       <span className="ml-4 text-gray-500 mt-4">Loading ERP...</span>
+  //     </div>
+  //   );
+  // }
+
+  return (
+    <div className="p-6 w-full bg-gray-50 min-h-screen">
+      {/* Updated Header - Replaced Search Bar */}
+      {loading ? <HeaderSkeleton /> : <CommanHeader />}
+      {/* Summary Cards Grid */}
+      {loading ? (
+        <SummaryCardSkeleton />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+          {summaryData.map((item, index) => (
+            <div
+              key={index}
+              className={`bg-white rounded-xl shadow-sm p-4 border border-gray-100 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1 ${item.border}`}
+              style={{ animation: `fadeIn 0.5s ease-out ${index * 0.1}s both` }}
+            >
+              <div className="flex justify-between items-start">
+                <div className={`p-2 rounded-lg ${item.color}`}>
+                  {item.icon}
+                </div>
+                <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                  {item.change}
+                </span>
+              </div>
+              <div className="mt-4">
+                <div className="text-2xl font-bold text-gray-800">
+                  {item.value}
+                </div>
+                <div className="text-sm text-gray-500 mt-1">{item.name}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {loading ? (
+          <>
+            {/* Sales Overview Skeleton */}
+            <ChartSkeleton type="line" />
+
+            {/* Order Status Skeleton with legend shimmer */}
+            <ChartSkeleton type="bar" />
+          </>
+        ) : (
+          <>
+            {/* Revenue Chart */}
+            <div
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-100"
+              style={{ animation: "slideInLeft 0.5s ease-out" }}
+            >
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                <h2 className="text-lg font-semibold text-gray-800 mb-2 sm:mb-0">
+                  Sales Overview
+                </h2>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => fetchSalesChart("weekly")}
+                    className="px-3 py-1 text-xs bg-newPrimary/10 text-newPrimary rounded-full"
+                  >
+                    Weekly
+                  </button>
+                  <button
+                    onClick={() => fetchSalesChart("monthly")}
+                    className="px-3 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded-full"
+                  >
+                    Monthly
+                  </button>
+                  <button
+                    onClick={() => fetchSalesChart("yearly")}
+                    className="px-3 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded-full"
+                  >
+                    Yearly
+                  </button>
+                </div>
+              </div>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={data}
+                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="day" />
+                    <YAxis domain={[30, 210]} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="thisWeek"
+                      stroke="#84cf16"
+                      strokeWidth={3}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
+                      name="This Week"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="lastWeek"
+                      stroke="#6b7280"
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                      name="Last Week"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Order Status Bar Chart */}
+            <div
+              className="bg-white rounded-xl shadow-sm p-6 border border-gray-100"
+              style={{ animation: "slideInRight 0.5s ease-out" }}
+            >
+              <h2 className="text-lg font-semibold text-gray-800 mb-6">
+                Order Status
+              </h2>
+              <div className="flex justify-center items-center h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={pieData}
+                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="month" />
+                    <YAxis
+                      tickFormatter={(value) => `$${value / 1000}k`}
+                      domain={[0, 3000]}
+                    />
+                    <Tooltip
+                      formatter={(value) => [`$${value}`, "Orders"]}
+                      cursor={{ fill: "rgba(0,0,0,0.05)" }}
+                    />
+                    <Bar dataKey="thisYear" fill="#84cf16" barSize={40} />
+                    <Bar dataKey="lastYear" fill="#d1d5db" barSize={40} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Legend */}
+              <div className="flex flex-wrap justify-center gap-4 mt-4">
+                {pieData.map((entry, index) => (
+                  <div key={index} className="flex items-center">
+                    <div
+                      className="w-3 h-3 rounded-full mr-2"
+                      style={{ backgroundColor: entry.color }}
+                    ></div>
+                    <span className="text-sm text-gray-600">{entry.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+      {/* Recent Transactions */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
+        {/* Header with Search */}
+        <div className="flex justify-between items-center px-4 py-3 border-b border-gray-200 bg-gray-50 rounded-t-xl">
+          <h2 className="text-md font-semibold text-gray-700">
+            Recent Booking Customers
+          </h2>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-8 pr-3 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-blue-400 focus:border-blue-400"
+            />
+            <svg
+              className="w-4 h-4 text-gray-400 absolute left-2 top-2.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+        </div>
+
+        {/* Scrollable Table with Fixed Header */}
+        <div className="overflow-y-auto max-h-72">
+          <div className="min-w-[1000px] text-sm">
+            {/* Table Header */}
+            <div className="grid grid-cols-7 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase border-b border-gray-200 sticky top-0 z-10">
+              <div>Customer Name</div>
+              <div>Mobile No.</div>
+              <div>Address</div>
+              <div>Items</div>
+              <div>Total</div>
+              <div>Payment Method</div>
+              <div>Status</div>
+            </div>
+
+            {/* Table Body */}
+            <div className="flex flex-col divide-y divide-gray-200">
+              {loading ? (
+                <DasboardTableSkelton rows={filteredData.length} cols={7} />
+              ) : (
+                filteredData.map((booking, index) => (
+                  <div
+                    key={booking.id}
+                    className="grid grid-cols-7 items-center px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                  >
+                    <div className="font-medium text-gray-700">
+                      {booking.customerName}
+                    </div>
+                    <div className="text-gray-600">{booking.mobileNo}</div>
+                    <div className="text-gray-600 truncate">
+                      {booking.address}
+                    </div>
+                    <div className="text-gray-600 truncate">
+                      {booking.items.join(", ")}
+                    </div>
+                    <div className="text-gray-600">Rs.{booking.total}</div>
+                    <div className="text-gray-600">{booking.paymentMethod}</div>
+                    <div>
+                      <span
+                        className={`px-2 py-1 text-xs rounded-full ${
+                          statusColor[booking.status]
+                        }`}
+                      >
+                        {booking.status}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* No Data State */}
+        {filteredData.length === 0 && !loading && (
+          <div className="text-center py-6 text-gray-500">
+            No recent transactions found.
+          </div>
+        )}
+      </div>
+
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        @keyframes slideInLeft {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes slideInRight {
+          from {
+            opacity: 0;
+            transform: translateX(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+        @keyframes slideInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default AdminDashboard;
