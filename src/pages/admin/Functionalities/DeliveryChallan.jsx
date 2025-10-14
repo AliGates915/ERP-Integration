@@ -3,86 +3,11 @@ import { SquarePen, Trash2, CheckCircle, XCircle } from "lucide-react";
 import CommanHeader from "../../../components/CommanHeader";
 import TableSkeleton from "../Skeleton";
 import Swal from "sweetalert2";
+import { api } from "../../../context/ApiService";
 
 const DeliveryChallan = () => {
-  const [deliveryChallans, setDeliveryChallans] = useState([
-    {
-      _id: "1",
-      dcNo: "DC-001",
-      date: "2025-10-01",
-      orderNo: "ORD-001",
-      orderDate: "2025-09-25",
-      orderDetails: {
-        customer: "Acme Corp",
-        person: "John Smith",
-        phone: "123-456-7890",
-        address: "123 Main St",
-        orderType: "Standard",
-        mode: "Truck",
-        deliveryAddress: "456 Elm St",
-        deliveryDate: "2025-10-05",
-        totalWeight: 500,
-      },
-      vehicleDetails: {
-        truckNo: "TRK-001",
-        driverName: "Mike Johnson",
-        father: "Robert Johnson",
-        cnic: "12345-6789012-3",
-        mobileNo: "987-654-3210",
-        containerNo1: "CNT-001",
-        batchNo1: "BAT-001",
-        forLocation1: "Warehouse A",
-        containerNo2: "CNT-002",
-        batchNo2: "BAT-002",
-        forLocation2: "Warehouse B",
-        firstWeight: 450,
-        weightBridgeName: "City Weigh",
-        weightBridgeSlipNo: "WBS-001",
-      },
-      remarks: "Handle with care",
-      approvalRemarks: "Approved by manager",
-      status: "Approved",
-    },
-    {
-      _id: "2",
-      dcNo: "DC-002",
-      date: "2025-10-02",
-      orderNo: "ORD-002",
-      orderDate: "2025-09-26",
-      orderDetails: {
-        customer: "Beta Inc",
-        person: "Sarah Brown",
-        phone: "234-567-8901",
-        address: "789 Oak St",
-        orderType: "Express",
-        mode: "Van",
-        deliveryAddress: "101 Pine St",
-        deliveryDate: "2025-10-06",
-        totalWeight: 300,
-      },
-      vehicleDetails: {
-        truckNo: "TRK-002",
-        driverName: "Tom Wilson",
-        father: "James Wilson",
-        cnic: "23456-7890123-4",
-        mobileNo: "876-543-2109",
-        containerNo1: "CNT-003",
-        batchNo1: "BAT-003",
-        forLocation1: "Warehouse C",
-        containerNo2: "",
-        batchNo2: "",
-        forLocation2: "",
-        firstWeight: 280,
-        weightBridgeName: "North Weigh",
-        weightBridgeSlipNo: "WBS-002",
-      },
-      remarks: "Urgent delivery",
-      approvalRemarks: "Pending review",
-      status: "Pending",
-    },
-  ]);
-
   const [isSliderOpen, setIsSliderOpen] = useState(false);
+  const [deliveryChallan, setDeliveryChallan] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dcNo, setDcNo] = useState("");
   const [date, setDate] = useState("");
@@ -128,13 +53,14 @@ const DeliveryChallan = () => {
   const sliderRef = useRef(null);
   const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
 
-  // Simulate fetching delivery challans
+  // fetch delivery challans
   const fetchDeliveryChallans = useCallback(async () => {
     try {
       setLoading(true);
-      // Static data already set in state
+      const response = await api.get("/delivery-challan");
+      setDeliveryChallan(response.data);
     } catch (error) {
-      console.error("Failed to fetch delivery challans", error);
+      console.error("Failed to fetch delivery challan", error);
     } finally {
       setTimeout(() => {
         setLoading(false);
