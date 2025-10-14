@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { HashLoader } from "react-spinners";
 import gsap from "gsap";
@@ -8,7 +6,6 @@ import Swal from "sweetalert2";
 import axios from "axios";
 import Barcode from "react-barcode";
 import { SquarePen, Trash2 } from "lucide-react";
-
 
 import TableSkeleton from "../Skeleton";
 import CommanHeader from "../../../components/CommanHeader";
@@ -55,13 +52,15 @@ const FbrProduct = () => {
 
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
 
-
   // Utility to generate random barcode string
-const generateRandomBarcode = () => {
-  const prefix = "PBC"; // you can change prefix
-  const randomPart = Math.random().toString(36).substring(2, 10).toUpperCase();
-  return `${prefix}-${randomPart}`;
-};
+  const generateRandomBarcode = () => {
+    const prefix = "PBC"; // you can change prefix
+    const randomPart = Math.random()
+      .toString(36)
+      .substring(2, 10)
+      .toUpperCase();
+    return `${prefix}-${randomPart}`;
+  };
 
   // GSAP Animation for Modal
   useEffect(() => {
@@ -98,7 +97,6 @@ const generateRandomBarcode = () => {
         `${import.meta.env.VITE_API_BASE_URL}/item-details`
       );
       setItemList(res.data); // store actual categories array
-     
     } catch (error) {
       console.error("Failed to fetch item details", error);
     } finally {
@@ -110,20 +108,19 @@ const generateRandomBarcode = () => {
   }, [fetchData]);
 
   // next gass pass id creation
-   useEffect(() => {
-  if (itemList.length > 0) {
-    const maxNo = Math.max(
-      ...itemList.map((r) => {
-        const match = r.itemId?.match(/ITEM-(\d+)/); 
-        return match ? parseInt(match[1], 10) : 0;
-      })
-    );
-    setNextItemCategoryId((maxNo + 1).toString().padStart(3, "0"));
-  } else {
-    setNextItemCategoryId("001");
-  }
-}, [itemList]);
-
+  useEffect(() => {
+    if (itemList.length > 0) {
+      const maxNo = Math.max(
+        ...itemList.map((r) => {
+          const match = r.itemId?.match(/ITEM-(\d+)/);
+          return match ? parseInt(match[1], 10) : 0;
+        })
+      );
+      setNextItemCategoryId((maxNo + 1).toString().padStart(3, "0"));
+    } else {
+      setNextItemCategoryId("001");
+    }
+  }, [itemList]);
 
   // CategoryList Fetch
   const fetchCategoryList = useCallback(async () => {
@@ -133,7 +130,6 @@ const generateRandomBarcode = () => {
         `${import.meta.env.VITE_API_BASE_URL}/categories`
       );
       setCategoryList(res.data); // store actual categories array
-    
     } catch (error) {
       console.error("Failed to fetch categories", error);
     } finally {
@@ -147,7 +143,6 @@ const generateRandomBarcode = () => {
   // Fetch itemTypes when category changes
   useEffect(() => {
     if (!itemCategory) return; // only call when category selected
-  
 
     const fetchItemTypes = async () => {
       try {
@@ -173,7 +168,6 @@ const generateRandomBarcode = () => {
         `${import.meta.env.VITE_API_BASE_URL}/item-unit`
       );
       setItemUnitList(res.data); // store actual categories array
-     
     } catch (error) {
       console.error("Failed to fetch item unit", error);
     } finally {
@@ -192,7 +186,6 @@ const generateRandomBarcode = () => {
         `${import.meta.env.VITE_API_BASE_URL}/manufacturers/list`
       );
       setManufacturerList(res.data); // store actual categories array
-
     } catch (error) {
       console.error("Failed to fetch Manufacturer", error);
     } finally {
@@ -211,7 +204,6 @@ const generateRandomBarcode = () => {
         `${import.meta.env.VITE_API_BASE_URL}/suppliers/list`
       );
       setSupplierList(res.data); // store actual categories array
-
     } catch (error) {
       console.error("Failed to fetch Supplier", error);
     } finally {
@@ -230,7 +222,6 @@ const generateRandomBarcode = () => {
         `${import.meta.env.VITE_API_BASE_URL}/shelves`
       );
       setShelvesList(res.data); // store actual categories array
-    
     } catch (error) {
       console.error("Failed to fetch Shelves", error);
     } finally {
@@ -296,7 +287,6 @@ const generateRandomBarcode = () => {
 
   // Save or Update Item
   const handleSave = async () => {
-   
     const errors = validateForm();
     if (errors.length > 0) {
       Swal.fire({
@@ -309,7 +299,10 @@ const generateRandomBarcode = () => {
 
     const formData = new FormData();
 
-    formData.append("itemId", editId? itemCategoryId: `ITEM-${nextItemCategoryId}`);
+    formData.append(
+      "itemId",
+      editId ? itemCategoryId : `ITEM-${nextItemCategoryId}`
+    );
     formData.append("itemName", itemName);
     formData.append("itemCategory", itemCategory.id);
     formData.append("manufacturer", manufacture);
@@ -336,8 +329,6 @@ const generateRandomBarcode = () => {
     if (image) {
       formData.append("itemImage", image);
     }
-
-
 
     try {
       const headers = {
@@ -397,7 +388,6 @@ const generateRandomBarcode = () => {
   };
   // Edit Item
   const handleEdit = (item) => {
-
     setIsEdit(true);
     setEditId(item._id);
 
@@ -411,7 +401,7 @@ const generateRandomBarcode = () => {
     setShelveLocation(item?.shelveLocation?._id || "");
     setItemUnit(item?.itemUnit?._id || "");
     setItemType(item?.itemType?._id || "");
-  setItemCategoryId(item.itemId)
+    setItemCategoryId(item.itemId);
     // Normal fields
     setItemName(item.itemName || "");
     setPerUnit(item.perUnit ? item.perUnit.toString() : "");
@@ -744,7 +734,9 @@ const generateRandomBarcode = () => {
                       </label>
                       <input
                         type="text"
-                        value={editId ? itemCategoryId: `ITEM-${nextItemCategoryId}`}
+                        value={
+                          editId ? itemCategoryId : `ITEM-${nextItemCategoryId}`
+                        }
                         onChange={(e) => setItemCategoryId(e.target.value)}
                         required
                         className="w-full p-2 border rounded"
@@ -757,7 +749,7 @@ const generateRandomBarcode = () => {
                       <label className="block text-gray-700 font-medium">
                         Primary Barcode <span className="text-red-500">*</span>
                       </label>
-                    
+
                       {/* Show barcode preview only if entered */}
                       {primaryBarcode && (
                         <div className="">
@@ -929,7 +921,7 @@ const generateRandomBarcode = () => {
                       </select>
                     </div>
 
-                      {/* Per Unit */}
+                    {/* Per Unit */}
                     <div className="flex-1 min-w-0">
                       <label className="block text-gray-700 font-medium">
                         Per Unit
@@ -972,7 +964,6 @@ const generateRandomBarcode = () => {
                       />
                     </div>
 
-                  
                     {/* Stock */}
                     <div className="flex-1 min-w-0">
                       <label className="block text-gray-700 font-medium">

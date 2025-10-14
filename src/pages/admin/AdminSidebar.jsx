@@ -45,10 +45,10 @@ const links = [
   //   label: "Sales ",
   //   icon: <FcSalesPerformance color="#1d4ed8"/>,
   // },
-   {
+  {
     to: "/admin/fbr-integration",
     label: "Sales ",
-    icon: <BiPurchaseTagAlt  color="black"/>,
+    icon: <BiPurchaseTagAlt color="black" />,
   },
   // {
   //   to: "/admin/sales-invoice",
@@ -82,60 +82,64 @@ const links = [
   //   key: "isSettings",
   // },
   // { to: "/admin/report", label: "Report", icon: <FaChartBar />, key: "isReports" },
-  {
-    label: "Setup",
-    icon: <FaCogs />,
-    children: [
-      { to: "/admin/customers-list", label: "Customers", icon: <FaTags /> },
-      { to: "/admin/group", label: "Group", icon: <FaUserGroup /> },
-      { to: "/admin/company", label: "Company", icon: <FaTags /> },
-      {
-        to: "/admin/category-item",
-        label: "Item Categories",
-        icon: <FaTags />,
-        key: "isItemCategory",
-      },
-      { to: "/admin/item-type", label: "Item Type", icon: <FaTags /> },
-      {
-        to: "/admin/manufacture",
-        label: "Manufacturer",
-        icon: <FaIndustry />,
-        key: "isItemManufacturer",
-      },
-      {
-        to: "/admin/supplier",
-        label: "Supplier",
-        icon: <FaTruck />,
-        key: "isItemSupplier",
-      },
-      {
-        to: "/admin/shelve-location",
-        label: "Shelve Location",
-        icon: <FaWarehouse />,
-        key: "isItemLocation",
-      },
-      {
-        to: "/admin/item-unit",
-        label: "Item Unit",
-        icon: <FaBalanceScale />,
-        key: "isItemUnit",
-      },
-      { to: "/admin/promotion", label: "Promotion", icon: <FaBalanceScale /> },
-      {
-        to: "/admin/promotion-item",
-        label: "Promotion Item",
-        icon: <FaBalanceScale />,
-      },
-      { to: "/admin/tax", label: "Tax", icon: <FaBalanceScale /> },
-    ],
-  },
+  // {
+  //   label: "Setup",
+  //   icon: <FaCogs />,
+  //   children: [
+  //     { to: "/admin/customers-list", label: "Customers", icon: <FaTags /> },
+  //     { to: "/admin/group", label: "Group", icon: <FaUserGroup /> },
+  //     { to: "/admin/company", label: "Company", icon: <FaTags /> },
+  //     {
+  //       to: "/admin/category-item",
+  //       label: "Item Categories",
+  //       icon: <FaTags />,
+  //       key: "isItemCategory",
+  //     },
+  //     { to: "/admin/item-type", label: "Item Type", icon: <FaTags /> },
+  //     {
+  //       to: "/admin/manufacture",
+  //       label: "Manufacturer",
+  //       icon: <FaIndustry />,
+  //       key: "isItemManufacturer",
+  //     },
+  //     {
+  //       to: "/admin/supplier",
+  //       label: "Supplier",
+  //       icon: <FaTruck />,
+  //       key: "isItemSupplier",
+  //     },
+  //     {
+  //       to: "/admin/shelve-location",
+  //       label: "Shelve Location",
+  //       icon: <FaWarehouse />,
+  //       key: "isItemLocation",
+  //     },
+  //     {
+  //       to: "/admin/item-unit",
+  //       label: "Item Unit",
+  //       icon: <FaBalanceScale />,
+  //       key: "isItemUnit",
+  //     },
+  //     { to: "/admin/promotion", label: "Promotion", icon: <FaBalanceScale /> },
+  //     {
+  //       to: "/admin/promotion-item",
+  //       label: "Promotion Item",
+  //       icon: <FaBalanceScale />,
+  //     },
+  //     { to: "/admin/tax", label: "Tax", icon: <FaBalanceScale /> },
+  //   ],
+  // },
   {
     label: "Management",
     icon: <FaUserShield />,
     children: [
       { to: "/admin/designation", label: "Designation", icon: <FaUsersCog /> },
       { to: "/admin/employee", label: "Employee", icon: <FaUserCog /> },
-      { to: "/admin/departments", label: "Departments", icon: <FaUserShield /> },
+      {
+        to: "/admin/departments",
+        label: "Departments",
+        icon: <FaUserShield />,
+      },
     ],
   },
   {
@@ -149,7 +153,12 @@ const links = [
         icon: <FaUsersCog />,
         key: "isGroupManagement",
       },
-      { to: "/admin/users", label: "Users", icon: <FaUserCog />, key: "isUsers" },
+      {
+        to: "/admin/users",
+        label: "Users",
+        icon: <FaUserCog />,
+        key: "isUsers",
+      },
       {
         to: "/admin/access-rights",
         label: "Access Control",
@@ -158,7 +167,6 @@ const links = [
       },
     ],
   },
-
 ];
 
 const AdminSidebar = () => {
@@ -194,16 +202,14 @@ const AdminSidebar = () => {
     return userInfo[link.key] === true; // Check permission key
   };
 
-  const filteredLinks = links
-    .filter(filterWithPermissions)
-    .map((link) =>
-      link.children
-        ? {
+  const filteredLinks = links.filter(filterWithPermissions).map((link) =>
+    link.children
+      ? {
           ...link,
           children: link.children.filter(filterWithPermissions),
         }
-        : link
-    );
+      : link
+  );
 
   const toggleMenu = (label) => {
     setOpenMenu(openMenu === label ? null : label);
@@ -226,8 +232,9 @@ const AdminSidebar = () => {
               <div key={link.label}>
                 <button
                   onClick={() => toggleMenu(link.label)}
-                  className={`w-full flex items-center justify-center sm:justify-start gap-2 px-2 sm:px-4 py-2 rounded-lg font-medium transition text-gray-700 hover:text-gray-600 hover:bg-newPrimary/30 ${openMenu === link.label ? "bg-newPrimary/20" : ""
-                    }`}
+                  className={`w-full flex items-center justify-center sm:justify-start gap-2 px-2 sm:px-4 py-2 rounded-lg font-medium transition text-gray-700 hover:text-gray-600 hover:bg-newPrimary/30 ${
+                    openMenu === link.label ? "bg-newPrimary/20" : ""
+                  }`}
                 >
                   {link.icon}
                   <span className="hidden sm:inline">{link.label}</span>
@@ -245,13 +252,16 @@ const AdminSidebar = () => {
                         key={sub.to}
                         to={sub.to}
                         className={({ isActive }) =>
-                          `flex items-center gap-2 px-2 sm:px-4 py-2 rounded-lg font-medium transition ${isActive
-                            ? "bg-newPrimary/80 text-white"
-                            : "text-gray-700 hover:text-gray-600 hover:bg-newPrimary/30"
+                          `flex items-center gap-2 px-2 sm:px-4 py-2 rounded-lg font-medium transition ${
+                            isActive
+                              ? "bg-newPrimary/80 text-white"
+                              : "text-gray-700 hover:text-gray-600 hover:bg-newPrimary/30"
                           }`
                         }
                       >
-                        {sub.icon && <span className="text-lg">{sub.icon}</span>}
+                        {sub.icon && (
+                          <span className="text-lg">{sub.icon}</span>
+                        )}
                         <span className="hidden sm:inline">{sub.label}</span>
                       </NavLink>
                     ))}
@@ -263,9 +273,10 @@ const AdminSidebar = () => {
                 key={link.to}
                 to={link.to}
                 className={({ isActive }) =>
-                  `flex items-center justify-center sm:justify-start gap-2 px-2 sm:px-4 py-2 rounded-lg font-medium transition ${isActive
-                    ? "bg-newPrimary/80 text-white"
-                    : "text-gray-700 hover:text-gray-600 hover:bg-newPrimary/30"
+                  `flex items-center justify-center sm:justify-start gap-2 px-2 sm:px-4 py-2 rounded-lg font-medium transition ${
+                    isActive
+                      ? "bg-newPrimary/80 text-white"
+                      : "text-gray-700 hover:text-gray-600 hover:bg-newPrimary/30"
                   }`
                 }
                 end={link.to === "/admin"}

@@ -622,122 +622,148 @@ const SalesReturn = () => {
                 </div>
 
                 {/* Items Section */}
-              <div className="mt-6">
-  <h3 className="text-lg font-medium text-gray-700 mb-4">Items</h3>
+                <div className="mt-6">
+                  <h3 className="text-lg font-medium text-gray-700 mb-4">
+                    Items
+                  </h3>
 
-  <div className="border p-4 rounded-lg bg-formBgGray space-y-4">
-    {/* Add Row */}
-    <div className="flex flex-wrap gap-4 items-end">
-      <div className="flex-1 min-w-[180px]">
-        <label className="block text-gray-700 font-medium mb-2">
-          Item
-        </label>
-        <select
-          value={itemName}
-          onChange={(e) => setItemName(e.target.value)}
-          className="w-full p-3 border border-gray-300 bg-white rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-        >
-          <option value="">Select Item</option>
-          {itemList.map((item) => (
-            <option key={item._id} value={item.itemName}>
-              {item.itemName}
-            </option>
-          ))}
-        </select>
-      </div>
+                  <div className="border p-4 rounded-lg bg-formBgGray space-y-4">
+                    {/* Add Row */}
+                    <div className="flex flex-wrap gap-4 items-end">
+                      <div className="flex-1 min-w-[180px]">
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Item
+                        </label>
+                        <select
+                          value={itemName}
+                          onChange={(e) => setItemName(e.target.value)}
+                          className="w-full p-3 border border-gray-300 bg-white rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                        >
+                          <option value="">Select Item</option>
+                          {itemList.map((item) => (
+                            <option key={item._id} value={item.itemName}>
+                              {item.itemName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
 
-      <div className="flex-1 min-w-[120px]">
-        <label className="block text-gray-700 font-medium mb-2">
-          Quantity
-        </label>
-        <input
-          type="number"
-          value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-          placeholder="Enter quantity"
-        />
-      </div>
+                      <div className="flex-1 min-w-[120px]">
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Quantity
+                        </label>
+                        <input
+                          type="number"
+                          value={quantity}
+                          onChange={(e) => setQuantity(e.target.value)}
+                          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                          placeholder="Enter quantity"
+                        />
+                      </div>
 
-      <div className="flex-1 min-w-[120px]">
-        <label className="block text-gray-700 font-medium mb-2">
-          Price
-        </label>
-        <input
-          type="number"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-          placeholder="Enter price"
-        />
-      </div>
+                      <div className="flex-1 min-w-[120px]">
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Price
+                        </label>
+                        <input
+                          type="number"
+                          value={price}
+                          onChange={(e) => setPrice(e.target.value)}
+                          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                          placeholder="Enter price"
+                        />
+                      </div>
 
-      <div className="flex-1 min-w-[120px]">
-        <label className="block text-gray-700 font-medium mb-2">
-          Total
-        </label>
-        <input
-          type="number"
-          value={total}
-          readOnly
-          className="w-full p-3 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
-        />
-      </div>
+                      <div className="flex-1 min-w-[120px]">
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Total
+                        </label>
+                        <input
+                          type="number"
+                          value={total}
+                          readOnly
+                          className="w-full p-3 border border-gray-300 rounded-md bg-gray-100 text-gray-600"
+                        />
+                      </div>
 
-      <div className="flex-shrink-0">
-        <button
-          type="button"
-          onClick={handleAddItem}
-          className="px-6 py-3 bg-lime-500 text-white font-medium rounded-lg hover:bg-lime-600 transition flex items-center gap-2"
-        >
-          <span className="text-lg font-bold">+</span> Add
-        </button>
-      </div>
-    </div>
+                      <div className="flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={handleAddItem}
+                          className="px-6 py-3 bg-lime-500 text-white font-medium rounded-lg hover:bg-lime-600 transition flex items-center gap-2"
+                        >
+                          <span className="text-lg font-bold">+</span> Add
+                        </button>
+                      </div>
+                    </div>
 
-    {/* Items Table */}
-    {items.length > 0 ? (
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
-        <table className="w-full border-collapse">
-          <thead className="bg-gray-200 text-gray-600 text-sm border border-gray-300">
-            <tr>
-              <th className="px-4 py-2 border border-gray-300">Sr #</th>
-              <th className="px-4 py-2 border border-gray-300">Item Name</th>
-              <th className="px-4 py-2 border border-gray-300">Quantity</th>
-              <th className="px-4 py-2 border border-gray-300">Price</th>
-              <th className="px-4 py-2 border border-gray-300">Total</th>
-              <th className="px-4 py-2 border border-gray-300">Action</th>
-            </tr>
-          </thead>
-          <tbody className="text-gray-700 text-sm">
-            {items.map((item, idx) => (
-              <tr key={idx} className="bg-gray-50 even:bg-white text-center border border-gray-300">
-                <td className="px-4 py-2 border border-gray-300">{idx + 1}</td>
-                <td className="px-4 py-2 border border-gray-300">{item.itemName}</td>
-                <td className="px-4 py-2 border border-gray-300">{item.quantity}</td>
-                <td className="px-4 py-2 border border-gray-300">{item.price}</td>
-                <td className="px-4 py-2 border border-gray-300">{item.total}</td>
-                <td className="px-4 py-2 border border-gray-300">
-                  <button
-                    onClick={() => handleRemoveItem(idx)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    ✕
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    ) : (
-      <div className="text-center py-4 text-gray-500 bg-white rounded-lg border border-gray-200">
-        No items added
-      </div>
-    )}
-  </div>
-</div>
-
+                    {/* Items Table */}
+                    {items.length > 0 ? (
+                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                        <table className="w-full border-collapse">
+                          <thead className="bg-gray-200 text-gray-600 text-sm border border-gray-300">
+                            <tr>
+                              <th className="px-4 py-2 border border-gray-300">
+                                Sr #
+                              </th>
+                              <th className="px-4 py-2 border border-gray-300">
+                                Item Name
+                              </th>
+                              <th className="px-4 py-2 border border-gray-300">
+                                Quantity
+                              </th>
+                              <th className="px-4 py-2 border border-gray-300">
+                                Price
+                              </th>
+                              <th className="px-4 py-2 border border-gray-300">
+                                Total
+                              </th>
+                              <th className="px-4 py-2 border border-gray-300">
+                                Action
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="text-gray-700 text-sm">
+                            {items.map((item, idx) => (
+                              <tr
+                                key={idx}
+                                className="bg-gray-50 even:bg-white text-center border border-gray-300"
+                              >
+                                <td className="px-4 py-2 border border-gray-300">
+                                  {idx + 1}
+                                </td>
+                                <td className="px-4 py-2 border border-gray-300">
+                                  {item.itemName}
+                                </td>
+                                <td className="px-4 py-2 border border-gray-300">
+                                  {item.quantity}
+                                </td>
+                                <td className="px-4 py-2 border border-gray-300">
+                                  {item.price}
+                                </td>
+                                <td className="px-4 py-2 border border-gray-300">
+                                  {item.total}
+                                </td>
+                                <td className="px-4 py-2 border border-gray-300">
+                                  <button
+                                    onClick={() => handleRemoveItem(idx)}
+                                    className="text-red-500 hover:text-red-700"
+                                  >
+                                    ✕
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4 text-gray-500 bg-white rounded-lg border border-gray-200">
+                        No items added
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 {/* Bottom Section */}
                 <div className="space-y-3 border p-4 pb-6 rounded-lg bg-gray-100">

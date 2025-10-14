@@ -6,22 +6,26 @@ import {
   FaAddressBook,
   FaMoneyBillWave,
   FaReceipt,
+  FaThList,
+  FaUsers,
+  FaBox,
+  FaIndustry,
+  FaWarehouse,
+  FaBalanceScale,
+  FaBoxOpen,
+  FaFileInvoiceDollar,
+  FaBook,
+  FaBuilding,
 } from "react-icons/fa";
 import { AiOutlineProduct } from "react-icons/ai";
 import { TbFileInvoice } from "react-icons/tb";
-import { FaUsersViewfinder } from "react-icons/fa6";
+import { FaMoneyCheckDollar, FaUsersViewfinder } from "react-icons/fa6";
 
 import { FaTruck } from "react-icons/fa";
 import CommanHeader from "../../../components/CommanHeader";
 
+// salesChildren
 const salesChildren = [
-  { to: "/admin/fbr-company", label: "Company", icon: <FaListAlt /> },
-  {
-    to: "/admin/fbr-customers",
-    label: "Customers",
-    icon: <FaUsersViewfinder />,
-  },
-  { to: "/admin/fbr-products", label: "Product", icon: <AiOutlineProduct /> },
   {
     to: "/admin/fbr-booking-orders",
     label: "Booking Order",
@@ -38,12 +42,54 @@ const salesChildren = [
     icon: <TbFileInvoice />,
   },
   { to: "/admin/fbr-sales-return", label: "Sales Return", icon: <FaUndoAlt /> },
+];
+
+// setupChildren
+const setupChildren = [
+  { to: "/admin/company", label: "Company", icon: <FaBuilding /> },
+  { to: "/admin/customers-list", label: "Customer", icon: <FaUsers /> },
+  {
+    to: "/admin/category-item",
+    label: "Item Category",
+    icon: <FaThList />,
+  },
+  { to: "/admin/item-type", label: "Item Type", icon: <FaBox /> },
+  {
+    to: "/admin/manufacture",
+    label: "Manufacture",
+    icon: <FaIndustry />,
+  },
+  {
+    to: "/admin/supplier",
+    label: "Supplier",
+    icon: <FaTruck />,
+  },
+  {
+    to: "/admin/shelve-location",
+    label: "Shelve Location",
+    icon: <FaWarehouse />,
+  },
+  { to: "/admin/item-unit", label: "Item Unit", icon: <FaBalanceScale /> },
+  {
+    to: "/admin/tax",
+    label: "Tax",
+    icon: <FaMoneyCheckDollar />,
+  },
+  { to: "/admin/fbr-products", label: "Products", icon: <FaBoxOpen /> },
+];
+
+// reportsChildren
+const reportsChildren = [
   {
     to: "/admin/fbr-payment-receipt",
     label: "Payment Receipt",
-    icon: <FaReceipt />,
+    icon: <FaFileInvoiceDollar />,
   },
-  { to: "/admin/fbr-ledger", label: "Ledger", icon: <FaAddressBook /> },
+  {
+    to: "/admin/fbr-ledger",
+    label: "Ledger",
+    icon: <FaBook />,
+  },
   {
     to: "/admin/fbr-receivable",
     label: "Receivable",
@@ -65,11 +111,11 @@ const FbrPage = () => {
 
         {/* Content Layer */}
         <div className="relative z-10">
-
-          <h1 className="text-2xl text-white font-bold mb-6">Functionalities</h1>
+          <h1 className="text-2xl text-white font-bold mb-6">
+            Functionalities
+          </h1>
 
           <div className="bg-gray-400 opacity-80 rounded-xl px-4 py-4">
-
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 ">
               {salesChildren.map((item) => (
                 <NavLink
@@ -88,13 +134,12 @@ const FbrPage = () => {
             </div>
           </div>
 
-            {/* Reposts */}
-           <h1 className="mt-2 text-2xl text-white font-bold mb-6">Reports</h1>
+          {/* Reposts */}
+          <h1 className="mt-2 text-2xl text-white font-bold mb-6">Reports</h1>
 
           <div className="bg-gray-400 opacity-80 rounded-xl px-4 py-4">
-
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 ">
-              {salesChildren.map((item) => (
+              {reportsChildren.map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}
@@ -111,13 +156,12 @@ const FbrPage = () => {
             </div>
           </div>
 
-              {/* Setup */}
-              <h1 className="mt-2 text-2xl text-white font-bold mb-6">Setup</h1>
+          {/* Setup */}
+          <h1 className="mt-2 text-2xl text-white font-bold mb-6">Setup</h1>
 
           <div className="bg-gray-400 opacity-80 rounded-xl px-4 py-4">
-
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 ">
-              {salesChildren.map((item) => (
+              {setupChildren.map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}
@@ -133,12 +177,10 @@ const FbrPage = () => {
               ))}
             </div>
           </div>
-          
         </div>
       </div>
     </div>
   );
 };
-
 
 export default FbrPage;
