@@ -69,17 +69,17 @@ import SalesPage from "./pages/admin/Sales/SalesPage.jsx";
 import Test from "./pages/admin/Purchase/api.jsx";
 import Group from "./pages/admin/SetUp/Group.jsx";
 import Company from "./pages/admin/SetUp/Company.jsx";
-import FbrCompany from "./pages/admin/FbrIntergration/FbrCompany.jsx";
-import FbrCustomers from "./pages/admin/FbrIntergration/FbrCustomers.jsx";
-import FbrProduct from "./pages/admin/FbrIntergration/FbrProduct.jsx";
-import FbrBookingOrders from "./pages/admin/FbrIntergration/FbrBookingOrders.jsx";
-import FbrDeliveryChallan from "./pages/admin/FbrIntergration/FbrDeliveryChallan.jsx";
-import FbrSalesInvoices from "./pages/admin/FbrIntergration/FbrSalesInvoices.jsx";
-import FbrSalesReturn from "./pages/admin/FbrIntergration/FbrSalesReturn.jsx";
-import FbrPaymentReceipt from "./pages/admin/FbrIntergration/FbrPaymentReceipt.jsx";
-import FbrLedger from "./pages/admin/FbrIntergration/FbrLedger.jsx";
-import FbrReceivable from "./pages/admin/FbrIntergration/FbrReceivable.jsx";
-import FbrPage from "./pages/admin/FbrIntergration/FbrPage.jsx";
+import FbrCompany from "./pages/admin/Functionalities/FbrCompany.jsx";
+import FbrCustomers from "./pages/admin/Functionalities/FbrCustomers.jsx";
+import FbrProduct from "./pages/admin/Functionalities/FbrProduct.jsx";
+import FbrBookingOrders from "./pages/admin/Functionalities/FbrBookingOrders.jsx";
+import FbrDeliveryChallan from "./pages/admin/Functionalities/FbrDeliveryChallan.jsx";
+import FbrSalesInvoices from "./pages/admin/Functionalities/FbrSalesInvoices.jsx";
+import FbrSalesReturn from "./pages/admin/Functionalities/FbrSalesReturn.jsx";
+import FbrPaymentReceipt from "./pages/admin/Functionalities/FbrPaymentReceipt.jsx";
+import FbrLedger from "./pages/admin/Functionalities/FbrLedger.jsx";
+import FbrReceivable from "./pages/admin/Functionalities/FbrReceivable.jsx";
+import FbrPage from "./pages/admin/Functionalities/FbrPage.jsx";
 
 
 function AppContent() {
