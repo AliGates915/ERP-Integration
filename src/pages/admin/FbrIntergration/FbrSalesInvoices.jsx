@@ -457,7 +457,7 @@ const FbrSalesInvoices = () => {
                 <div>Invoice Date</div>
                 <div>DC No.</div>
                 <div>Delivery Date</div>
-                <div>Medicine Type</div>
+                <div>Item Type</div>
                 <div>Booking Number</div>
                 <div>Vendor</div>
                 <div>Address</div>
@@ -669,14 +669,14 @@ const FbrSalesInvoices = () => {
                   <div className="flex gap-4">
                     <div className="flex-1 min-w-0">
                       <label className="block text-gray-700 font-medium mb-2">
-                        Medicine Type
+                        Item Type
                       </label>
                       <input
                         type="text"
                         value={medicineType}
                         readOnly
                         className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                        placeholder="Medicine type"
+                        placeholder="Item type"
                       />
                     </div>
                     <div className="flex-1 min-w-0">
