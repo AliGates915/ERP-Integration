@@ -104,29 +104,24 @@ const FbrBookingOrders = () => {
     fetchProductList();
   }, [fetchProductList]);
 
-  useEffect(() => {
-    if (searchTerm && !searchTerm.startsWith("ORD-")) {
-      fetchBookingOrders();
-      return;
-    }
+useEffect(() => {
+  if (searchTerm.trim() === "") {
+    fetchBookingOrders(); // only when cleared
+    return;
+  }
 
-    const delayDebounce = setTimeout(() => {
-      try {
-        setLoading(true);
-        const filtered = bookingOrders.filter((order) =>
-          order.orderNo.toUpperCase().includes(searchTerm.toUpperCase())
-        );
-        setBookingOrders(filtered);
-      } catch (error) {
-        console.error("Search booking order failed:", error);
-        setBookingOrders([]);
-      } finally {
-        setLoading(false);
-      }
-    }, 1000);
+  const delayDebounce = setTimeout(() => {
+    setLoading(true);
+    const filtered = bookingOrders.filter((order) =>
+      order?.orderNo?.toUpperCase().includes(searchTerm.toUpperCase())
+    );
+    setBookingOrders(filtered);
+    setLoading(false);
+  }, 500);
 
-    return () => clearTimeout(delayDebounce);
-  }, [searchTerm, fetchBookingOrders, bookingOrders]);
+  return () => clearTimeout(delayDebounce);
+}, [searchTerm, fetchBookingOrders]);
+
 
   useEffect(() => {
     if (bookingOrders.length > 0) {
@@ -327,7 +322,7 @@ const headers={
       products: itemsList, // 👈 this is the key difference
       remarks,
     };
-console.log({newOrder});
+
 
     try {
       if (editingOrder) {
@@ -377,6 +372,9 @@ console.log({newOrder});
   };
 
   const handleDelete = (id) => {
+    const headers={
+  Authorization: `Bearer ${userInfo?.token}`,
+}
     const swalWithTailwindButtons = Swal.mixin({
       customClass: {
         actions: "space-x-2",
@@ -401,7 +399,8 @@ console.log({newOrder});
       .then(async (result) => {
         if (result.isConfirmed) {
           try {
-            setBookingOrders((prev) => prev.filter((o) => o._id !== id));
+            setLoading(true)
+          await api.delete(`/booking-order/${id}`,{headers})
             swalWithTailwindButtons.fire(
               "Deleted!",
               "Booking Order deleted successfully.",
@@ -414,7 +413,10 @@ console.log({newOrder});
               "Failed to delete booking order.",
               "error"
             );
+          }finally{
+            setLoading(false)
           }
+          fetchBookingOrders()
         } else if (result.dismiss === Swal.DismissReason.cancel) {
           swalWithTailwindButtons.fire(
             "Cancelled",
