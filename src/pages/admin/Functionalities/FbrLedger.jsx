@@ -57,6 +57,61 @@ const FbrLedger = () => {
   const recordsPerPage = 10;
   const sliderRef = useRef(null);
   const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
+  const [selectedCustomer, setSelectedCustomer] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
+  // Sample customer list
+  const customers = [
+    { id: "CUST-001", name: "Customer A" },
+    { id: "CUST-002", name: "Customer B" },
+    { id: "CUST-003", name: "Customer C" },
+  ];
+
+  // Sample ledger data
+  const allLedgerData = [
+    {
+      sr: 1,
+      date: "2025-10-01",
+      id: "LED-001",
+      description: "Payment Received",
+      paid: 500,
+      received: 0,
+      balance: 500,
+      total: 500,
+      customerId: "CUST-001",
+    },
+    {
+      sr: 2,
+      date: "2025-10-05",
+      id: "LED-002",
+      description: "Invoice Payment",
+      paid: 0,
+      received: 300,
+      balance: 200,
+      total: 500,
+      customerId: "CUST-001",
+    },
+    {
+      sr: 3,
+      date: "2025-10-03",
+      id: "LED-003",
+      description: "Payment Received",
+      paid: 700,
+      received: 0,
+      balance: 700,
+      total: 700,
+      customerId: "CUST-002",
+    },
+  ];
+
+  // Filter ledger data based on selected customer and date range
+  const filteredLedger = allLedgerData.filter(
+    (entry) =>
+      entry.customerId === selectedCustomer &&
+      (!dateFrom || entry.date >= dateFrom) &&
+      (!dateTo || entry.date <= dateTo)
+  );
 
   // Simulate fetching ledger entries
   const fetchLedgerEntries = useCallback(async () => {
@@ -449,128 +504,118 @@ const FbrLedger = () => {
 
               <form onSubmit={handleSubmit} className="space-y-4 p-4 md:p-6">
                 {/* Top Section */}
-                <div className="space-y-3 border p-4 pb-6 rounded-lg bg-gray-100">
-                  <div className="flex gap-4">
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Ledger ID
-                      </label>
-                      <input
-                        type="text"
-                        value={
-                          editingLedgerEntry
-                            ? ledgerId
-                            : `LED-${nextCustomerId}`
-                        }
-                        readOnly
-                        className="w-full p-3 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
-                      />
+                <div className="p-4 md:p-6">
+                  {/* Selection Form */}
+                  <div className="space-y-4 border p-4 rounded-lg bg-gray-100 mb-6">
+                    <div className="flex gap-4">
+                      {/* Customer Selection */}
+                      <div className="flex-1 min-w-0">
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Customer Name <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={selectedCustomer}
+                          onChange={(e) => setSelectedCustomer(e.target.value)}
+                          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                          required
+                        >
+                          <option value="">Select Customer</option>
+                          {customers.map((cust) => (
+                            <option key={cust.id} value={cust.id}>
+                              {cust.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Date <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                        required
-                      />
+                    <div className="flex gap-4">
+                      {/* Date From */}
+                      <div className="flex-1 min-w-0">
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Date From
+                        </label>
+                        <input
+                          type="date"
+                          value={dateFrom}
+                          onChange={(e) => setDateFrom(e.target.value)}
+                          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                        />
+                      </div>
+
+                      {/* Date To */}
+                      <div className="flex-1 min-w-0">
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Date To
+                        </label>
+                        <input
+                          type="date"
+                          value={dateTo}
+                          onChange={(e) => setDateTo(e.target.value)}
+                          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex gap-4">
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Sales Invoice
-                      </label>
-                      <select
-                        value={salesInvoice}
-                        onChange={(e) => setSalesInvoice(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                      >
-                        <option value="">Select Invoice</option>
-                        <option value="INV-001">INV-001</option>
-                        <option value="INV-002">INV-002</option>
-                      </select>
+                  {/* Ledger Table */}
+                  {selectedCustomer && (
+                    <div className="overflow-x-auto border rounded-lg">
+                      <table className="w-full text-left border-collapse">
+                        <thead className="bg-gray-100">
+                          <tr>
+                            <th className="px-4 py-2 border">SR</th>
+                            <th className="px-4 py-2 border">Date</th>
+                            <th className="px-4 py-2 border">ID</th>
+                            <th className="px-4 py-2 border">Description</th>
+                            <th className="px-4 py-2 border">Paid</th>
+                            <th className="px-4 py-2 border">Received</th>
+                            <th className="px-4 py-2 border">Balance</th>
+                            <th className="px-4 py-2 border">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredLedger.length > 0 ? (
+                            filteredLedger.map((entry) => (
+                              <tr
+                                key={entry.id}
+                                className="odd:bg-white even:bg-gray-50"
+                              >
+                                <td className="px-4 py-2 border">{entry.sr}</td>
+                                <td className="px-4 py-2 border">
+                                  {entry.date}
+                                </td>
+                                <td className="px-4 py-2 border">{entry.id}</td>
+                                <td className="px-4 py-2 border">
+                                  {entry.description}
+                                </td>
+                                <td className="px-4 py-2 border">
+                                  {entry.paid}
+                                </td>
+                                <td className="px-4 py-2 border">
+                                  {entry.received}
+                                </td>
+                                <td className="px-4 py-2 border">
+                                  {entry.balance}
+                                </td>
+                                <td className="px-4 py-2 border">
+                                  {entry.total}
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td
+                                colSpan="8"
+                                className="text-center py-4 text-gray-500"
+                              >
+                                No ledger entries found
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Customer Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
-                        placeholder="Enter customer name"
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Amount <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        placeholder="Enter amount"
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                        required
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Transaction Date <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        value={transactionDate}
-                        onChange={(e) => setTransactionDate(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4">
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Transaction Type <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={transactionType}
-                        onChange={(e) => setTransactionType(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                        required
-                      >
-                        <option value="">Select Type</option>
-                        <option value="Credit">Credit</option>
-                        <option value="Debit">Debit</option>
-                      </select>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Status <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={status}
-                        onChange={(e) => setStatus(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                        required
-                      >
-                        <option value="">Select Status</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Processed">Processed</option>
-                        <option value="Rejected">Rejected</option>
-                      </select>
-                    </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Submit */}
