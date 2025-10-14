@@ -714,7 +714,17 @@ const FbrDeliveryChallan = () => {
                       </select>
                     </div>
 
-                 
+                    <div className="flex-1">
+                      <label className="block text-gray-700 font-medium mb-2">
+                        Order Date <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={orderDate}
+                        onChange={(e) => setOrderDate(e.target.value)}
+                        className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -945,7 +955,7 @@ const FbrDeliveryChallan = () => {
                     />
                   </div>
 
-            
+                 
                 </div>
 
                 {/* SUBMIT BUTTON */}

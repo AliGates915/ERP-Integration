@@ -699,7 +699,9 @@ const FbrBookingOrders = () => {
                   </div>
                 </div>
                 <div className="border bg-gray-100 p-4 rounded-lg space-y-4">
+                  {/* Row 1 — Customer + Phone */}
                   <div className="flex gap-4">
+                    {/* Customer */}
                     <div className="flex-1 min-w-0">
                       <label className="block text-gray-700 font-medium mb-2">
                         Customer <span className="text-red-500">*</span>
@@ -727,20 +729,8 @@ const FbrBookingOrders = () => {
                         </p>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Contact Person
-                      </label>
-                      <input
-                        type="text"
-                        value={person}
-                        readOnly
-                        className="w-full p-3 border border-gray-300 rounded-md bg-gray-100"
-                        placeholder="Contact person"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
+
+                    {/* Phone */}
                     <div className="flex-1 min-w-0">
                       <label className="block text-gray-700 font-medium mb-2">
                         Phone
@@ -753,6 +743,25 @@ const FbrBookingOrders = () => {
                         placeholder="Phone number"
                       />
                     </div>
+                  </div>
+
+                  {/* Row 2 — Address + Balance */}
+                  <div className="flex gap-4">
+                    {/* Address */}
+                    <div className="flex-1 min-w-0">
+                      <label className="block text-gray-700 font-medium mb-2">
+                        Address
+                      </label>
+                      <input
+                        type="text"
+                        value={address}
+                        readOnly
+                        className="w-full p-3 border border-gray-300 rounded-md bg-gray-100"
+                        placeholder="Address"
+                      />
+                    </div>
+
+                    {/* Balance */}
                     <div className="flex-1 min-w-0">
                       <label className="block text-gray-700 font-medium mb-2">
                         Balance
@@ -766,21 +775,8 @@ const FbrBookingOrders = () => {
                       />
                     </div>
                   </div>
-                  <div className="flex gap-4">
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Address
-                      </label>
-                      <input
-                        type="text"
-                        value={address}
-                        readOnly
-                        className="w-full p-3 border border-gray-300 rounded-md bg-gray-100"
-                        placeholder="Address"
-                      />
-                    </div>
-                  </div>
                 </div>
+
                 <div className="border bg-gray-100 p-4 rounded-lg space-y-4">
                   <div className="flex gap-4">
                     {/* Order Type */}
@@ -961,8 +957,7 @@ const FbrBookingOrders = () => {
                       <input
                         type="number"
                         value={qty}
-                       onChange={(e)=>setQty(e.target.value)}
-                       
+                        onChange={(e) => setQty(e.target.value)}
                         className="w-full p-3 border border-gray-300 rounded-md bg-gray-100"
                         placeholder="Qty"
                       />
