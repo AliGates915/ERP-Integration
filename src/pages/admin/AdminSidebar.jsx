@@ -48,7 +48,7 @@ const links = [
   {
     to: "/admin/fbr-integration",
     label: "Sales ",
-    icon: <BiPurchaseTagAlt color="black" />,
+    icon: <BiPurchaseTagAlt />,
   },
   // {
   //   to: "/admin/sales-invoice",

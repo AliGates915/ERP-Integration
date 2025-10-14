@@ -54,8 +54,8 @@ import Tax from "./pages/admin/SetUp/Tax.jsx";
 import SalesPage from "./pages/admin/Sales/SalesPage.jsx";
 import Group from "./pages/admin/SetUp/Group.jsx";
 import Company from "./pages/admin/SetUp/Company.jsx";
-import FbrCompany from "./pages/admin/Functionalities/FbrCompany.jsx";
-import FbrCustomers from "./pages/admin/Functionalities/FbrCustomers.jsx";
+// import FbrCompany from "./pages/admin/Functionalities/FbrCompany.jsx";
+// import FbrCustomers from "./pages/admin/Functionalities/FbrCustomers.jsx";
 import FbrProduct from "./pages/admin/SetUp/FbrProduct.jsx";
 import FbrBookingOrders from "./pages/admin/Functionalities/FbrBookingOrders.jsx";
 import FbrDeliveryChallan from "./pages/admin/Functionalities/FbrDeliveryChallan.jsx";
@@ -133,8 +133,8 @@ function AppContent() {
             <Route path="sales-return" element={<SalesReturn />} />
             <Route path="distributor" element={<DistributorList />} />
             {/* fbr */}
-            <Route path="fbr-company" element={<FbrCompany />} />
-            <Route path="fbr-customers" element={<FbrCustomers />} />
+            {/* <Route path="fbr-company" element={<FbrCompany />} /> */}
+            {/* <Route path="fbr-customers" element={<FbrCustomers />} /> */}
             <Route path="fbr-products" element={<FbrProduct />} />
             <Route path="fbr-booking-orders" element={<FbrBookingOrders />} />
             <Route
