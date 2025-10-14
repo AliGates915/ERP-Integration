@@ -60,6 +60,20 @@ const FbrReceivable = () => {
   const sliderRef = useRef(null);
   const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
 
+  const [showZero, setShowZero] = useState(true);
+
+  // Sample customer data
+  const customers = [
+    { sr: 1, name: "Customer A", balance: 500 },
+    { sr: 2, name: "Customer B", balance: 0 },
+    { sr: 3, name: "Customer C", balance: 300 },
+    { sr: 4, name: "Customer D", balance: 0 },
+  ];
+  // Filter customers based on radio button
+  const filteredCustomers = showZero
+    ? customers
+    : customers.filter((c) => c.balance !== 0);
+
   // Simulate fetching receivables
   const fetchReceivables = useCallback(async () => {
     try {
@@ -459,134 +473,66 @@ const FbrReceivable = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4 p-4 md:p-6">
-                <div className="space-y-3 border p-4 pb-6 rounded-lg bg-gray-100">
-                  {/* Row 1 */}
-                  <div className="flex gap-4">
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Receivable ID
-                      </label>
+                <div className="p-4">
+                  {/* Radio Buttons */}
+                  <div className="flex gap-4 mb-6">
+                    <label className="flex items-center gap-2">
                       <input
-                        type="text"
-                        value={
-                          editingReceivable
-                            ? receivableId
-                            : `REC-${nextReceivableId}`
-                        }
-                        readOnly
-                        className="w-full p-3 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
+                        type="radio"
+                        name="balanceFilter"
+                        value="withZero"
+                        checked={showZero}
+                        onChange={() => setShowZero(true)}
+                        className="w-4 h-4"
                       />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Date <span className="text-red-500">*</span>
-                      </label>
+                      With Zero
+                    </label>
+                    <label className="flex items-center gap-2">
                       <input
-                        type="date"
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                        required
+                        type="radio"
+                        name="balanceFilter"
+                        value="withoutZero"
+                        checked={!showZero}
+                        onChange={() => setShowZero(false)}
+                        className="w-4 h-4"
                       />
-                    </div>
+                      Without Zero
+                    </label>
                   </div>
 
-                  {/* Row 2 */}
-                  <div className="flex gap-4">
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Invoice No <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={invoiceNumber}
-                        onChange={(e) => setInvoiceNumber(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                        required
-                      >
-                        <option value="">Select Invoice</option>
-                        {invoiceList.map((inv) => (
-                          <option key={inv._id} value={inv.invoiceNumber}>
-                            {inv.invoiceNumber}
-                          </option>
+                  {/* Table */}
+                  <div className="overflow-x-auto border rounded-lg">
+                    <table className="w-full text-left border-collapse">
+                      <thead className="bg-gray-100">
+                        <tr>
+                          <th className="px-4 py-2 border">SR</th>
+                          <th className="px-4 py-2 border">Customer</th>
+                          <th className="px-4 py-2 border">Balance</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredCustomers.map((cust) => (
+                          <tr
+                            key={cust.sr}
+                            className="odd:bg-white even:bg-gray-50"
+                          >
+                            <td className="px-4 py-2 border">{cust.sr}</td>
+                            <td className="px-4 py-2 border">{cust.name}</td>
+                            <td className="px-4 py-2 border">{cust.balance}</td>
+                          </tr>
                         ))}
-                      </select>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Invoice Date <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        value={invoiceDate}
-                        onChange={(e) => setInvoiceDate(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Row 3 */}
-                  <div className="flex gap-4">
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Customer Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
-                        placeholder="Enter customer name"
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                        required
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Due Date <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        value={dueDate}
-                        onChange={(e) => setDueDate(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Row 4 */}
-                  <div className="flex gap-4">
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Amount <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        placeholder="Enter amount"
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                        min="0"
-                        step="0.01"
-                        required
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Status <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={status}
-                        onChange={(e) => setStatus(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                        required
-                      >
-                        <option value="">Select Status</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Paid">Paid</option>
-                        <option value="Overdue">Overdue</option>
-                      </select>
-                    </div>
+                        {filteredCustomers.length === 0 && (
+                          <tr>
+                            <td
+                              colSpan="3"
+                              className="text-center py-4 text-gray-500"
+                            >
+                              No customers to display
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
 
