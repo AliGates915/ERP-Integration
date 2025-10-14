@@ -122,7 +122,7 @@ const Login = () => {
     //     />
     //   </div>
     // </div>
-<div className="min-h-screen relative bg-[url('/images/erpImage.png')] bg-cover bg-center py-6 flex flex-col justify-center sm:py-12">
+<div className="min-h-screen relative bg-[url('/images/erpImage.jfif')] bg-cover bg-center py-6 flex flex-col justify-center sm:py-12">
   {/* Overlay for opacity */}
   <div className="absolute inset-0 bg-black/70"></div> 
 

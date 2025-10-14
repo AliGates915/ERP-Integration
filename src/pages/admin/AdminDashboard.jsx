@@ -516,7 +516,7 @@ const AdminDashboard = () => {
   // }
 
   return (
-    <div className="p-6 w-full bg-gray-50 min-h-screen">
+    <div className="p-4 w-full bg-gray-50 min-h-screen">
       {/* Updated Header - Replaced Search Bar */}
       {loading ? <HeaderSkeleton /> : <CommanHeader />}
       {/* Summary Cards Grid */}
