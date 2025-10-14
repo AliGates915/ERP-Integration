@@ -711,21 +711,10 @@ const FbrDeliveryChallan = () => {
                         <option value="">Select Booking Order</option>
                         <option value="001">001</option>
                         <option value="002">002</option>
-                      
                       </select>
                     </div>
 
-                    <div className="flex-1">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Order Date <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        value={orderDate}
-                        onChange={(e) => setOrderDate(e.target.value)}
-                        className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                      />
-                    </div>
+                 
                   </div>
                 </div>
 
@@ -766,42 +755,27 @@ const FbrDeliveryChallan = () => {
                       />
                     </div>
                   </div>
-
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-2">
-                      Address <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={orderDetails.address}
-                      onChange={(e) =>
-                        setOrderDetails({
-                          ...orderDetails,
-                          address: e.target.value,
-                        })
-                      }
-                      className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                    />
-                  </div>
-
                   <div className="flex gap-4">
+                    {/* Address */}
                     <div className="flex-1">
                       <label className="block text-gray-700 font-medium mb-2">
-                        Delivery Date <span className="text-red-500">*</span>
+                        Address <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="date"
-                        value={orderDetails.deliveryDate}
+                        type="text"
+                        value={orderDetails.address}
                         onChange={(e) =>
                           setOrderDetails({
                             ...orderDetails,
-                            deliveryDate: e.target.value,
+                            address: e.target.value,
                           })
                         }
                         className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                        placeholder="Enter address"
                       />
                     </div>
 
+                    {/* Delivery Address */}
                     <div className="flex-1">
                       <label className="block text-gray-700 font-medium mb-2">
                         Delivery Address <span className="text-red-500">*</span>
@@ -816,6 +790,7 @@ const FbrDeliveryChallan = () => {
                           })
                         }
                         className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                        placeholder="Enter delivery address"
                       />
                     </div>
                   </div>
@@ -840,18 +815,7 @@ const FbrDeliveryChallan = () => {
                       </select>
                     </div>
 
-                    <div className="flex-1">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Rate
-                      </label>
-                      <input
-                        type="number"
-                        value={rate}
-                        onChange={(e) => setRate(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                        placeholder="Enter rate"
-                      />
-                    </div>
+                
 
                     <div className="flex-1">
                       <label className="block text-gray-700 font-medium mb-2">
@@ -882,18 +846,7 @@ const FbrDeliveryChallan = () => {
 
                   {/* Line 2 */}
                   <div className="flex gap-4 items-end">
-                    <div className="flex-1">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        In Stock
-                      </label>
-                      <input
-                        type="text"
-                        value={inStock}
-                        onChange={(e) => setInStock(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                        placeholder="Enter in stock"
-                      />
-                    </div>
+                  
 
                     <div className="flex-1">
                       <label className="block text-gray-700 font-medium mb-2">
@@ -992,18 +945,7 @@ const FbrDeliveryChallan = () => {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-gray-700 font-medium mb-2">
-                      Approval Remarks
-                    </label>
-                    <textarea
-                      value={approvalRemarks}
-                      onChange={(e) => setApprovalRemarks(e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                      placeholder="Enter Approval Remarks"
-                      rows="3"
-                    />
-                  </div>
+            
                 </div>
 
                 {/* SUBMIT BUTTON */}
