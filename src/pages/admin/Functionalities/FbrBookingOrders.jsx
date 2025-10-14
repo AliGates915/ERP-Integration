@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { SquarePen, Trash2, X } from "lucide-react";
+import { Eye, SquarePen, Trash2, X } from "lucide-react";
 import CommanHeader from "../../../components/CommanHeader";
 import TableSkeleton from "../Skeleton";
 import Swal from "sweetalert2";
 import { api } from "../../../context/ApiService";
 import toast from "react-hot-toast";
+import ViewModel from "../../../helper/ViewModel";
 
 const FbrBookingOrders = () => {
   const [bookingOrders, setBookingOrders] = useState([]);
   const [isSliderOpen, setIsSliderOpen] = useState(false);
+  const [isView, setIsView] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [orderNo, setOrderNo] = useState("");
@@ -104,24 +107,23 @@ const FbrBookingOrders = () => {
     fetchProductList();
   }, [fetchProductList]);
 
-useEffect(() => {
-  if (searchTerm.trim() === "") {
-    fetchBookingOrders(); // only when cleared
-    return;
-  }
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      fetchBookingOrders(); // only when cleared
+      return;
+    }
 
-  const delayDebounce = setTimeout(() => {
-    setLoading(true);
-    const filtered = bookingOrders.filter((order) =>
-      order?.orderNo?.toUpperCase().includes(searchTerm.toUpperCase())
-    );
-    setBookingOrders(filtered);
-    setLoading(false);
-  }, 500);
+    const delayDebounce = setTimeout(() => {
+      setLoading(true);
+      const filtered = bookingOrders.filter((order) =>
+        order?.orderNo?.toUpperCase().includes(searchTerm.toUpperCase())
+      );
+      setBookingOrders(filtered);
+      setLoading(false);
+    }, 500);
 
-  return () => clearTimeout(delayDebounce);
-}, [searchTerm, fetchBookingOrders]);
-
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, fetchBookingOrders]);
 
   useEffect(() => {
     if (bookingOrders.length > 0) {
@@ -186,8 +188,6 @@ useEffect(() => {
   }, [itemsList]);
 
   const handleAddItem = () => {
-   
-
     if (!product || !rate || !inStock || !total || !specification) {
       Swal.fire({
         icon: "warning",
@@ -200,16 +200,14 @@ useEffect(() => {
 
     const selectedProduct = productList.find((p) => p._id === product);
 
-   const newItem = {
-  name: selectedProduct ? selectedProduct.itemName : "",
-  rate: parseFloat(rate),
-  qty: parseFloat(qty) || 1,
-  total: parseFloat(total),
-  inStock,
-  details: specification, // renamed field
-};
-
-
+    const newItem = {
+      name: selectedProduct ? selectedProduct.itemName : "",
+      rate: parseFloat(rate),
+      qty: parseFloat(qty) || 1,
+      total: parseFloat(total),
+      inStock,
+      details: specification, // renamed field
+    };
 
     setItemsList([...itemsList, newItem]);
     setProduct("");
@@ -264,7 +262,6 @@ useEffect(() => {
     if (!deliveryDate) newErrors.deliveryDate = "Delivery Date is required";
     if (!mode) newErrors.mode = "Mode is required";
     if (!paymentMethod) newErrors.paymentMethod = "Payment Method is required";
-   
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -275,34 +272,33 @@ useEffect(() => {
     setIsSliderOpen(true);
   };
 
- const handleEditClick = (order) => {
-  setEditingOrder(order);
-  setOrderNo(order.orderNo || "");
-  setOrderDate(order.orderDate ? order.orderDate.split("T")[0] : ""); // ✅ format date
-  setCustomer(order.customer?._id || ""); // ✅ set ID for select dropdown
-  setPerson(order.person || "");
-  setPhone(order.customer?.phoneNumber || "");
-  setAddress(order.customer?.address || "");
-  setBalance(order.customer?.balance || "");
-  setDeliveryAddress(order.deliveryAddress || "");
-  setOrderType(order.orderType || "");
-  setDeliveryDate(order.deliveryDate ? order.deliveryDate.split("T")[0] : "");
-  setMode(order.mode || "");
-  setPaymentMethod(order.paymentMethod || "");
-  setItemsList(order.products || []); // ✅ use `products` instead of `items`
-  setTotalWeight(order.totalWeight || 0);
-  setTotalAmount(order.totalAmount || 0);
-  setRemarks(order.remarks || "");
-  setErrors({});
-  setIsSliderOpen(true);
-};
-
+  const handleEditClick = (order) => {
+    setEditingOrder(order);
+    setOrderNo(order.orderNo || "");
+    setOrderDate(order.orderDate ? order.orderDate.split("T")[0] : ""); // ✅ format date
+    setCustomer(order.customer?._id || ""); // ✅ set ID for select dropdown
+    setPerson(order.person || "");
+    setPhone(order.customer?.phoneNumber || "");
+    setAddress(order.customer?.address || "");
+    setBalance(order.customer?.balance || "");
+    setDeliveryAddress(order.deliveryAddress || "");
+    setOrderType(order.orderType || "");
+    setDeliveryDate(order.deliveryDate ? order.deliveryDate.split("T")[0] : "");
+    setMode(order.mode || "");
+    setPaymentMethod(order.paymentMethod || "");
+    setItemsList(order.products || []); // ✅ use `products` instead of `items`
+    setTotalWeight(order.totalWeight || 0);
+    setTotalAmount(order.totalAmount || 0);
+    setRemarks(order.remarks || "");
+    setErrors({});
+    setIsSliderOpen(true);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-const headers={
-  Authorization: `Bearer ${userInfo?.token}`,
-}
+    const headers = {
+      Authorization: `Bearer ${userInfo?.token}`,
+    };
     if (!validateForm()) {
       return;
     }
@@ -323,40 +319,39 @@ const headers={
       remarks,
     };
 
-
     try {
       if (editingOrder) {
-       try{
-        setLoading(true);
-        await api.put(`/booking-order/${editingOrder._id}`,newOrder,{headers});
-         Swal.fire({
-          icon: "success",
-          title: "Updated!",
-          text: "Booking Order updated successfully.",
-          confirmButtonColor: "#3085d6",
-        });
-       }catch(err){
-        toast.error(err.response.data.message);
-       }finally{
-        setLoading(false)
-       }
-       
+        try {
+          setLoading(true);
+          await api.put(`/booking-order/${editingOrder._id}`, newOrder, {
+            headers,
+          });
+          Swal.fire({
+            icon: "success",
+            title: "Updated!",
+            text: "Booking Order updated successfully.",
+            confirmButtonColor: "#3085d6",
+          });
+        } catch (err) {
+          toast.error(err.response.data.message);
+        } finally {
+          setLoading(false);
+        }
       } else {
         try {
           setLoading(true);
-          await api.post("/booking-order",newOrder,{headers});
-           Swal.fire({
-          icon: "success",
-          title: "Added!",
-          text: "Booking Order added successfully.",
-          confirmButtonColor: "#3085d6",
-        });
+          await api.post("/booking-order", newOrder, { headers });
+          Swal.fire({
+            icon: "success",
+            title: "Added!",
+            text: "Booking Order added successfully.",
+            confirmButtonColor: "#3085d6",
+          });
         } catch (error) {
           toast.error(error.response.data.message);
-        }finally{
-          setLoading(false)
+        } finally {
+          setLoading(false);
         }
-       
       }
       fetchBookingOrders();
       resetForm();
@@ -372,9 +367,9 @@ const headers={
   };
 
   const handleDelete = (id) => {
-    const headers={
-  Authorization: `Bearer ${userInfo?.token}`,
-}
+    const headers = {
+      Authorization: `Bearer ${userInfo?.token}`,
+    };
     const swalWithTailwindButtons = Swal.mixin({
       customClass: {
         actions: "space-x-2",
@@ -399,8 +394,8 @@ const headers={
       .then(async (result) => {
         if (result.isConfirmed) {
           try {
-            setLoading(true)
-          await api.delete(`/booking-order/${id}`,{headers})
+            setLoading(true);
+            await api.delete(`/booking-order/${id}`, { headers });
             swalWithTailwindButtons.fire(
               "Deleted!",
               "Booking Order deleted successfully.",
@@ -413,10 +408,10 @@ const headers={
               "Failed to delete booking order.",
               "error"
             );
-          }finally{
-            setLoading(false)
+          } finally {
+            setLoading(false);
           }
-          fetchBookingOrders()
+          fetchBookingOrders();
         } else if (result.dismiss === Swal.DismissReason.cancel) {
           swalWithTailwindButtons.fire(
             "Cancelled",
@@ -438,6 +433,11 @@ const headers={
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
+const handleView = (order) => {
+  setSelectedOrder(order);
+  setIsView(true);
+};
+console.log({bookingOrders});
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
@@ -529,6 +529,13 @@ const headers={
                         >
                           <Trash2 size={18} />
                         </button>
+                        <button
+                          onClick={() => handleView(order)}
+                          className="py-1 text-sm rounded text-amber-600 hover:bg-amber-50 transition-colors"
+                          title="View Details"
+                        >
+                          <Eye size={18} />
+                        </button>
                       </div>
                     </div>
                   ))
@@ -611,7 +618,6 @@ const headers={
                             : "border-gray-300 focus:ring-newPrimary"
                         }`}
                         placeholder="Enter order number"
-                       
                       />
                       {errors.orderNo && (
                         <p className="text-red-500 text-xs mt-1">
@@ -867,7 +873,6 @@ const headers={
                             ? "border-red-500 focus:ring-red-500"
                             : "border-gray-300 focus:ring-newPrimary"
                         }`}
-                        
                       >
                         <option value="">Select Product</option>
                         {productList.map((prod) => (
@@ -1045,9 +1050,16 @@ const headers={
                 </button>
               </form>
             </div>
+           
           </div>
         )}
-
+      {isView && selectedOrder && (
+              <ViewModel
+                data={selectedOrder}
+                type="bookingOrder" // 👈 You can define a new case for booking orders inside ViewModel
+                onClose={() => setIsView(false)}
+              />
+            )}
         <style jsx>{`
           .custom-scrollbar::-webkit-scrollbar {
             width: 6px;

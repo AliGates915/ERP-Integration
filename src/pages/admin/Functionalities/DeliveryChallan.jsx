@@ -53,29 +53,11 @@ const DeliveryChallan = () => {
   const sliderRef = useRef(null);
   const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
 
-  // fetch delivery challans
-  const fetchDeliveryChallans = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await api.get("/delivery-challan");
-      setDeliveryChallan(response.data);
-    } catch (error) {
-      console.error("Failed to fetch delivery challan", error);
-    } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchDeliveryChallans();
-  }, [fetchDeliveryChallans]);
 
   // Delivery challan search
   useEffect(() => {
     if (!searchTerm || !searchTerm.startsWith("DC-")) {
-      fetchDeliveryChallans();
+      fetchDeliveryChallan();
       return;
     }
 
