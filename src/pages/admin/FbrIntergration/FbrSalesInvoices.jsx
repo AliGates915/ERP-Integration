@@ -70,7 +70,13 @@ const FbrSalesInvoices = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [errors, setErrors] = useState({});
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState([
+    { srNo: 1, item: "Cement Bags (50kg)", rate: 1200, qty: 10 },
+    { srNo: 2, item: "Steel Rod 12mm", rate: 220, qty: 100 },
+    { srNo: 3, item: "Bricks (1000 pcs)", rate: 15000, qty: 1 },
+    { srNo: 4, item: "Paint Drum (20L)", rate: 4500, qty: 2 },
+    { srNo: 5, item: "PVC Pipe 1 inch", rate: 350, qty: 25 },
+  ]);
   const [totalPrice, setTotalPrice] = useState(0);
   const [discountPercentage, setDiscountPercentage] = useState("");
   const [discountAmount, setDiscountAmount] = useState("");
@@ -198,7 +204,7 @@ const FbrSalesInvoices = () => {
       setAddress(selectedDc.address);
       setPhoneNo(selectedDc.phoneNo);
       setBalance(selectedDc.balance.toString());
-      setItems(selectedDc.items || []);
+      setItems(selectedDc.items || []); // ✅ KEEP THIS HERE
     } else {
       setDeliveryDate("");
       setMedicineType("");
@@ -208,7 +214,7 @@ const FbrSalesInvoices = () => {
       setAddress("");
       setPhoneNo("");
       setBalance("");
-      setItems([]);
+      setItems([]); // ✅ KEEP THIS HERE
     }
   };
 
@@ -421,6 +427,7 @@ const FbrSalesInvoices = () => {
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
+  console.log({});
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
@@ -766,16 +773,14 @@ const FbrSalesInvoices = () => {
                   </h3>
                   <div className="border border-gray-200 rounded-lg overflow-hidden">
                     {/* Header */}
-                    <div className="grid grid-cols-[1fr_2fr_1fr_1fr_1fr_1fr] bg-gray-200 text-gray-600 text-sm font-semibold uppercase border-b border-gray-300">
+                    <div className="grid grid-cols-[1fr_1fr_1fr_1fr_1fr] bg-gray-200 text-gray-600 text-sm font-semibold uppercase border-b border-gray-300">
                       <div className="px-4 py-2 border-r border-gray-300">
                         SR#.
                       </div>
                       <div className="px-4 py-2 border-r border-gray-300">
                         Item
                       </div>
-                      <div className="px-4 py-2 border-r border-gray-300">
-                        Pack Size
-                      </div>
+
                       <div className="px-4 py-2 border-r border-gray-300">
                         Rate
                       </div>
@@ -794,24 +799,41 @@ const FbrSalesInvoices = () => {
                       items.map((item) => (
                         <div
                           key={item.srNo}
-                          className="grid grid-cols-[1fr_2fr_1fr_1fr_1fr_1fr] text-sm text-gray-700 bg-gray-100 even:bg-white border-t border-gray-300"
+                          className="grid grid-cols-[1fr_1fr_1fr_1fr_1fr] text-sm text-gray-700 bg-gray-100 even:bg-white border-t border-gray-300"
                         >
-                          <div className="px-4 py-2 border-r border-gray-300 text-center">
+                          <div className="px-4 py-2 border-r border-gray-300 ">
                             {item.srNo}
                           </div>
-                          <div className="px-4 py-2 border-r border-gray-300 text-center">
+                          <div className="px-4 py-2 border-r border-gray-300 ">
                             {item.item}
                           </div>
-                          <div className="px-4 py-2 border-r border-gray-300 text-center">
-                            {item.packSize}
+
+                          <div className="px-4 py-2 border-r border-gray-300 ">
+                            <input
+                              type="number"
+                              value={item.rate}
+                              onChange={(e) => {
+                                const newRate = parseFloat(e.target.value) || 0;
+                                setItems((prevItems) =>
+                                  prevItems.map((it) =>
+                                    it.srNo === item.srNo
+                                      ? {
+                                          ...it,
+                                          rate: newRate,
+                                          total: newRate * it.qty,
+                                        }
+                                      : it
+                                  )
+                                );
+                              }}
+                              className="w-20 p-1 border border-gray-300 rounded text-center focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                            />
                           </div>
-                          <div className="px-4 py-2 border-r border-gray-300 text-center">
-                            {item.rate}
-                          </div>
-                          <div className="px-4 py-2 border-r border-gray-300 text-center">
+
+                          <div className="px-4 py-2 border-r border-gray-300 ">
                             {item.qty}
                           </div>
-                          <div className="px-4 py-2 text-center">
+                          <div className="px-4 py-2 ">
                             {item.total}
                           </div>
                         </div>
