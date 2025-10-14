@@ -128,27 +128,12 @@ const navigate=useNavigate()
           {formatDate(currentTime)} • {formatTime(currentTime)}
         </p>
       </div>
-
+    <div className="mr-28">
+      <img src="/images/fbr.png" alt="" className="w-[6rem] h-24 " />
+     </div>
       {/* Quick Stats + Notifications */}
       <div className="flex flex-col sm:flex-row gap-4 items-center bg-gradient-to-r  p-4 rounded-xl">
-        {/* <div className="text-center">
-          <div className="text-2xl font-bold text-newPrimary">{sales}</div>
-          <div className="text-xs text-gray-600">Today's Sales</div>
-        </div>
-        <div className="h-8 w-px bg-newPrimary/30 hidden sm:block"></div>
-        <div className="text-center">
-          <div className="text-2xl font-bold text-newPrimary">
-            ${revenue.toLocaleString()}
-          </div>
-          <div className="text-xs text-gray-600">Revenue</div>
-        </div>
-        <div className="h-8 w-px bg-newPrimary/30 hidden sm:block"></div>
-        <div className="text-center">
-          <div className="text-2xl font-bold text-newPrimary">
-            {bookingPending}
-          </div>
-          <div className="text-xs text-gray-600">Orders</div>
-        </div> */}
+     
 
         {/* Notifications */}
         <div className="">

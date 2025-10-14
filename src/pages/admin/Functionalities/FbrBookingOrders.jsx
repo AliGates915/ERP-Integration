@@ -3,70 +3,11 @@ import { SquarePen, Trash2, X } from "lucide-react";
 import CommanHeader from "../../../components/CommanHeader";
 import TableSkeleton from "../Skeleton";
 import Swal from "sweetalert2";
+import { api } from "../../../context/ApiService";
+import toast from "react-hot-toast";
 
 const FbrBookingOrders = () => {
-  const [bookingOrders, setBookingOrders] = useState([
-    {
-      _id: "1",
-      orderNo: "ORD-001",
-      orderDate: "2025-10-01",
-      customer: "cust1",
-      person: "John Doe",
-      phone: "123-456-7890",
-      address: "123 Tech St",
-      balance: 500,
-      deliveryAddress: "456 Delivery Rd",
-      orderType: "Standard",
-      deliveryDate: "2025-10-05",
-      mode: "Delivery",
-      paymentMethod: "Cash",
-      items: [
-        {
-          product: "prod1",
-          specification: "15-inch, 16GB RAM",
-          weight: 2.5,
-          packing: "Box",
-          inStock: 10,
-          qty: 2,
-          rate: 1000,
-          total: 2000,
-        },
-      ],
-      totalWeight: 2.5,
-      totalAmount: 2000,
-      remarks: "Urgent delivery",
-    },
-    {
-      _id: "2",
-      orderNo: "ORD-002",
-      orderDate: "2025-10-02",
-      customer: "cust2",
-      person: "Jane Smith",
-      phone: "987-654-3210",
-      address: "789 Retail Ave",
-      balance: 200,
-      deliveryAddress: "321 Pickup St",
-      orderType: "Express",
-      deliveryDate: "2025-10-06",
-      mode: "Pickup",
-      paymentMethod: "Online",
-      items: [
-        {
-          product: "prod2",
-          specification: "Wireless",
-          weight: 0.2,
-          packing: "Plastic",
-          inStock: 50,
-          qty: 5,
-          rate: 20,
-          total: 100,
-        },
-      ],
-      totalWeight: 0.2,
-      totalAmount: 100,
-      remarks: "Handle with care",
-    },
-  ]);
+  const [bookingOrders, setBookingOrders] = useState([]);
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -97,74 +38,19 @@ const FbrBookingOrders = () => {
   const [qty, setQty] = useState(null);
 
   const [errors, setErrors] = useState({});
-  const [customerList, setCustomerList] = useState([
-    {
-      _id: "cust1",
-      customerName: "Tech Corp",
-      contactPerson: "John Doe",
-      phone: "123-456-7890",
-      address: "123 Tech St",
-      balance: 500,
-    },
-    {
-      _id: "cust2",
-      customerName: "Retail Inc",
-      contactPerson: "Jane Smith",
-      phone: "987-654-3210",
-      address: "789 Retail Ave",
-      balance: 200,
-    },
-    {
-      _id: "cust3",
-      customerName: "Global Traders",
-      contactPerson: "Alice Brown",
-      phone: "555-123-4567",
-      address: "456 Global Rd",
-      balance: 1000,
-    },
-  ]);
-  const [productList, setProductList] = useState([
-    {
-      _id: "prod1",
-      productName: "Laptop",
-      rate: 1000,
-      weight: 2.5,
-      packing: "Box",
-      inStock: 10,
-      total: 1000,
-      specification: "15-inch, 16GB RAM",
-    },
-    {
-      _id: "prod2",
-      productName: "Mouse",
-      rate: 20,
-      weight: 0.2,
-      packing: "Plastic",
-      inStock: 50,
-      total: 20,
-      specification: "Wireless",
-    },
-    {
-      _id: "prod3",
-      productName: "Keyboard",
-      rate: 50,
-      weight: 0.8,
-      packing: "Box",
-      inStock: 30,
-      total: 50,
-      specification: "Mechanical",
-    },
-  ]);
+  const [customerList, setCustomerList] = useState([]);
+  const [productList, setProductList] = useState([]);
   const [nextOrderNo, setNextOrderNo] = useState("003");
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 10;
   const sliderRef = useRef(null);
   const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
-
+  // fetch booking orders
   const fetchBookingOrders = useCallback(async () => {
     try {
       setLoading(true);
-      // Static data already set in state
+      const response = await api.get("/booking-order");
+      setBookingOrders(response.data);
     } catch (error) {
       console.error("Failed to fetch booking orders", error);
     } finally {
@@ -177,6 +63,46 @@ const FbrBookingOrders = () => {
   useEffect(() => {
     fetchBookingOrders();
   }, [fetchBookingOrders]);
+
+  // fetch customer List
+  const fetchCustomerList = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/customers/booking-customer");
+      setCustomerList(response);
+      // console.log({ customer: response });
+    } catch (error) {
+      console.error("Failed to fetch booking orders", error);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCustomerList();
+  }, [fetchCustomerList]);
+
+  // fetch Product List
+  const fetchProductList = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/item-details/booking-products");
+      setProductList(response);
+      console.log({ product: response });
+    } catch (error) {
+      console.error("Failed to fetch booking orders", error);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProductList();
+  }, [fetchProductList]);
 
   useEffect(() => {
     if (searchTerm && !searchTerm.startsWith("ORD-")) {
@@ -220,27 +146,32 @@ const FbrBookingOrders = () => {
     if (customer && customerList.length > 0) {
       const selectedCustomer = customerList.find((c) => c._id === customer);
       if (selectedCustomer) {
-        setPerson(selectedCustomer.contactPerson || "");
-        setPhone(selectedCustomer.phone || "");
+        setPhone(selectedCustomer.phoneNumber || "");
         setAddress(selectedCustomer.address || "");
         setBalance(selectedCustomer.balance || "");
       }
     }
   }, [customer, customerList]);
-
+  // fetch product
   useEffect(() => {
     if (product && productList.length > 0) {
       const selectedProduct = productList.find((p) => p._id === product);
       if (selectedProduct) {
-        setRate(selectedProduct.rate || "");
-        setWeight(selectedProduct.weight || "");
-        setPacking(selectedProduct.packing || "");
-        setInStock(selectedProduct.inStock || "");
+        setRate(selectedProduct.price || "");
+        setInStock(selectedProduct.stock || "");
         setTotal(selectedProduct.total || "");
-        setSpecification(selectedProduct.specification || "");
       }
     }
   }, [product, productList]);
+  // calculate total
+  useEffect(() => {
+    if (qty && rate) {
+      const calculatedTotal = parseFloat(qty) * parseFloat(rate);
+      setTotal(calculatedTotal); // round to 2 decimals
+    } else {
+      setTotal("");
+    }
+  }, [qty, rate]);
 
   const calculateTotals = () => {
     const weightSum = itemsList.reduce(
@@ -260,15 +191,9 @@ const FbrBookingOrders = () => {
   }, [itemsList]);
 
   const handleAddItem = () => {
-    if (
-      !product ||
-      !rate ||
-      !weight ||
-      !packing ||
-      !inStock ||
-      !total ||
-      !specification
-    ) {
+   
+
+    if (!product || !rate || !inStock || !total || !specification) {
       Swal.fire({
         icon: "warning",
         title: "Missing Fields",
@@ -278,24 +203,25 @@ const FbrBookingOrders = () => {
       return;
     }
 
-    const newItem = {
-      product,
-      rate: parseFloat(rate),
-      weight: parseFloat(weight),
-      packing,
-      inStock,
-      total: parseFloat(total),
-      specification,
-      qty: 1,
-    };
+    const selectedProduct = productList.find((p) => p._id === product);
+
+   const newItem = {
+  name: selectedProduct ? selectedProduct.itemName : "",
+  rate: parseFloat(rate),
+  qty: parseFloat(qty) || 1,
+  total: parseFloat(total),
+  inStock,
+  details: specification, // renamed field
+};
+
+
 
     setItemsList([...itemsList, newItem]);
     setProduct("");
     setRate("");
-    setWeight("");
-    setPacking("");
     setInStock("");
     setTotal("");
+    setQty("");
     setSpecification("");
   };
 
@@ -325,6 +251,7 @@ const FbrBookingOrders = () => {
     setSpecification("");
     setItemsList([]);
     setTotalWeight(0);
+    setQty("");
     setTotalAmount(0);
     setRemarks("");
     setEditingOrder(null);
@@ -334,7 +261,6 @@ const FbrBookingOrders = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!orderNo && !editingOrder) newErrors.orderNo = "Order No is required";
     if (!orderDate) newErrors.orderDate = "Order Date is required";
     if (!customer) newErrors.customer = "Customer is required";
     if (!deliveryAddress)
@@ -343,8 +269,7 @@ const FbrBookingOrders = () => {
     if (!deliveryDate) newErrors.deliveryDate = "Delivery Date is required";
     if (!mode) newErrors.mode = "Mode is required";
     if (!paymentMethod) newErrors.paymentMethod = "Payment Method is required";
-    if (itemsList.length === 0)
-      newErrors.items = "At least one item is required";
+   
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -355,31 +280,34 @@ const FbrBookingOrders = () => {
     setIsSliderOpen(true);
   };
 
-  const handleEditClick = (order) => {
-    setEditingOrder(order);
-    setOrderNo(order.orderNo || "");
-    setOrderDate(order.orderDate || "");
-    setCustomer(order.customer || "");
-    setPerson(order.person || "");
-    setPhone(order.phone || "");
-    setAddress(order.address || "");
-    setBalance(order.balance || "");
-    setDeliveryAddress(order.deliveryAddress || "");
-    setOrderType(order.orderType || "");
-    setDeliveryDate(order.deliveryDate || "");
-    setMode(order.mode || "");
-    setPaymentMethod(order.paymentMethod || "");
-    setItemsList(order.items || []);
-    setTotalWeight(order.totalWeight || 0);
-    setTotalAmount(order.totalAmount || 0);
-    setRemarks(order.remarks || "");
-    setErrors({});
-    setIsSliderOpen(true);
-  };
+ const handleEditClick = (order) => {
+  setEditingOrder(order);
+  setOrderNo(order.orderNo || "");
+  setOrderDate(order.orderDate ? order.orderDate.split("T")[0] : ""); // ✅ format date
+  setCustomer(order.customer?._id || ""); // ✅ set ID for select dropdown
+  setPerson(order.person || "");
+  setPhone(order.customer?.phoneNumber || "");
+  setAddress(order.customer?.address || "");
+  setBalance(order.customer?.balance || "");
+  setDeliveryAddress(order.deliveryAddress || "");
+  setOrderType(order.orderType || "");
+  setDeliveryDate(order.deliveryDate ? order.deliveryDate.split("T")[0] : "");
+  setMode(order.mode || "");
+  setPaymentMethod(order.paymentMethod || "");
+  setItemsList(order.products || []); // ✅ use `products` instead of `items`
+  setTotalWeight(order.totalWeight || 0);
+  setTotalAmount(order.totalAmount || 0);
+  setRemarks(order.remarks || "");
+  setErrors({});
+  setIsSliderOpen(true);
+};
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+const headers={
+  Authorization: `Bearer ${userInfo?.token}`,
+}
     if (!validateForm()) {
       return;
     }
@@ -388,7 +316,6 @@ const FbrBookingOrders = () => {
       orderNo: editingOrder ? orderNo : `ORD-${nextOrderNo}`,
       orderDate,
       customer,
-      person,
       phone,
       address,
       balance,
@@ -397,36 +324,44 @@ const FbrBookingOrders = () => {
       deliveryDate,
       mode,
       paymentMethod,
-      items: itemsList,
-      totalWeight: parseFloat(totalWeight),
-      totalAmount: parseFloat(totalAmount),
+      products: itemsList, // 👈 this is the key difference
       remarks,
     };
+console.log({newOrder});
 
     try {
       if (editingOrder) {
-        setBookingOrders((prev) =>
-          prev.map((o) =>
-            o._id === editingOrder._id ? { ...o, ...newOrder, _id: o._id } : o
-          )
-        );
-        Swal.fire({
+       try{
+        setLoading(true);
+        await api.put(`/booking-order/${editingOrder._id}`,newOrder,{headers});
+         Swal.fire({
           icon: "success",
           title: "Updated!",
           text: "Booking Order updated successfully.",
           confirmButtonColor: "#3085d6",
         });
+       }catch(err){
+        toast.error(err.response.data.message);
+       }finally{
+        setLoading(false)
+       }
+       
       } else {
-        setBookingOrders((prev) => [
-          ...prev,
-          { ...newOrder, _id: `temp-${Date.now()}` },
-        ]);
-        Swal.fire({
+        try {
+          setLoading(true);
+          await api.post("/booking-order",newOrder,{headers});
+           Swal.fire({
           icon: "success",
           title: "Added!",
           text: "Booking Order added successfully.",
           confirmButtonColor: "#3085d6",
         });
+        } catch (error) {
+          toast.error(error.response.data.message);
+        }finally{
+          setLoading(false)
+        }
+       
       }
       fetchBookingOrders();
       resetForm();
@@ -532,7 +467,7 @@ const FbrBookingOrders = () => {
         <div className="rounded-xl shadow border border-gray-200 overflow-hidden">
           <div className="overflow-y-auto lg:overflow-x-auto max-h-[900px]">
             <div className="min-w-[1400px]">
-              <div className="hidden lg:grid grid-cols-[150px,200px,150px,150px,150px,150px,100px] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+              <div className="hidden lg:grid grid-cols-7 gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
                 <div>Order No</div>
                 <div>Customer</div>
                 <div>Order Date</div>
@@ -545,9 +480,9 @@ const FbrBookingOrders = () => {
               <div className="flex flex-col divide-y divide-gray-100">
                 {loading ? (
                   <TableSkeleton
-                    rows={recordsPerPage}
+                    rows={currentRecords.length || 5}
                     cols={7}
-                    className="lg:grid-cols-[150px,200px,150px,150px,150px,150px,100px]"
+                    className="lg:grid-cols-7"
                   />
                 ) : currentRecords.length === 0 ? (
                   <div className="text-center py-4 text-gray-500 bg-white">
@@ -557,17 +492,26 @@ const FbrBookingOrders = () => {
                   currentRecords.map((order) => (
                     <div
                       key={order._id}
-                      className="grid grid-cols-1 lg:grid-cols-[150px,200px,150px,150px,150px,150px,100px] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                      className="grid grid-cols-1 lg:grid-cols-7 items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
                       <div className="text-gray-600">{order.orderNo}</div>
                       <div className="text-gray-600">
-                        {customerList.find((c) => c._id === order.customer)
-                          ?.customerName || "N/A"}
+                        {order?.customer?.customerName || "N/A"}
                       </div>
-                      <div className="text-gray-600">{order.orderDate}</div>
-                      <div className="text-gray-600">{order.deliveryDate}</div>
-                      <div className="text-gray-600">{order.orderType}</div>
-                      <div className="text-gray-600">{order.paymentMethod}</div>
+                      <div className="text-gray-600">
+                        {new Date(order.orderDate).toLocaleDateString() ||
+                          "N/A"}
+                      </div>
+                      <div className="text-gray-600">
+                        {new Date(order.deliveryDate).toLocaleDateString() ||
+                          "N/A"}
+                      </div>
+                      <div className="text-gray-600">
+                        {order.orderType || "N/A"}
+                      </div>
+                      <div className="text-gray-600">
+                        {order.paymentMethod || "N/A"}
+                      </div>
                       <div className="flex gap-3 justify-start">
                         <button
                           onClick={() => handleEditClick(order)}
@@ -665,7 +609,7 @@ const FbrBookingOrders = () => {
                             : "border-gray-300 focus:ring-newPrimary"
                         }`}
                         placeholder="Enter order number"
-                        required
+                       
                       />
                       {errors.orderNo && (
                         <p className="text-red-500 text-xs mt-1">
@@ -921,12 +865,12 @@ const FbrBookingOrders = () => {
                             ? "border-red-500 focus:ring-red-500"
                             : "border-gray-300 focus:ring-newPrimary"
                         }`}
-                        required
+                        
                       >
                         <option value="">Select Product</option>
                         {productList.map((prod) => (
                           <option key={prod._id} value={prod._id}>
-                            {prod.productName}
+                            {prod.itemName}
                           </option>
                         ))}
                       </select>
@@ -1001,7 +945,7 @@ const FbrBookingOrders = () => {
                       <input
                         type="text"
                         value={specification}
-                        readOnly
+                        onChange={(e) => setSpecification(e.target.value)}
                         className="w-full p-3 border border-gray-300 rounded-md bg-gray-100"
                         placeholder="Specifications"
                       />
@@ -1042,11 +986,10 @@ const FbrBookingOrders = () => {
                               {idx + 1}
                             </td>
                             <td className="px-4 py-2 border-b text-center">
-                              {productList.find((p) => p._id === item.product)
-                                ?.productName || "N/A"}
+                              {item.name}
                             </td>
                             <td className="px-4 py-2 border-b text-center">
-                              {item.specification}
+                              {item.details}
                             </td>
                             <td className="px-4 py-2 border-b text-center">
                               {item.inStock}
