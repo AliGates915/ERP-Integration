@@ -6,28 +6,7 @@ import Swal from "sweetalert2";
 import { api } from "../../../context/ApiService";
 
 const FbrLedger = () => {
-  const [ledgerEntries, setLedgerEntries] = useState([
-    {
-      _id: "1",
-      customerId: "CUS-001",
-      customerName: "John Doe",
-      transactionDate: "2025-09-01",
-      transactionType: "Credit",
-      amount: 500,
-      balance: 500,
-      notes: "Initial deposit",
-    },
-    {
-      _id: "2",
-      customerId: "CUS-002",
-      customerName: "Jane Smith",
-      transactionDate: "2025-09-15",
-      transactionType: "Debit",
-      amount: 200,
-      balance: -200,
-      notes: "Purchase of goods",
-    },
-  ]);
+  const [ledgerEntries, setLedgerEntries] = useState([]);
   // New states for CustomerLedger form
   const [ledgerId, setLedgerId] = useState("");
   const [date, setDate] = useState("");
@@ -419,12 +398,12 @@ const FbrLedger = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="px-3 py-2 w-[250px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary"
             />
-            <button
+            {/* <button
               className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-newPrimary/80"
               onClick={handleAddLedgerEntry}
             >
               + Add Ledger Entry
-            </button>
+            </button> */}
           </div>
         </div>
         <div className="flex gap-6">
