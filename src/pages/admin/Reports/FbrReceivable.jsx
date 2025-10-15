@@ -348,81 +348,71 @@ const FbrReceivable = () => {
         </div>
 
         <div className="rounded-xl shadow border border-gray-200 overflow-hidden">
-          <div className="overflow-y-auto lg:overflow-x-auto max-h-[900px]">
-            <div className="min-w-[1200px]">
-              <div className="hidden lg:grid grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
-                <div>Receivable ID</div>
-                <div>Customer Name</div>
-                <div>Invoice Number</div>
-                <div>Invoice Date</div>
-                <div>Due Date</div>
-                <div>Amount</div>
-                <div>Status</div>
-                <div>Actions</div>
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-4 p-4 md:p-6">
+            {/* Radio Buttons */}
+            <div className="flex gap-4 mb-6">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="balanceFilter"
+                  value="withZero"
+                  checked={showZero}
+                  onChange={() => setShowZero(true)}
+                  className="w-4 h-4"
+                />
+                With Zero
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="balanceFilter"
+                  value="withoutZero"
+                  checked={!showZero}
+                  onChange={() => setShowZero(false)}
+                  className="w-4 h-4"
+                />
+                Without Zero
+              </label>
+            </div>
 
-              <div className="flex flex-col divide-y divide-gray-100">
-                {loading ? (
-                  <TableSkeleton
-                    rows={recordsPerPage}
-                    cols={8}
-                    className="lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]"
-                  />
-                ) : currentRecords.length === 0 ? (
-                  <div className="text-center py-4 text-gray-500 bg-white">
-                    No receivables found.
-                  </div>
-                ) : (
-                  currentRecords.map((receivable) => (
-                    <div
-                      key={receivable._id}
-                      className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
-                    >
-                      <div className="text-gray-600">
-                        {receivable.receivableId}
-                      </div>
-                      <div className="text-gray-600">
-                        {receivable.customerName}
-                      </div>
-                      <div className="text-gray-600">
-                        {receivable.invoiceNumber}
-                      </div>
-                      <div className="text-gray-600">
-                        {receivable.invoiceDate}
-                      </div>
-                      <div className="text-gray-600">{receivable.dueDate}</div>
-                      <div className="text-gray-600">{receivable.amount}</div>
-                      <div className="text-gray-600">{receivable.status}</div>
-                      <div className="flex gap-3 justify-start">
-                        <button
-                          onClick={() => handleEditClick(receivable)}
-                          className="py-1 text-sm rounded text-blue-600 hover:bg-blue-50 transition-colors"
-                          title="Edit"
-                        >
-                          <SquarePen size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(receivable._id)}
-                          className="py-1 text-sm rounded text-red-600 hover:bg-red-50 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
+            {/* Customer Table */}
+            <div className="overflow-y-auto lg:overflow-x-auto max-h-[600px] rounded-xl">
+              <div className="min-w-[600px]">
+                <div className="hidden lg:grid grid-cols-3 gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+                  <div>SR</div>
+                  <div>Customer</div>
+                  <div>Balance</div>
+                </div>
+
+                <div className="flex flex-col divide-y divide-gray-100">
+                  {filteredCustomers.length === 0 ? (
+                    <div className="text-center py-4 text-gray-500 bg-white">
+                      No customers to display
                     </div>
-                  ))
-                )}
+                  ) : (
+                    filteredCustomers.map((cust) => (
+                      <div
+                        key={cust.sr}
+                        className="grid grid-cols-1 lg:grid-cols-3 items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                      >
+                        <div className="text-gray-600">{cust.sr}</div>
+                        <div className="text-gray-600">{cust.name}</div>
+                        <div className="text-gray-600">{cust.balance}</div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          </form>
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
             <div className="flex justify-between my-4 px-10">
               <div className="text-sm text-gray-600">
                 Showing {indexOfFirstRecord + 1} to{" "}
-                {Math.min(indexOfLastRecord, receivables.length)} of{" "}
-                {receivables.length} records
+                {Math.min(indexOfLastRecord, filteredCustomers.length)} of{" "}
+                {filteredCustomers.length} records
               </div>
               <div className="flex gap-2">
                 <button
@@ -473,69 +463,6 @@ const FbrReceivable = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4 p-4 md:p-6">
-                <div className="p-4">
-                  {/* Radio Buttons */}
-                  <div className="flex gap-4 mb-6">
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="balanceFilter"
-                        value="withZero"
-                        checked={showZero}
-                        onChange={() => setShowZero(true)}
-                        className="w-4 h-4"
-                      />
-                      With Zero
-                    </label>
-                    <label className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name="balanceFilter"
-                        value="withoutZero"
-                        checked={!showZero}
-                        onChange={() => setShowZero(false)}
-                        className="w-4 h-4"
-                      />
-                      Without Zero
-                    </label>
-                  </div>
-
-                  {/* Table */}
-                  <div className="overflow-x-auto border rounded-lg">
-                    <table className="w-full text-left border-collapse">
-                      <thead className="bg-gray-100">
-                        <tr>
-                          <th className="px-4 py-2 border">SR</th>
-                          <th className="px-4 py-2 border">Customer</th>
-                          <th className="px-4 py-2 border">Balance</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredCustomers.map((cust) => (
-                          <tr
-                            key={cust.sr}
-                            className="odd:bg-white even:bg-gray-50"
-                          >
-                            <td className="px-4 py-2 border">{cust.sr}</td>
-                            <td className="px-4 py-2 border">{cust.name}</td>
-                            <td className="px-4 py-2 border">{cust.balance}</td>
-                          </tr>
-                        ))}
-                        {filteredCustomers.length === 0 && (
-                          <tr>
-                            <td
-                              colSpan="3"
-                              className="text-center py-4 text-gray-500"
-                            >
-                              No customers to display
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
                 {/* Submit */}
                 <button
                   type="submit"

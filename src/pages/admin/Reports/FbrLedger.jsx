@@ -234,6 +234,18 @@ const FbrLedger = () => {
       return;
     }
 
+    // Calculate The amount value and balance
+
+    const totalPaid = filteredLedger.reduce(
+      (acc, curr) => acc + (parseFloat(curr.paid) || 0),
+      0
+    );
+    const totalReceived = filteredLedger.reduce(
+      (acc, curr) => acc + (parseFloat(curr.received) || 0),
+      0
+    );
+    const totalBalance = totalReceived - totalPaid;
+
     // Calculate balance based on transaction type
     const amountValue = parseFloat(amount);
     const balance = transactionType === "Credit" ? amountValue : -amountValue;
@@ -378,106 +390,198 @@ const FbrLedger = () => {
             </button>
           </div>
         </div>
-
-        <div className="rounded-xl shadow border border-gray-200 overflow-hidden">
-          <div className="overflow-y-auto lg:overflow-x-auto max-h-[900px]">
-            <div className="min-w-[1200px]">
-              <div className="hidden lg:grid grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
-                <div>Customer ID</div>
-                <div>Customer Name</div>
-                <div>Transaction Date</div>
-                <div>Transaction Type</div>
-                <div>Amount</div>
-                <div>Balance</div>
-                <div>Actions</div>
+        <div className="flex gap-6">
+          {/* Left Filter Section */}
+          <div className="w-1/3">
+            <div className="space-y-5">
+              {/* Customer Selection */}
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Customer Name <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={selectedCustomer}
+                  onChange={(e) => setSelectedCustomer(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                  required
+                >
+                  <option value="">Select Customer</option>
+                  {customers.map((cust) => (
+                    <option key={cust.id} value={cust.id}>
+                      {cust.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-
-              <div className="flex flex-col divide-y divide-gray-100">
-                {loading ? (
-                  <TableSkeleton
-                    rows={recordsPerPage}
-                    cols={7}
-                    className="lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr]"
+              <div className="flex gap-5">
+                {/* Date From */}
+                <div className="w-1/2">
+                  <label className="block text-gray-700 font-medium mb-2">
+                    Date From
+                  </label>
+                  <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => setDateFrom(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
                   />
-                ) : currentRecords.length === 0 ? (
-                  <div className="text-center py-4 text-gray-500 bg-white">
-                    No ledger entries found.
-                  </div>
-                ) : (
-                  currentRecords.map((ledgerEntry) => (
-                    <div
-                      key={ledgerEntry._id}
-                      className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
-                    >
-                      <div className="text-gray-600">
-                        {ledgerEntry.customerId}
-                      </div>
-                      <div className="text-gray-600">
-                        {ledgerEntry.customerName}
-                      </div>
-                      <div className="text-gray-600">
-                        {ledgerEntry.transactionDate}
-                      </div>
-                      <div className="text-gray-600">
-                        {ledgerEntry.transactionType}
-                      </div>
-                      <div className="text-gray-600">{ledgerEntry.amount}</div>
-                      <div className="text-gray-600">{ledgerEntry.balance}</div>
-                      <div className="flex gap-3 justify-start">
-                        <button
-                          onClick={() => handleEditClick(ledgerEntry)}
-                          className="py-1 text-sm rounded text-blue-600 hover:bg-blue-50 transition-colors"
-                          title="Edit"
-                        >
-                          <SquarePen size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(ledgerEntry._id)}
-                          className="py-1 text-sm rounded text-red-600 hover:bg-red-50 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
+                </div>
+
+                {/* Date To */}
+                <div className="w-1/2">
+                  <label className="block text-gray-700 font-medium mb-2">
+                    Date To
+                  </label>
+                  <input
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => setDateTo(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex justify-between my-4 px-10">
-              <div className="text-sm text-gray-600">
-                Showing {indexOfFirstRecord + 1} to{" "}
-                {Math.min(indexOfLastRecord, ledgerEntries.length)} of{" "}
-                {ledgerEntries.length} records
+          {/* Right Side Form Content */}
+          <div className="flex-1">{/* your main form fields go here */}</div>
+        </div>
+
+        <div className="p-4 md:p-6">
+          {/* Selection Form */}
+
+          {(selectedCustomer || dateFrom || dateTo) && (
+            <div className="rounded-xl shadow border border-gray-200 overflow-hidden mt-6">
+              <div className="overflow-y-auto lg:overflow-x-auto max-h-[900px]">
+                <div className="min-w-full custom-scrollbar">
+                  {/* Table Header */}
+                  <div className="hidden lg:grid grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+                    <div>SR</div>
+                    <div>Date</div>
+                    <div>ID</div>
+                    <div>Description</div>
+                    <div>Paid</div>
+                    <div>Received</div>
+                    <div>Balance</div>
+                  </div>
+
+                  {/* Table Rows */}
+                  <div className="flex flex-col divide-y divide-gray-100">
+                    {loading ? (
+                      <div className="text-center py-4 text-gray-500 bg-white">
+                        Loading...
+                      </div>
+                    ) : filteredLedger.length === 0 ? (
+                      <div className="text-center py-4 text-gray-500 bg-white">
+                        No ledger entries found.
+                      </div>
+                    ) : (
+                      <>
+                        {filteredLedger.map((entry, index) => (
+                          <div
+                            key={entry.id || index}
+                            className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                          >
+                            <div className="text-gray-600">{index + 1}</div>
+                            <div className="text-gray-600">{entry.date}</div>
+                            <div className="text-gray-600">{entry.id}</div>
+                            <div className="text-gray-600">
+                              {entry.description}
+                            </div>
+                            <div className="text-gray-600">{entry.paid}</div>
+                            <div className="text-gray-600">
+                              {entry.received}
+                            </div>
+                            <div className="text-gray-600">{entry.balance}</div>
+                          </div>
+                        ))}
+
+                        {/* Totals Row */}
+                        <div className="hidden lg:grid grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] justify-items-start gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+                          {/* Empty columns for alignment */}
+                          <div className="col-span-4"></div>
+
+                          {/* Total Paid */}
+                          <div className="text-blue-700 text-center">
+                            Total Paid:{" "}
+                            <span className="font-bold">
+                              {filteredLedger
+                                .reduce(
+                                  (sum, e) => sum + (parseFloat(e.paid) || 0),
+                                  0
+                                )
+                                .toFixed(2)}
+                            </span>
+                          </div>
+
+                          {/* Total Received */}
+                          <div className="text-green-700 text-center">
+                            Total Received:{" "}
+                            <span className="font-bold">
+                              {filteredLedger
+                                .reduce(
+                                  (sum, e) =>
+                                    sum + (parseFloat(e.received) || 0),
+                                  0
+                                )
+                                .toFixed(2)}
+                            </span>
+                          </div>
+
+                          {/* Total Balance */}
+                          <div className="text-red-700 text-center">
+                            Total Balance:{" "}
+                            <span className="font-bold">
+                              {filteredLedger
+                                .reduce(
+                                  (sum, e) =>
+                                    sum + (parseFloat(e.balance) || 0),
+                                  0
+                                )
+                                .toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className={`px-3 py-1 rounded-md ${
-                    currentPage === 1
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-newPrimary text-white hover:bg-newPrimary/80"
-                  }`}
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className={`px-3 py-1 rounded-md ${
-                    currentPage === totalPages
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-newPrimary text-white hover:bg-newPrimary/80"
-                  }`}
-                >
-                  Next
-                </button>
-              </div>
+
+              {/* Pagination Controls (Optional) */}
+              {totalPages > 1 && (
+                <div className="flex justify-between my-4 px-10">
+                  <div className="text-sm text-gray-600">
+                    Showing {indexOfFirstRecord + 1} to{" "}
+                    {Math.min(indexOfLastRecord, filteredLedger.length)} of{" "}
+                    {filteredLedger.length} records
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className={`px-3 py-1 rounded-md ${
+                        currentPage === 1
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-newPrimary text-white hover:bg-newPrimary/80"
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className={`px-3 py-1 rounded-md ${
+                        currentPage === totalPages
+                          ? "bg-gray-400 cursor-not-allowed"
+                          : "bg-newPrimary text-white hover:bg-newPrimary/80"
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -504,119 +608,6 @@ const FbrLedger = () => {
 
               <form onSubmit={handleSubmit} className="space-y-4 p-4 md:p-6">
                 {/* Top Section */}
-                <div className="p-4 md:p-6">
-                  {/* Selection Form */}
-                  <div className="space-y-4 border p-4 rounded-lg bg-gray-100 mb-6">
-                    <div className="flex gap-4">
-                      {/* Customer Selection */}
-                      <div className="flex-1 min-w-0">
-                        <label className="block text-gray-700 font-medium mb-2">
-                          Customer Name <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          value={selectedCustomer}
-                          onChange={(e) => setSelectedCustomer(e.target.value)}
-                          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                          required
-                        >
-                          <option value="">Select Customer</option>
-                          {customers.map((cust) => (
-                            <option key={cust.id} value={cust.id}>
-                              {cust.name}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="flex gap-4">
-                      {/* Date From */}
-                      <div className="flex-1 min-w-0">
-                        <label className="block text-gray-700 font-medium mb-2">
-                          Date From
-                        </label>
-                        <input
-                          type="date"
-                          value={dateFrom}
-                          onChange={(e) => setDateFrom(e.target.value)}
-                          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                        />
-                      </div>
-
-                      {/* Date To */}
-                      <div className="flex-1 min-w-0">
-                        <label className="block text-gray-700 font-medium mb-2">
-                          Date To
-                        </label>
-                        <input
-                          type="date"
-                          value={dateTo}
-                          onChange={(e) => setDateTo(e.target.value)}
-                          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Ledger Table */}
-                  {selectedCustomer && (
-                    <div className="overflow-x-auto border rounded-lg">
-                      <table className="w-full text-left border-collapse">
-                        <thead className="bg-gray-100">
-                          <tr>
-                            <th className="px-4 py-2 border">SR</th>
-                            <th className="px-4 py-2 border">Date</th>
-                            <th className="px-4 py-2 border">ID</th>
-                            <th className="px-4 py-2 border">Description</th>
-                            <th className="px-4 py-2 border">Paid</th>
-                            <th className="px-4 py-2 border">Received</th>
-                            <th className="px-4 py-2 border">Balance</th>
-                            <th className="px-4 py-2 border">Total</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredLedger.length > 0 ? (
-                            filteredLedger.map((entry) => (
-                              <tr
-                                key={entry.id}
-                                className="odd:bg-white even:bg-gray-50"
-                              >
-                                <td className="px-4 py-2 border">{entry.sr}</td>
-                                <td className="px-4 py-2 border">
-                                  {entry.date}
-                                </td>
-                                <td className="px-4 py-2 border">{entry.id}</td>
-                                <td className="px-4 py-2 border">
-                                  {entry.description}
-                                </td>
-                                <td className="px-4 py-2 border">
-                                  {entry.paid}
-                                </td>
-                                <td className="px-4 py-2 border">
-                                  {entry.received}
-                                </td>
-                                <td className="px-4 py-2 border">
-                                  {entry.balance}
-                                </td>
-                                <td className="px-4 py-2 border">
-                                  {entry.total}
-                                </td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td
-                                colSpan="8"
-                                className="text-center py-4 text-gray-500"
-                              >
-                                No ledger entries found
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
 
                 {/* Submit */}
                 <button
