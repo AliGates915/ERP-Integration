@@ -3,32 +3,9 @@ import { SquarePen, Trash2 } from "lucide-react";
 import CommanHeader from "../../../components/CommanHeader";
 import TableSkeleton from "../Skeleton";
 import Swal from "sweetalert2";
-
+import { api } from "../../../context/ApiService";
 const FbrReceivable = () => {
-  const [receivables, setReceivables] = useState([
-    {
-      _id: "1",
-      receivableId: "REC-001",
-      customerName: "John Doe",
-      invoiceNumber: "INV-001",
-      invoiceDate: "2025-09-01",
-      dueDate: "2025-10-01",
-      amount: 1000,
-      status: "Pending",
-      notes: "Payment for laptop order",
-    },
-    {
-      _id: "2",
-      receivableId: "REC-002",
-      customerName: "Jane Smith",
-      invoiceNumber: "INV-002",
-      invoiceDate: "2025-09-15",
-      dueDate: "2025-10-15",
-      amount: 250,
-      status: "Paid",
-      notes: "Mouse purchase",
-    },
-  ]);
+  const [receivables, setReceivables] = useState([]);
   // New states for Receivable form
   const [date, setDate] = useState(""); // record creation date
   const [invoiceList, setInvoiceList] = useState([
@@ -62,37 +39,33 @@ const FbrReceivable = () => {
 
   const [showZero, setShowZero] = useState(true);
 
-  // Sample customer data
-  const customers = [
-    { sr: 1, name: "Customer A", balance: 500 },
-    { sr: 2, name: "Customer B", balance: 0 },
-    { sr: 3, name: "Customer C", balance: 300 },
-    { sr: 4, name: "Customer D", balance: 0 },
-  ];
   // Filter customers based on radio button
   const filteredCustomers = showZero
-    ? customers
-    : customers.filter((c) => c.balance !== 0);
+    ? receivables
+    : receivables.filter((c) => c.balance !== 0);
 
   // Simulate fetching receivables
   const fetchReceivables = useCallback(async () => {
     try {
       setLoading(true);
-      // Static data already set in state
+      const response = await api.get(
+        `/customer-ledger/receivables?withZero=${showZero}`
+      );
+      // console.log("Fetched receivables:", response.data);
+      setReceivables(response.data || []); // ✅ assign data
     } catch (error) {
       console.error("Failed to fetch receivables", error);
+      setReceivables([]);
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
+      setTimeout(() => setLoading(false), 500);
     }
-  }, []);
+  }, [showZero]);
 
   useEffect(() => {
     fetchReceivables();
   }, [fetchReceivables]);
 
-  // Receivable search
+  // ✅ FIXED VERSION
   useEffect(() => {
     if (!searchTerm || !searchTerm.startsWith("REC-")) {
       fetchReceivables();
@@ -102,12 +75,13 @@ const FbrReceivable = () => {
     const delayDebounce = setTimeout(() => {
       try {
         setLoading(true);
-        const filtered = receivables.filter((receivable) =>
-          receivable.receivableId
-            .toUpperCase()
-            .includes(searchTerm.toUpperCase())
+        setReceivables((prev) =>
+          prev.filter((receivable) =>
+            receivable.receivableId
+              .toUpperCase()
+              .includes(searchTerm.toUpperCase())
+          )
         );
-        setReceivables(filtered);
       } catch (error) {
         console.error("Search receivables failed:", error);
         setReceivables([]);
@@ -117,7 +91,7 @@ const FbrReceivable = () => {
     }, 1000);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm, fetchReceivables, receivables]);
+  }, [searchTerm]); // ✅ only depend on searchTerm
 
   // Generate next receivable ID
   useEffect(() => {
@@ -338,12 +312,6 @@ const FbrReceivable = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="px-3 py-2 w-[250px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary"
             />
-            <button
-              className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-newPrimary/80"
-              onClick={handleAddReceivable}
-            >
-              + Add Receivable
-            </button>
           </div>
         </div>
 
@@ -385,22 +353,16 @@ const FbrReceivable = () => {
                 </div>
 
                 <div className="flex flex-col divide-y divide-gray-100">
-                  {filteredCustomers.length === 0 ? (
-                    <div className="text-center py-4 text-gray-500 bg-white">
-                      No customers to display
+                  {filteredCustomers.map((cust, index) => (
+                    <div
+                      key={cust._id || cust.SR || index}
+                      className="grid grid-cols-1 lg:grid-cols-3 items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                    >
+                      <div className="text-gray-600">{index + 1}</div>
+                      <div className="text-gray-600">{cust.Customer}</div>
+                      <div className="text-gray-600">{cust.Balance}</div>
                     </div>
-                  ) : (
-                    filteredCustomers.map((cust) => (
-                      <div
-                        key={cust.sr}
-                        className="grid grid-cols-1 lg:grid-cols-3 items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
-                      >
-                        <div className="text-gray-600">{cust.sr}</div>
-                        <div className="text-gray-600">{cust.name}</div>
-                        <div className="text-gray-600">{cust.balance}</div>
-                      </div>
-                    ))
-                  )}
+                  ))}
                 </div>
               </div>
             </div>
