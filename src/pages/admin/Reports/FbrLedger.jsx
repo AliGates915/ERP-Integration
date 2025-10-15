@@ -447,7 +447,7 @@ const FbrLedger = () => {
           <div className="flex-1">{/* your main form fields go here */}</div>
         </div>
 
-        <div className="p-4 md:p-6">
+        <div className="p-0">
           {/* Selection Form */}
 
           {(selectedCustomer || dateFrom || dateTo) && (
