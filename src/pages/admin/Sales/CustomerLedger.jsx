@@ -59,6 +59,8 @@ const CustomerLedger = () => {
   const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
 
   // Simulate fetching ledger entries
+
+  
   const fetchLedgerEntries = useCallback(async () => {
     try {
       setLoading(true);

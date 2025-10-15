@@ -1,117 +1,175 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { SquarePen, Trash2 } from "lucide-react";
-import CommanHeader from "../../../components/CommanHeader";
-import TableSkeleton from "../Skeleton";
+import { HashLoader } from "react-spinners";
+import gsap from "gsap";
+import axios from "axios";
+import { toast } from "react-toastify";
 import Swal from "sweetalert2";
+import CommanHeader from "../../../components/CommanHeader";
+import { SquarePen, Trash2 } from "lucide-react";
+import TableSkeleton from "../Skeleton";
 
 const FbrPaymentReceipt = () => {
-  const [vouchers, setVouchers] = useState([
-    {
-      _id: "1",
-      voucherId: "PRV-001",
-      payerName: "Acme Corp",
-      amount: 1500,
-      paymentMethod: "Bank Transfer",
-      receiptDate: "2025-09-01",
-      receivedBy: "John Doe",
-      status: "Processed",
-    },
-    {
-      _id: "2",
-      voucherId: "PRV-002",
-      payerName: "Tech Solutions",
-      amount: 500,
-      paymentMethod: "Cash",
-      receiptDate: "2025-09-15",
-      receivedBy: "Jane Smith",
-      status: "Pending",
-    },
-  ]);
+  const [vouchers, setVouchers] = useState([]);
+  const [filteredVouchers, setFilteredVouchers] = useState([]); // NEW: Separate state for filtered data
   const [isSliderOpen, setIsSliderOpen] = useState(false);
+  const [paymentType, setPaymentType] = useState("Cash");
+  const [cashData, setCashData] = useState({
+    date: "",
+    receiptId: "",
+    customerName: "",
+    balance: 0,
+    amountReceived: 0,
+    newBalance: 0,
+    remarks: "",
+  });
+
+  const [bankData, setBankData] = useState({
+    bankName: "",
+    accountNumber: "",
+    accountHolderName: "",
+    amount: 0,
+    remarks: "",
+  });
+
+
+
+
+  const [customers, setCustomers] = useState([
+  ]); // Example, replace with API
+  const [banks, setBanks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [voucherId, setVoucherId] = useState("");
-  const [payerName, setPayerName] = useState("");
-  const [amount, setAmount] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("");
-  const [receiptDate, setReceiptDate] = useState("");
+  const [receiptId, setReceiptId] = useState("");
+  const [remarks, setRemarks] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [balance, setBalance] = useState("");
+  const [mode, setMode] = useState("");
+  const [date, setDate] = useState("");
   const [receivedBy, setReceivedBy] = useState("");
   const [status, setStatus] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [editingVoucher, setEditingVoucher] = useState(null);
+  const [editingVoucher, setEditingVoucher] = useState(null); // Fixed: was editingReceipt
   const [errors, setErrors] = useState({});
-  const [nextVoucherId, setNextVoucherId] = useState("003");
+  const [nextReceiptId, setNextReceiptId] = useState("001");
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 10;
   const sliderRef = useRef(null);
   const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
 
-  // Simulate fetching vouchers
-  const fetchVouchers = useCallback(async () => {
+  const API_URL = `${import.meta.env.VITE_API_BASE_URL}/payment-receipt-voucher`;
+
+  // Fixed fetchVouchers - remove useCallback or add proper dependencies
+  const fetchVouchers = async () => {
     try {
       setLoading(true);
-      // Static data already set in state
+      const res = await axios.get(API_URL);
+      const fetchedVouchers = res?.data?.data || res?.data || [];
+
+      setVouchers(fetchedVouchers);
+      setFilteredVouchers(fetchedVouchers); // Initialize filtered vouchers
     } catch (error) {
-      console.error("Failed to fetch vouchers", error);
+      console.error("Failed to fetch vouchers:", error);
+      toast.error("Failed to fetch vouchers");
+      setVouchers([]);
+      setFilteredVouchers([]);
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
+      setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
     fetchVouchers();
-  }, [fetchVouchers]);
+  }, []); // Empty dependency array - fetch only on mount
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/customers/status`);
+      setCustomers(res.data);
 
-  // Voucher search
+    } catch (error) {
+      console.error("Failed to fetch customers:", error);
+      toast.error("Failed to fetch customers");
+      setVouchers([]);
+      setFilteredVouchers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    if (!searchTerm || !searchTerm.startsWith("PRV-")) {
-      fetchVouchers();
+    fetchCustomers();
+  }, []);
+
+
+  const fetchBanks = async () => {
+  try {
+    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/payment-receipt-voucher`);
+    const vouchers = res.data?.data || [];
+    // Extract unique bank names from vouchers that have a bankSection
+    const uniqueBanks = vouchers
+      .filter(v => v.bankSection)
+      .map(v => ({
+        bankName: v.bankSection.bankName,
+        accountNumber: v.bankSection.accountNumber,
+        accountHolderName: v.bankSection.accountHolderName,
+      }))
+      .filter((b, index, self) =>
+        index === self.findIndex(t => t.bankName === b.bankName)
+      );
+
+    setBanks(uniqueBanks);
+  } catch (error) {
+    console.error("Failed to fetch bank data:", error);
+    toast.error("Failed to fetch bank data");
+    setBanks([]);
+  }
+};
+  useEffect(() => {
+    fetchBanks();
+  } , []);
+  // FIXED: Voucher search - doesn't modify main vouchers state
+  useEffect(() => {
+    if (!searchTerm) {
+      setFilteredVouchers(vouchers);
+      setCurrentPage(1); // Reset to first page when search is cleared
       return;
     }
 
     const delayDebounce = setTimeout(() => {
-      try {
-        setLoading(true);
-        const filtered = vouchers.filter((voucher) =>
-          voucher.voucherId.toUpperCase().includes(searchTerm.toUpperCase())
-        );
-        setVouchers(filtered);
-      } catch (error) {
-        console.error("Search voucher failed:", error);
-        setVouchers([]);
-      } finally {
-        setLoading(false);
-      }
-    }, 1000);
+      const filtered = vouchers.filter((voucher) =>
+        voucher.receiptId?.toUpperCase().includes(searchTerm.toUpperCase())
+      );
+      setFilteredVouchers(filtered);
+      setCurrentPage(1); // Reset to first page when search changes
+    }, 500);
 
     return () => clearTimeout(delayDebounce);
-  }, [searchTerm, fetchVouchers, vouchers]);
+  }, [searchTerm, vouchers]); // Only depends on searchTerm and vouchers
 
-  // Generate next voucher ID
+  // Generate next voucher ID - FIXED
   useEffect(() => {
     if (vouchers.length > 0) {
       const maxNo = Math.max(
         ...vouchers.map((v) => {
-          const match = v.voucherId?.match(/PRV-(\d+)/);
+          const match = v.receiptId?.match(/RV-(\d+)/); // Changed to match your API (RV-)
           return match ? parseInt(match[1], 10) : 0;
         })
       );
-      setNextVoucherId((maxNo + 1).toString().padStart(3, "0"));
+      setNextReceiptId((maxNo + 1).toString().padStart(3, "0"));
     } else {
-      setNextVoucherId("001");
+      setNextReceiptId("001");
     }
   }, [vouchers]);
 
   // Reset form fields
   const resetForm = () => {
-    setVoucherId("");
-    setPayerName("");
-    setAmount("");
-    setPaymentMethod("");
-    setReceiptDate("");
+    setReceiptId("");
+    setCustomerName("");
+    setBalance("");
+    setMode("");
+    setDate("");
     setReceivedBy(userInfo.employeeName || "");
     setStatus("");
+    setRemarks("");
     setEditingVoucher(null);
     setErrors({});
     setIsSliderOpen(false);
@@ -120,23 +178,18 @@ const FbrPaymentReceipt = () => {
   // Validate form fields
   const validateForm = () => {
     const newErrors = {};
-    const trimmedVoucherId = voucherId.trim();
-    const trimmedPayerName = payerName.trim();
-    const trimmedAmount = amount.trim();
-    const trimmedPaymentMethod = paymentMethod.trim();
-    const trimmedReceiptDate = receiptDate.trim();
-    const trimmedStatus = status.trim();
-    const parsedAmount = parseFloat(amount);
+    const trimmedCustomerName = customerName.trim();
+    const trimmedBalance = balance.trim();
+    const trimmedMode = mode.trim();
+    const trimmedDate = date.trim();
+    const parsedBalance = parseFloat(balance);
 
-    if (!trimmedVoucherId) newErrors.voucherId = "Voucher ID is required";
-    if (!trimmedPayerName) newErrors.payerName = "Payer Name is required";
-    if (!trimmedAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
-      newErrors.amount = "Amount must be a positive number";
+    if (!trimmedCustomerName) newErrors.customerName = "Customer Name is required";
+    if (!trimmedBalance || isNaN(parsedBalance) || parsedBalance <= 0) {
+      newErrors.balance = "Balance must be a positive number";
     }
-    if (!trimmedPaymentMethod)
-      newErrors.paymentMethod = "Payment Method is required";
-    if (!trimmedReceiptDate) newErrors.receiptDate = "Receipt Date is required";
-    if (!trimmedStatus) newErrors.status = "Status is required";
+    if (!trimmedMode) newErrors.mode = "Mode is required";
+    if (!trimmedDate) newErrors.date = "Date is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -150,100 +203,76 @@ const FbrPaymentReceipt = () => {
 
   const handleEditClick = (voucher) => {
     setEditingVoucher(voucher);
-    setVoucherId(voucher.voucherId || "");
-    setPayerName(voucher.payerName || "");
-    setAmount(voucher.amount || "");
-    setPaymentMethod(voucher.paymentMethod || "");
-    setReceiptDate(voucher.receiptDate || "");
+    setReceiptId(voucher.receiptId || "");
+    setCustomerName(voucher.customer?.customerName || "");
+    setBalance(voucher.amountReceived || "");
+    setMode(voucher.mode || "");
+    setDate(voucher.date ? voucher.date.split('T')[0] : "");
     setReceivedBy(voucher.receivedBy || userInfo.employeeName || "");
-    setStatus(voucher.status || "");
+    setRemarks(voucher.remarks || ""); // Add this
     setErrors({});
     setIsSliderOpen(true);
   };
 
-  const [paymentType, setPaymentType] = useState("Cash"); // Default to Cash
-  const [cashData, setCashData] = useState({
-    date: "",
-    receiptId: "",
-    customer: "",
-    balance: 0,
-    amountReceived: 0,
-    newBalance: 0,
-    remarks:''
-  });
-  const [bankData, setBankData] = useState({
-    bankName: "",
-    accountNumber: "",
-    accountHolder: "",
-    amount: 0,
-    remarks:""
-  });
-
-  const customers = [
-    { name: "Customer A", balance: 1000 },
-    { name: "Customer B", balance: 500 },
-    { name: "Customer C", balance: 2000 },
-  ];
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (paymentType === "Cash") {
-      console.log("Cash Data:", cashData);
-    } else {
-      console.log("Bank Data:", bankData);
-    }
-
-    const newVoucher = {
-      voucherId: editingVoucher ? voucherId : `PRV-${nextVoucherId}`,
-      payerName: payerName.trim(),
-      amount: parseFloat(amount),
-      paymentMethod: paymentMethod.trim(),
-      receiptDate: receiptDate.trim(),
-      receivedBy: receivedBy.trim(),
-      status: status.trim(),
-    };
 
     try {
-      if (editingVoucher) {
-        setVouchers((prev) =>
-          prev.map((v) =>
-            v._id === editingVoucher._id
-              ? { ...v, ...newVoucher, _id: v._id }
-              : v
-          )
-        );
-        Swal.fire({
-          icon: "success",
-          title: "Updated!",
-          text: "Payment Receipt Voucher updated successfully.",
-          confirmButtonColor: "#3085d6",
-        });
+      let voucherData;
+
+      if (paymentType === "Cash") {
+        voucherData = {
+          receiptId: editingVoucher ? cashData.receiptId : `RV-${nextReceiptId}`,
+          date: cashData.date,
+          mode: "Cash",
+          customer: {
+            customerName: cashData.customer,
+            balance: cashData.balance,
+          },
+          amountReceived: cashData.amountReceived,
+          newBalance: cashData.newBalance,
+          remarks: cashData.remarks,
+        };
       } else {
-        setVouchers((prev) => [
-          ...prev,
-          { ...newVoucher, _id: `temp-${Date.now()}` },
-        ]);
-        Swal.fire({
-          icon: "success",
-          title: "Added!",
-          text: "Payment Receipt Voucher added successfully.",
-          confirmButtonColor: "#3085d6",
-        });
+        voucherData = {
+          receiptId: editingVoucher ? bankData.receiptId : `RV-${nextReceiptId}`,
+          date: new Date().toISOString(),
+          mode: "Bank",
+          bankSection: {
+            bankName: bankData.bankName,
+            accountNumber: bankData.accountNumber,
+            accountHolderName: bankData.accountHolderName,
+          },
+          amountReceived: bankData.amount,
+          newBalance: 0,
+          remarks: bankData.remarks,
+        };
       }
-      fetchVouchers();
-      resetForm();
-    } catch (error) {
-      console.error("Error saving voucher:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error!",
-        text: "Failed to save voucher.",
-        confirmButtonColor: "#d33",
+
+      console.log("Submitting data:", voucherData);
+
+      const response = await axios.post(API_URL, voucherData, {
+        headers: {
+          Authorization: `Bearer ${userInfo?.token}`,
+          "Content-Type": "application/json",
+        },
       });
+
+      if (response.data.success) {
+        toast.success("Voucher saved successfully!");
+        resetForm();
+        fetchVouchers();
+      } else {
+        toast.error(response.data.message || "Failed to save voucher");
+      }
+    } catch (error) {
+      console.error("Submit Error:", error);
+      toast.error("Server error while saving voucher.");
     }
   };
 
-  const handleDelete = (id) => {
+
+  const handleDelete = async (id) => {
     const swalWithTailwindButtons = Swal.mixin({
       customClass: {
         actions: "space-x-2",
@@ -268,7 +297,10 @@ const FbrPaymentReceipt = () => {
       .then(async (result) => {
         if (result.isConfirmed) {
           try {
-            setVouchers((prev) => prev.filter((v) => v._id !== id));
+            await axios.delete(`${API_URL}/${id}`);
+            // Update both states
+            setVouchers(prev => prev.filter((v) => v._id !== id));
+            setFilteredVouchers(prev => prev.filter((v) => v._id !== id));
             swalWithTailwindButtons.fire(
               "Deleted!",
               "Payment Receipt Voucher deleted successfully.",
@@ -292,11 +324,11 @@ const FbrPaymentReceipt = () => {
       });
   };
 
-  // Pagination logic
+  // Pagination logic - UPDATED to use filteredVouchers
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-  const currentRecords = vouchers.slice(indexOfFirstRecord, indexOfLastRecord);
-  const totalPages = Math.ceil(vouchers.length / recordsPerPage);
+  const currentRecords = filteredVouchers.slice(indexOfFirstRecord, indexOfLastRecord);
+  const totalPages = Math.ceil(filteredVouchers.length / recordsPerPage);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -311,11 +343,15 @@ const FbrPaymentReceipt = () => {
             <h1 className="text-2xl font-bold text-newPrimary">
               Payment Receipt Voucher Details
             </h1>
+            <p className="text-sm text-gray-600 mt-1">
+              Showing {filteredVouchers.length} of {vouchers.length} vouchers
+              {searchTerm && " (filtered)"}
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <input
               type="text"
-              placeholder="Enter Voucher ID eg: PRV-001"
+              placeholder="Enter Voucher ID eg: RV-001" // Changed to RV-
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="px-3 py-2 w-[250px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary"
@@ -338,8 +374,8 @@ const FbrPaymentReceipt = () => {
                 <div>Amount</div>
                 <div>Payment Method</div>
                 <div>Receipt Date</div>
-                <div>Received By</div>
-                <div>Status</div>
+                <div>Balance</div>
+                <div>Remarks</div>
                 <div>Actions</div>
               </div>
 
@@ -352,7 +388,7 @@ const FbrPaymentReceipt = () => {
                   />
                 ) : currentRecords.length === 0 ? (
                   <div className="text-center py-4 text-gray-500 bg-white">
-                    No vouchers found.
+                    {searchTerm ? "No vouchers found matching your search." : "No vouchers found."}
                   </div>
                 ) : (
                   currentRecords.map((voucher) => (
@@ -360,15 +396,15 @@ const FbrPaymentReceipt = () => {
                       key={voucher._id}
                       className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
-                      <div className="text-gray-600">{voucher.voucherId}</div>
-                      <div className="text-gray-600">{voucher.payerName}</div>
-                      <div className="text-gray-600">{voucher.amount}</div>
+                      <div className="text-gray-600">{voucher.receiptId}</div>
+                      <div className="text-gray-600">{voucher.customer?.customerName || "-"}</div>
+                      <div className="text-gray-600">${voucher.amountReceived || "-"}</div>
+                      <div className="text-gray-600">{voucher.mode}</div>
                       <div className="text-gray-600">
-                        {voucher.paymentMethod}
+                        {voucher.date ? new Date(voucher.date).toLocaleDateString() : "-"}
                       </div>
-                      <div className="text-gray-600">{voucher.receiptDate}</div>
-                      <div className="text-gray-600">{voucher.receivedBy}</div>
-                      <div className="text-gray-600">{voucher.status}</div>
+                      <div className="text-gray-600">${voucher.newBalance || "-"}</div>
+                      <div className="text-gray-600">{voucher.remarks || "-"}</div>
                       <div className="flex gap-3 justify-start">
                         <button
                           onClick={() => handleEditClick(voucher)}
@@ -392,34 +428,32 @@ const FbrPaymentReceipt = () => {
             </div>
           </div>
 
-          {/* Pagination Controls */}
+          {/* Pagination Controls - UPDATED to use filteredVouchers */}
           {totalPages > 1 && (
             <div className="flex justify-between my-4 px-10">
               <div className="text-sm text-gray-600">
                 Showing {indexOfFirstRecord + 1} to{" "}
-                {Math.min(indexOfLastRecord, vouchers.length)} of{" "}
-                {vouchers.length} records
+                {Math.min(indexOfLastRecord, filteredVouchers.length)} of{" "}
+                {filteredVouchers.length} records
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className={`px-3 py-1 rounded-md ${
-                    currentPage === 1
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-newPrimary text-white hover:bg-newPrimary/80"
-                  }`}
+                  className={`px-3 py-1 rounded-md ${currentPage === 1
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-newPrimary text-white hover:bg-newPrimary/80"
+                    }`}
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className={`px-3 py-1 rounded-md ${
-                    currentPage === totalPages
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-newPrimary text-white hover:bg-newPrimary/80"
-                  }`}
+                  className={`px-3 py-1 rounded-md ${currentPage === totalPages
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-newPrimary text-white hover:bg-newPrimary/80"
+                    }`}
                 >
                   Next
                 </button>
@@ -518,14 +552,14 @@ const FbrPaymentReceipt = () => {
                           Customer Name <span className="text-red-500">*</span>
                         </label>
                         <select
-                          value={cashData.customer}
+                          value={cashData.customerName}
                           onChange={(e) => {
                             const selectedCustomer = customers.find(
-                              (c) => c.name === e.target.value
+                              (c) => c.customerName === e.target.value
                             );
                             setCashData({
                               ...cashData,
-                              customer: e.target.value,
+                              customerName: selectedCustomer?.customerName || "",
                               balance: selectedCustomer
                                 ? selectedCustomer.balance
                                 : 0,
@@ -540,8 +574,8 @@ const FbrPaymentReceipt = () => {
                         >
                           <option value="">Select Customer</option>
                           {customers.map((c) => (
-                            <option key={c.name} value={c.name}>
-                              {c.name}
+                            <option key={c._id} value={c.customerName}>
+                              {c.customerName}
                             </option>
                           ))}
                         </select>
@@ -592,17 +626,16 @@ const FbrPaymentReceipt = () => {
                           type="text"
                           value={Math.round(cashData.newBalance)}
                           readOnly
-                          className={`w-full p-3 border rounded-md ${
-                            cashData.newBalance < 0
-                              ? "bg-red-100 text-red-600"
-                              : "bg-gray-100"
-                          }`}
+                          className={`w-full p-3 border rounded-md ${cashData.newBalance < 0
+                            ? "bg-red-100 text-red-600"
+                            : "bg-gray-100"
+                            }`}
                         />
                       </div>
 
 
                     </div>
-                     {/* Remarks Field */}
+                    {/* Remarks Field */}
                     <div>
                       <label className="block text-gray-700 font-medium mb-2">
                         Remarks
@@ -610,7 +643,7 @@ const FbrPaymentReceipt = () => {
                       <textarea
                         value={cashData.remarks}
                         onChange={(e) =>
-                          setBankData({
+                          setCashData({
                             ...cashData,
                             remarks: e.target.value,
                           })
@@ -628,83 +661,44 @@ const FbrPaymentReceipt = () => {
                   <div className="space-y-4">
                     {/* Bank Name & Account Number */}
                     <div className="flex gap-4">
+                      {/* Bank Name */}
                       <div className="flex-1">
                         <label className="block text-gray-700 font-medium mb-2">
                           Bank Name <span className="text-red-500">*</span>
                         </label>
                         <select
-                          value={bankData.bankName}
+                          value={bankData?.bankName || ""} // ensure controlled value
                           onChange={(e) =>
-                            setBankData({
-                              ...bankData,
+                            setBankData((prev) => ({
+                              ...prev,
                               bankName: e.target.value,
-                            })
+                            }))
                           }
                           className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
                         >
                           <option value="">Select Bank</option>
-                          <option value="Habib Bank Limited (HBL)">
-                            Habib Bank Limited (HBL)
-                          </option>
-                          <option value="National Bank of Pakistan (NBP)">
-                            National Bank of Pakistan (NBP)
-                          </option>
-                          <option value="Standard Chartered Bank Pakistan">
-                            Standard Chartered Bank Pakistan
-                          </option>
-                          <option value="Meezan Bank">Meezan Bank</option>
-                          <option value="Allied Bank Limited (ABL)">
-                            Allied Bank Limited (ABL)
-                          </option>
-                          <option value="Faysal Bank">Faysal Bank</option>
-                          <option value="Askari Bank">Askari Bank</option>
-                          <option value="Bank Alfalah">Bank Alfalah</option>
-                          <option value="Bank Al Habib">Bank Al Habib</option>
-                          <option value="Habib Metropolitan Bank">
-                            Habib Metropolitan Bank
-                          </option>
-                          <option value="The Bank of Punjab (BOP)">
-                            The Bank of Punjab (BOP)
-                          </option>
-                          <option value="JS Bank">JS Bank</option>
-                          <option value="The Bank of Khyber">
-                            The Bank of Khyber
-                          </option>
-                          <option value="Samba Bank Limited">
-                            Samba Bank Limited
-                          </option>
-                          <option value="Soneri Bank">Soneri Bank</option>
-                          <option value="MCB Bank Limited">
-                            MCB Bank Limited
-                          </option>
-                          <option value="United Bank Limited (UBL)">
-                            United Bank Limited (UBL)
-                          </option>
-                          <option value="Dubai Islamic Bank Pakistan (DIB)">
-                            Dubai Islamic Bank Pakistan (DIB)
-                          </option>
-                          <option value="Muslim Commercial Bank (MCB)">
-                            Muslim Commercial Bank (MCB)
-                          </option>
-                          <option value="Deutsche Bank AG, Pakistan Branch">
-                            Deutsche Bank AG, Pakistan Branch
-                          </option>
+                          {banks.map((b, index) => (
+                            <option key={index} value={b.bankName}>
+                              {b.bankName}
+                            </option>
+                          ))}
                         </select>
                       </div>
 
+                      {/* Account Number */}
                       <div className="flex-1">
                         <label className="block text-gray-700 font-medium mb-2">
                           A/C Number <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
-                          value={bankData.accountNumber}
+                          value={bankData?.accountNumber || ""} // ensure controlled input
                           onChange={(e) =>
-                            setBankData({
-                              ...bankData,
+                            setBankData((prev) => ({
+                              ...prev,
                               accountNumber: e.target.value,
-                            })
+                            }))
                           }
                           placeholder="Enter Account Number"
                           className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -712,6 +706,7 @@ const FbrPaymentReceipt = () => {
                         />
                       </div>
                     </div>
+
 
                     {/* Account Holder & Amount */}
                     <div className="flex gap-4">
@@ -722,11 +717,11 @@ const FbrPaymentReceipt = () => {
                         </label>
                         <input
                           type="text"
-                          value={bankData.accountHolder}
+                          value={bankData.accountHolderName}
                           onChange={(e) =>
                             setBankData({
                               ...bankData,
-                              accountHolder: e.target.value,
+                              accountHolderName: e.target.value,
                             })
                           }
                           className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -784,23 +779,6 @@ const FbrPaymentReceipt = () => {
             </div>
           </div>
         )}
-
-        <style jsx>{`
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: #edf2f7;
-            border-radius: 4px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #a0aec0;
-            border-radius: 4px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #718096;
-          }
-        `}</style>
       </div>
     </div>
   );
