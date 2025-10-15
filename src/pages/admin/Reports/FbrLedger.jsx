@@ -3,6 +3,7 @@ import { SquarePen, Trash2 } from "lucide-react";
 import CommanHeader from "../../../components/CommanHeader";
 import TableSkeleton from "../Skeleton";
 import Swal from "sweetalert2";
+import { api } from "../../../context/ApiService";
 
 const FbrLedger = () => {
   const [ledgerEntries, setLedgerEntries] = useState([
@@ -47,11 +48,7 @@ const FbrLedger = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingLedgerEntry, setEditingLedgerEntry] = useState(null);
   const [errors, setErrors] = useState({});
-  const [customerList, setCustomerList] = useState([
-    { _id: "cust1", customerName: "John Doe" },
-    { _id: "cust2", customerName: "Jane Smith" },
-    { _id: "cust3", customerName: "Alice Johnson" },
-  ]);
+  const [customerList, setCustomerList] = useState([]);
   const [nextCustomerId, setNextCustomerId] = useState("003");
   const [currentPage, setCurrentPage] = useState(1);
   const recordsPerPage = 10;
@@ -61,52 +58,91 @@ const FbrLedger = () => {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
-  // Sample customer list
-  const customers = [
-    { id: "CUST-001", name: "Customer A" },
-    { id: "CUST-002", name: "Customer B" },
-    { id: "CUST-003", name: "Customer C" },
-  ];
+  // fetch FBR Ledger
+  const fetchBookingOrders = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/customer-ledger");
+      setLedgerEntries(response.data);
+      console.log(response.data);
+    } catch (error) {
+      console.error("Failed to fetch FBR Ledger", error);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+    }
+  }, []);
 
-  // Sample ledger data
-  const allLedgerData = [
-    {
-      sr: 1,
-      date: "2025-10-01",
-      id: "LED-001",
-      description: "Payment Received",
-      paid: 500,
-      received: 0,
-      balance: 500,
-      total: 500,
-      customerId: "CUST-001",
-    },
-    {
-      sr: 2,
-      date: "2025-10-05",
-      id: "LED-002",
-      description: "Invoice Payment",
-      paid: 0,
-      received: 300,
-      balance: 200,
-      total: 500,
-      customerId: "CUST-001",
-    },
-    {
-      sr: 3,
-      date: "2025-10-03",
-      id: "LED-003",
-      description: "Payment Received",
-      paid: 700,
-      received: 0,
-      balance: 700,
-      total: 700,
-      customerId: "CUST-002",
-    },
-  ];
+  useEffect(() => {
+    fetchBookingOrders();
+  }, [fetchBookingOrders]);
+
+  // fetch Customer List
+  const fetchCustomerList = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/customers/status");
+      setCustomerList(response);
+      console.log("Customers:", response);
+    } catch (error) {
+      console.error("Failed to fetch customer list", error);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCustomerList();
+  }, [fetchCustomerList]);
+
+  // fetch Customer ID
+  const fetchCustomerId = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(
+        "/customer-ledger?customer=68de36db09c8211ed0774caa"
+      );
+      setLedgerId(response.data);
+      console.log("Customer Data:", response.data);
+    } catch (error) {
+      console.error("Failed to fetch customer list", error);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+    }
+  }, []);
+  useEffect(() => {
+    fetchCustomerId(selectedCustomer);
+  }, [selectedCustomer, fetchCustomerId]);
+
+  // fetch Date
+  const fetchDate = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(
+        "/customer-ledger?customer=68de36db09c8211ed0774caa&from=2025-10-01&to=2025-10-15"
+      );
+      setDate(response.data);
+      console.log("Date:", response.data);
+    } catch (error) {
+      console.error("Failed to fetch date", error);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDate();
+  }, [fetchDate]);
 
   // Filter ledger data based on selected customer and date range
-  const filteredLedger = allLedgerData.filter(
+  const filteredLedger = ledgerEntries.filter(
     (entry) =>
       entry.customerId === selectedCustomer &&
       (!dateFrom || entry.date >= dateFrom) &&
@@ -363,6 +399,7 @@ const FbrLedger = () => {
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
+  console.log({ ledgerEntries });
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
@@ -406,13 +443,14 @@ const FbrLedger = () => {
                   required
                 >
                   <option value="">Select Customer</option>
-                  {customers.map((cust) => (
-                    <option key={cust.id} value={cust.id}>
-                      {cust.name}
+                  {customerList.map((cust) => (
+                    <option key={cust._id} value={cust._id}>
+                      {cust.customerName}
                     </option>
                   ))}
                 </select>
               </div>
+
               <div className="flex gap-5">
                 {/* Date From */}
                 <div className="w-1/2">
@@ -450,140 +488,134 @@ const FbrLedger = () => {
         <div className="p-0">
           {/* Selection Form */}
 
-          {(selectedCustomer || dateFrom || dateTo) && (
-            <div className="rounded-xl shadow border border-gray-200 overflow-hidden mt-6">
-              <div className="overflow-y-auto lg:overflow-x-auto max-h-[900px]">
-                <div className="min-w-full custom-scrollbar">
-                  {/* Table Header */}
-                  <div className="hidden lg:grid grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
-                    <div>SR</div>
-                    <div>Date</div>
-                    <div>ID</div>
-                    <div>Description</div>
-                    <div>Paid</div>
-                    <div>Received</div>
-                    <div>Balance</div>
-                  </div>
+          <div className="rounded-xl shadow border border-gray-200 overflow-hidden mt-6">
+            <div className="overflow-y-auto lg:overflow-x-auto max-h-[900px]">
+              <div className="min-w-full custom-scrollbar">
+                {/* Table Header */}
+                <div className="hidden lg:grid grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+                  <div>SR</div>
+                  <div>Date</div>
+                  <div>ID</div>
+                  <div>Description</div>
+                  <div>Paid</div>
+                  <div>Received</div>
+                  <div>Balance</div>
+                </div>
 
-                  {/* Table Rows */}
-                  <div className="flex flex-col divide-y divide-gray-100">
-                    {loading ? (
-                      <div className="text-center py-4 text-gray-500 bg-white">
-                        Loading...
-                      </div>
-                    ) : filteredLedger.length === 0 ? (
-                      <div className="text-center py-4 text-gray-500 bg-white">
-                        No ledger entries found.
-                      </div>
-                    ) : (
-                      <>
-                        {filteredLedger.map((entry, index) => (
-                          <div
-                            key={entry.id || index}
-                            className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
-                          >
-                            <div className="text-gray-600">{index + 1}</div>
-                            <div className="text-gray-600">{entry.date}</div>
-                            <div className="text-gray-600">{entry.id}</div>
-                            <div className="text-gray-600">
-                              {entry.description}
-                            </div>
-                            <div className="text-gray-600">{entry.paid}</div>
-                            <div className="text-gray-600">
-                              {entry.received}
-                            </div>
-                            <div className="text-gray-600">{entry.balance}</div>
+                {/* Table Rows */}
+                <div className="flex flex-col divide-y divide-gray-100">
+                  {loading ? (
+                    <div className="text-center py-4 text-gray-500 bg-white">
+                      Loading...
+                    </div>
+                  ) : ledgerEntries.length === 0 ? (
+                    <div className="text-center py-4 text-gray-500 bg-white">
+                      No ledger entries found.
+                    </div>
+                  ) : (
+                    <>
+                      {ledgerEntries.map((entry, index) => (
+                        <div
+                          key={entry.id || index}
+                          className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                        >
+                          <div className="text-gray-600">{index + 1}</div>
+                          <div className="text-gray-600">{entry.Date}</div>
+                          <div className="text-gray-600">{entry.ID}</div>
+                          <div className="text-gray-600">
+                            {entry.Description}
                           </div>
-                        ))}
-
-                        {/* Totals Row */}
-                        <div className="hidden lg:grid grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] justify-items-start gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
-                          {/* Empty columns for alignment */}
-                          <div className="col-span-4"></div>
-
-                          {/* Total Paid */}
-                          <div className="text-blue-700 text-center">
-                            Total Paid:{" "}
-                            <span className="font-bold">
-                              {filteredLedger
-                                .reduce(
-                                  (sum, e) => sum + (parseFloat(e.paid) || 0),
-                                  0
-                                )
-                                .toFixed(2)}
-                            </span>
-                          </div>
-
-                          {/* Total Received */}
-                          <div className="text-green-700 text-center">
-                            Total Received:{" "}
-                            <span className="font-bold">
-                              {filteredLedger
-                                .reduce(
-                                  (sum, e) =>
-                                    sum + (parseFloat(e.received) || 0),
-                                  0
-                                )
-                                .toFixed(2)}
-                            </span>
-                          </div>
-
-                          {/* Total Balance */}
-                          <div className="text-red-700 text-center">
-                            Total Balance:{" "}
-                            <span className="font-bold">
-                              {filteredLedger
-                                .reduce(
-                                  (sum, e) =>
-                                    sum + (parseFloat(e.balance) || 0),
-                                  0
-                                )
-                                .toFixed(2)}
-                            </span>
-                          </div>
+                          <div className="text-gray-600">{entry.Paid}</div>
+                          <div className="text-gray-600">{entry.Received}</div>
+                          <div className="text-gray-600">{entry.Balance}</div>
                         </div>
-                      </>
-                    )}
-                  </div>
+                      ))}
+
+                      {/* Totals Row */}
+                      <div className="hidden lg:grid grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] justify-items-start gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+                        {/* Empty columns for alignment */}
+                        <div className="col-span-4"></div>
+
+                        {/* Total Paid */}
+                        <div className="text-blue-700 text-center">
+                          Total Paid:{" "}
+                          <span className="font-bold">
+                            {filteredLedger
+                              .reduce(
+                                (sum, e) => sum + (parseFloat(e.paid) || 0),
+                                0
+                              )
+                              .toFixed(2)}
+                          </span>
+                        </div>
+
+                        {/* Total Received */}
+                        <div className="text-green-700 text-center">
+                          Total Received:{" "}
+                          <span className="font-bold">
+                            {filteredLedger
+                              .reduce(
+                                (sum, e) => sum + (parseFloat(e.received) || 0),
+                                0
+                              )
+                              .toFixed(2)}
+                          </span>
+                        </div>
+
+                        {/* Total Balance */}
+                        <div className="text-red-700 text-center">
+                          Total Balance:{" "}
+                          <span className="font-bold">
+                            {filteredLedger
+                              .reduce(
+                                (sum, e) => sum + (parseFloat(e.balance) || 0),
+                                0
+                              )
+                              .toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
-
-              {/* Pagination Controls (Optional) */}
-              {totalPages > 1 && (
-                <div className="flex justify-between my-4 px-10">
-                  <div className="text-sm text-gray-600">
-                    Showing {indexOfFirstRecord + 1} to{" "}
-                    {Math.min(indexOfLastRecord, filteredLedger.length)} of{" "}
-                    {filteredLedger.length} records
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className={`px-3 py-1 rounded-md ${
-                        currentPage === 1
-                          ? "bg-gray-400 cursor-not-allowed"
-                          : "bg-newPrimary text-white hover:bg-newPrimary/80"
-                      }`}
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className={`px-3 py-1 rounded-md ${
-                        currentPage === totalPages
-                          ? "bg-gray-400 cursor-not-allowed"
-                          : "bg-newPrimary text-white hover:bg-newPrimary/80"
-                      }`}
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
-          )}
+
+            {/* Pagination Controls (Optional) */}
+            {totalPages > 1 && (
+              <div className="flex justify-between my-4 px-10">
+                <div className="text-sm text-gray-600">
+                  Showing {indexOfFirstRecord + 1} to{" "}
+                  {Math.min(indexOfLastRecord, filteredLedger.length)} of{" "}
+                  {filteredLedger.length} records
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={`px-3 py-1 rounded-md ${
+                      currentPage === 1
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-newPrimary text-white hover:bg-newPrimary/80"
+                    }`}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`px-3 py-1 rounded-md ${
+                      currentPage === totalPages
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-newPrimary text-white hover:bg-newPrimary/80"
+                    }`}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {isSliderOpen && (
