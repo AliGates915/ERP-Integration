@@ -58,6 +58,7 @@ const FbrPaymentReceipt = () => {
 
   const API_URL = `${import.meta.env.VITE_API_BASE_URL}/payment-receipt-voucher`;
 
+  
   // Fixed fetchVouchers - remove useCallback or add proper dependencies
   const fetchVouchers = async () => {
     try {
@@ -205,131 +206,170 @@ const FbrPaymentReceipt = () => {
     setIsSliderOpen(true);
   };
 
-  const handleEditClick = (voucher) => {
-    setEditingVoucher(voucher);
-    setReceiptId(voucher.receiptId || "");
-    setCustomerName(voucher.customer?.customerName || "");
-    setBalance(voucher.amountReceived || "");
-    setMode(voucher.mode || "");
-    setDate(voucher.date ? voucher.date.split('T')[0] : "");
-    setReceivedBy(voucher.receivedBy || userInfo.employeeName || "");
-    setRemarks(voucher.remarks || ""); // Add this
-    setErrors({});
-    setIsSliderOpen(true);
-  };
+const handleEditClick = (voucher) => {
+  setEditingVoucher(voucher); // Keep the full object (must include _id)
+  setErrors({});
+  setIsSliderOpen(true);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  if (voucher.mode === "Cash") {
+    setPaymentType("Cash");
+    setCashData({
+      receiptId: voucher.receiptId || "",
+      date: voucher.date ? voucher.date.split("T")[0] : "",
+      customer: voucher.customer?._id || "",
+      amountReceived: voucher.amountReceived || "",
+      newBalance: voucher.newBalance || "",
+      remarks: voucher.remarks || "",
+    });
+  } else {
+    setPaymentType("Bank");
+    setBankData({
+      receiptId: voucher.receiptId || "",
+      date: voucher.date ? voucher.date.split("T")[0] : "",
+      amountReceived: voucher.amountReceived || "",
+      bankName: voucher.bankSection?.bankName || "",
+      accountNumber: voucher.bankSection?.accountNumber || "",
+      accountHolderName: voucher.bankSection?.accountHolderName || "",
+      remarks: voucher.remarks || "",
+    });
+  }
+};
 
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
-      let voucherData;
+  try {
+    let voucherData;
 
-      if (paymentType === "Cash") {
-        voucherData = {
-          receiptId: editingVoucher
-            ? cashData.receiptId
-            : nextReceiptId, // already like RV-003
-          date: cashData.date,
-          mode: "Cash",
-          customer: cashData.customer, // _id
-          amountReceived: cashData.amountReceived,
-          newBalance: cashData.newBalance,
-          remarks: cashData.remarks,
-        };
-      } else {
-        voucherData = {
-          receiptId: editingVoucher
-            ? bankData.receiptId
-            : nextReceiptId,
-          date: bankData.date || new Date().toISOString().split("T")[0],
-          mode: "Bank",
-          amountReceived: bankData.amountReceived,
-          bankSection: {
-            bankName: bankData.bankName,
-            accountNumber: bankData.accountNumber,
-            accountHolderName: bankData.accountHolderName,
-          },
-          remarks: bankData.remarks,
-        };
-      }
-
-      console.log("Submitting data:", voucherData);
-      
-  
-
-      const response = await axios.post(API_URL, voucherData, {
-        headers: {
-          Authorization: `Bearer ${userInfo?.token}`,
-          "Content-Type": "application/json",
+    if (paymentType === "Cash") {
+      voucherData = {
+        receiptId: editingVoucher ? cashData.receiptId : nextReceiptId,
+        date: cashData.date,
+        mode: "Cash",
+        customer: cashData.customer,
+        amountReceived: cashData.amountReceived,
+        newBalance: cashData.newBalance,
+        remarks: cashData.remarks,
+      };
+    } else {
+      voucherData = {
+        receiptId: editingVoucher ? bankData.receiptId : nextReceiptId,
+        date: bankData.date || new Date().toISOString().split("T")[0],
+        mode: "Bank",
+        amountReceived: bankData.amountReceived,
+        bankSection: {
+          bankName: bankData.bankName,
+          accountNumber: bankData.accountNumber,
+          accountHolderName: bankData.accountHolderName,
         },
-      });
-
-      if (response.data.success) {
-        toast.success("Voucher saved successfully!");
-        resetForm();
-        fetchVouchers();
-      } else {
-        toast.error(response.data.message || "Failed to save voucher");
-      }
-    } catch (error) {
-      console.error("Submit Error:", error);
-      toast.error("Server error while saving voucher.");
+        remarks: bankData.remarks,
+      };
     }
-  };
 
+    console.log("Submitting data:", voucherData);
 
-  const handleDelete = async (id) => {
-    const swalWithTailwindButtons = Swal.mixin({
-      customClass: {
-        actions: "space-x-2",
-        confirmButton:
-          "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300",
-        cancelButton:
-          "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300",
+    const isUpdate = Boolean(editingVoucher?._id);
+
+    // ✅ FIXED: Added missing slash before ID
+    const url = isUpdate
+      ? `${API_URL}/${editingVoucher._id}`
+      : API_URL;
+
+    const method = isUpdate ? "put" : "post";
+
+    const response = await axios({
+      method,
+      url,
+      data: voucherData,
+      headers: {
+        Authorization: `Bearer ${userInfo?.token}`,
+        "Content-Type": "application/json",
       },
-      buttonsStyling: false,
     });
 
-    swalWithTailwindButtons
-      .fire({
-        title: "Are you sure?",
-        text: "You won't be able to revert this!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, delete it!",
-        cancelButtonText: "No, cancel!",
-        reverseButtons: true,
-      })
-      .then(async (result) => {
-        if (result.isConfirmed) {
-          try {
-            await axios.delete(`${API_URL}/${id}`);
-            // Update both states
-            setVouchers(prev => prev.filter((v) => v._id !== id));
-            setFilteredVouchers(prev => prev.filter((v) => v._id !== id));
+    if (response.data.success) {
+      toast.success(isUpdate ? "Voucher updated successfully!" : "Voucher added successfully!");
+      resetForm();
+      fetchVouchers();
+      setEditingVoucher(null);
+    } else {
+      toast.error(response.data.message || "Failed to save voucher");
+    }
+  } catch (error) {
+    console.error("Submit Error:", error.response?.data || error);
+    toast.error(error.response?.data?.message || "Server error while saving voucher.");
+  }
+};
+
+
+
+
+const handleDelete = async (id) => {
+  const swalWithTailwindButtons = Swal.mixin({
+    customClass: {
+      actions: "space-x-2",
+      confirmButton:
+        "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300",
+      cancelButton:
+        "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300",
+    },
+    buttonsStyling: false,
+  });
+
+  swalWithTailwindButtons
+    .fire({
+      title: "Are you sure?",
+      text: "This action cannot be undone!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "No, cancel!",
+      reverseButtons: true,
+    })
+    .then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await axios.delete(`${API_URL}/${id}`, {
+            headers: {
+              Authorization: `Bearer ${userInfo?.token}`,
+              "Content-Type": "application/json",
+            },
+          });
+
+          if (response.data.success) {
+            setVouchers((prev) => prev.filter((v) => v._id !== id));
+            setFilteredVouchers((prev) => prev.filter((v) => v._id !== id));
+
             swalWithTailwindButtons.fire(
               "Deleted!",
               "Payment Receipt Voucher deleted successfully.",
               "success"
             );
-          } catch (error) {
-            console.error("Delete error:", error);
+          } else {
             swalWithTailwindButtons.fire(
               "Error!",
-              "Failed to delete voucher.",
+              response.data.message || "Failed to delete voucher.",
               "error"
             );
           }
-        } else if (result.dismiss === Swal.DismissReason.cancel) {
+        } catch (error) {
+          console.error("Delete error:", error);
           swalWithTailwindButtons.fire(
-            "Cancelled",
-            "Payment Receipt Voucher is safe 🙂",
+            "Error!",
+            "Server error while deleting voucher.",
             "error"
           );
         }
-      });
-  };
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        swalWithTailwindButtons.fire(
+          "Cancelled",
+          "Payment Receipt Voucher is safe 🙂",
+          "error"
+        );
+      }
+    });
+};
+
 
   // Pagination logic - UPDATED to use filteredVouchers
   const indexOfLastRecord = currentPage * recordsPerPage;
