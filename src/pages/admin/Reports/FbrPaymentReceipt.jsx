@@ -14,20 +14,21 @@ const FbrPaymentReceipt = () => {
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [paymentType, setPaymentType] = useState("Cash");
   const [cashData, setCashData] = useState({
-    date: "",
     receiptId: "",
-    customerName: "",
-    balance: 0,
+    date: "",
+    customer: "",        // store customer _id (not name)
     amountReceived: 0,
     newBalance: 0,
     remarks: "",
   });
 
   const [bankData, setBankData] = useState({
+    receiptId: "",
+    date: "",
     bankName: "",
     accountNumber: "",
     accountHolderName: "",
-    amount: 0,
+    amountReceived: 0,
     remarks: "",
   });
 
@@ -101,31 +102,33 @@ const FbrPaymentReceipt = () => {
 
 
   const fetchBanks = async () => {
-  try {
-    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/payment-receipt-voucher`);
-    const vouchers = res.data?.data || [];
-    // Extract unique bank names from vouchers that have a bankSection
-    const uniqueBanks = vouchers
-      .filter(v => v.bankSection)
-      .map(v => ({
-        bankName: v.bankSection.bankName,
-        accountNumber: v.bankSection.accountNumber,
-        accountHolderName: v.bankSection.accountHolderName,
-      }))
-      .filter((b, index, self) =>
-        index === self.findIndex(t => t.bankName === b.bankName)
-      );
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/payment-receipt-voucher`);
+      const vouchers = res.data?.data || [];
+      console.log("Res ", res.data.data);
 
-    setBanks(uniqueBanks);
-  } catch (error) {
-    console.error("Failed to fetch bank data:", error);
-    toast.error("Failed to fetch bank data");
-    setBanks([]);
-  }
-};
+      // Extract unique bank names from vouchers that have a bankSection
+      const uniqueBanks = vouchers
+        .filter(v => v.bankSection)
+        .map(v => ({
+          bankName: v.bankSection.bankName,
+          accountNumber: v.bankSection.accountNumber,
+          accountHolderName: v.bankSection.accountHolderName,
+        }))
+        .filter((b, index, self) =>
+          index === self.findIndex(t => t.bankName === b.bankName)
+        );
+
+      setBanks(uniqueBanks);
+    } catch (error) {
+      console.error("Failed to fetch bank data:", error);
+      toast.error("Failed to fetch bank data");
+      setBanks([]);
+    }
+  };
   useEffect(() => {
     fetchBanks();
-  } , []);
+  }, []);
   // FIXED: Voucher search - doesn't modify main vouchers state
   useEffect(() => {
     if (!searchTerm) {
@@ -154,9 +157,9 @@ const FbrPaymentReceipt = () => {
           return match ? parseInt(match[1], 10) : 0;
         })
       );
-      setNextReceiptId((maxNo + 1).toString().padStart(3, "0"));
+      setNextReceiptId("RV-" + (maxNo + 1).toString().padStart(3, "0"));
     } else {
-      setNextReceiptId("001");
+      setNextReceiptId("RV-001");
     }
   }, [vouchers]);
 
@@ -165,6 +168,7 @@ const FbrPaymentReceipt = () => {
     setReceiptId("");
     setCustomerName("");
     setBalance("");
+    setBankData("")
     setMode("");
     setDate("");
     setReceivedBy(userInfo.employeeName || "");
@@ -217,39 +221,42 @@ const FbrPaymentReceipt = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+
     try {
       let voucherData;
 
       if (paymentType === "Cash") {
         voucherData = {
-          receiptId: editingVoucher ? cashData.receiptId : `RV-${nextReceiptId}`,
+          receiptId: editingVoucher
+            ? cashData.receiptId
+            : nextReceiptId, // already like RV-003
           date: cashData.date,
           mode: "Cash",
-          customer: {
-            customerName: cashData.customer,
-            balance: cashData.balance,
-          },
+          customer: cashData.customer, // _id
           amountReceived: cashData.amountReceived,
           newBalance: cashData.newBalance,
           remarks: cashData.remarks,
         };
       } else {
         voucherData = {
-          receiptId: editingVoucher ? bankData.receiptId : `RV-${nextReceiptId}`,
-          date: new Date().toISOString(),
+          receiptId: editingVoucher
+            ? bankData.receiptId
+            : nextReceiptId,
+          date: bankData.date || new Date().toISOString().split("T")[0],
           mode: "Bank",
+          amountReceived: bankData.amountReceived,
           bankSection: {
             bankName: bankData.bankName,
             accountNumber: bankData.accountNumber,
             accountHolderName: bankData.accountHolderName,
           },
-          amountReceived: bankData.amount,
-          newBalance: 0,
           remarks: bankData.remarks,
         };
       }
 
       console.log("Submitting data:", voucherData);
+      
+  
 
       const response = await axios.post(API_URL, voucherData, {
         headers: {
@@ -397,13 +404,13 @@ const FbrPaymentReceipt = () => {
                       className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
                       <div className="text-gray-600">{voucher.receiptId}</div>
-                      <div className="text-gray-600">{voucher.customer?.customerName || "-"}</div>
-                      <div className="text-gray-600">${voucher.amountReceived || "-"}</div>
+                      <div className="text-gray-600">{voucher.customer?.customerName || voucher.bankSection.accountHolderName || "-"}</div>
+                      <div className="text-gray-600">Rs.{voucher.amountReceived || "-"}</div>
                       <div className="text-gray-600">{voucher.mode}</div>
                       <div className="text-gray-600">
                         {voucher.date ? new Date(voucher.date).toLocaleDateString() : "-"}
                       </div>
-                      <div className="text-gray-600">${voucher.newBalance || "-"}</div>
+                      <div className="text-gray-600">Rs.{voucher.newBalance || "-"}</div>
                       <div className="text-gray-600">{voucher.remarks || "-"}</div>
                       <div className="flex gap-3 justify-start">
                         <button
@@ -532,13 +539,8 @@ const FbrPaymentReceipt = () => {
                         </label>
                         <input
                           type="text"
-                          value={cashData.receiptId}
-                          onChange={(e) =>
-                            setCashData({
-                              ...cashData,
-                              receiptId: e.target.value,
-                            })
-                          }
+                          value={nextReceiptId}
+
                           className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
                         />
@@ -552,21 +554,17 @@ const FbrPaymentReceipt = () => {
                           Customer Name <span className="text-red-500">*</span>
                         </label>
                         <select
-                          value={cashData.customerName}
+                          value={cashData.customer}
                           onChange={(e) => {
-                            const selectedCustomer = customers.find(
-                              (c) => c.customerName === e.target.value
-                            );
+                            const selectedId = e.target.value;
+                            const selectedCustomer = customers.find((c) => c._id === selectedId);
+
                             setCashData({
                               ...cashData,
-                              customerName: selectedCustomer?.customerName || "",
-                              balance: selectedCustomer
-                                ? selectedCustomer.balance
-                                : 0,
-                              newBalance: selectedCustomer
-                                ? selectedCustomer.balance
-                                : 0,
-                              amountReceived: 0,
+                              customer: selectedCustomer?._id || "",
+                              balance: selectedCustomer?.balance || 0, // ✅ store actual balance
+                              newBalance: selectedCustomer?.balance || 0,
+                              amountReceived: 0, // reset when new customer selected
                             });
                           }}
                           className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -574,7 +572,7 @@ const FbrPaymentReceipt = () => {
                         >
                           <option value="">Select Customer</option>
                           {customers.map((c) => (
-                            <option key={c._id} value={c.customerName}>
+                            <option key={c._id} value={c._id}>
                               {c.customerName}
                             </option>
                           ))}
@@ -607,7 +605,7 @@ const FbrPaymentReceipt = () => {
                           value={cashData.amountReceived}
                           onChange={(e) => {
                             const amount = parseFloat(e.target.value) || 0;
-                            const newBalance = cashData.balance - amount;
+                            const newBalance = cashData.balance - amount; // ✅ live calculation
                             setCashData({
                               ...cashData,
                               amountReceived: amount,
@@ -624,11 +622,11 @@ const FbrPaymentReceipt = () => {
                         </label>
                         <input
                           type="text"
-                          value={Math.round(cashData.newBalance)}
+                          value={Math.max(0, Math.round(cashData.newBalance))} // prevent negative display
                           readOnly
                           className={`w-full p-3 border rounded-md ${cashData.newBalance < 0
-                            ? "bg-red-100 text-red-600"
-                            : "bg-gray-100"
+                              ? "bg-red-100 text-red-600"
+                              : "bg-gray-100"
                             }`}
                         />
                       </div>
@@ -735,11 +733,11 @@ const FbrPaymentReceipt = () => {
                         </label>
                         <input
                           type="number"
-                          value={bankData.amount}
+                          value={bankData.amountReceived}
                           onChange={(e) =>
                             setBankData({
                               ...bankData,
-                              amount: parseFloat(e.target.value),
+                              amountReceived: parseFloat(e.target.value) || 0,
                             })
                           }
                           className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
