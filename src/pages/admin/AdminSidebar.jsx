@@ -129,19 +129,19 @@ const links = [
   //     { to: "/admin/tax", label: "Tax", icon: <FaBalanceScale /> },
   //   ],
   // },
-  {
-    label: "Management",
-    icon: <FaUserShield />,
-    children: [
-      { to: "/admin/designation", label: "Designation", icon: <FaUsersCog /> },
-      { to: "/admin/employee", label: "Employee", icon: <FaUserCog /> },
-      {
-        to: "/admin/departments",
-        label: "Departments",
-        icon: <FaUserShield />,
-      },
-    ],
-  },
+  // {
+  //   label: "Management",
+  //   icon: <FaUserShield />,
+  //   children: [
+  //     { to: "/admin/designation", label: "Designation", icon: <FaUsersCog /> },
+  //     { to: "/admin/employee", label: "Employee", icon: <FaUserCog /> },
+  //     {
+  //       to: "/admin/departments",
+  //       label: "Departments",
+  //       icon: <FaUserShield />,
+  //     },
+  //   ],
+  // },
   {
     label: "Security",
     key: "isSecurity",
