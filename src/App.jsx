@@ -41,7 +41,7 @@ import DistributionRateList from "./pages/admin/Sales/DistributionRateList.jsx";
 import BookingOrders from "./pages/admin/Sales/BookingOrders.jsx";
 import DeliveryChallan from "./pages/admin/Functionalities/DeliveryChallan.jsx";
 import SalesInvoices from "./pages/admin/Functionalities/SalesInvoices.jsx";
-import PaymentReceiptVoucher from "./pages/admin/Reports/PaymentReceiptVoucher.jsx";
+// import PaymentReceiptVoucher from "./pages/admin/Reports/PaymentReceiptVoucher.jsx";
 import CustomerLedger from "./pages/admin/Sales/CustomerLedger.jsx";
 import Receivable from "./pages/admin/Sales/Receivable.jsx";
 import SalesReturn from "./pages/admin/Functionalities/SalesReturn.jsx";
@@ -124,10 +124,10 @@ function AppContent() {
               element={<StoreAcknowledgement />}
             />
             <Route path="sales-invoices" element={<SalesInvoices />} />
-            <Route
+            {/* <Route
               path="payment-receipt-voucher"
               element={<PaymentReceiptVoucher />}
-            />
+            /> */}
             <Route path="customer-ledger" element={<CustomerLedger />} />
             <Route path="receivable" element={<Receivable />} />
             <Route path="sales-return" element={<SalesReturn />} />
