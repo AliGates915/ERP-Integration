@@ -169,12 +169,14 @@ const FbrPaymentReceipt = () => {
     balance: 0,
     amountReceived: 0,
     newBalance: 0,
+    remarks:''
   });
   const [bankData, setBankData] = useState({
     bankName: "",
     accountNumber: "",
     accountHolder: "",
     amount: 0,
+    remarks:""
   });
 
   const customers = [
@@ -330,7 +332,7 @@ const FbrPaymentReceipt = () => {
         <div className="rounded-xl shadow border border-gray-200 overflow-hidden">
           <div className="overflow-y-auto lg:overflow-x-auto max-h-[900px]">
             <div className="min-w-[1200px]">
-              <div className="hidden lg:grid grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+              <div className="hidden lg:grid grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
                 <div>Voucher ID</div>
                 <div>Payer Name</div>
                 <div>Amount</div>
@@ -597,6 +599,26 @@ const FbrPaymentReceipt = () => {
                           }`}
                         />
                       </div>
+
+
+                    </div>
+                     {/* Remarks Field */}
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">
+                        Remarks
+                      </label>
+                      <textarea
+                        value={cashData.remarks}
+                        onChange={(e) =>
+                          setBankData({
+                            ...cashData,
+                            remarks: e.target.value,
+                          })
+                        }
+                        placeholder="Enter any remarks or notes"
+                        className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows="3"
+                      />
                     </div>
                   </div>
                 )}
@@ -622,15 +644,61 @@ const FbrPaymentReceipt = () => {
                           required
                         >
                           <option value="">Select Bank</option>
-                          <option value="Bank A">Bank A</option>
-                          <option value="Bank B">Bank B</option>
+                          <option value="Habib Bank Limited (HBL)">
+                            Habib Bank Limited (HBL)
+                          </option>
+                          <option value="National Bank of Pakistan (NBP)">
+                            National Bank of Pakistan (NBP)
+                          </option>
+                          <option value="Standard Chartered Bank Pakistan">
+                            Standard Chartered Bank Pakistan
+                          </option>
+                          <option value="Meezan Bank">Meezan Bank</option>
+                          <option value="Allied Bank Limited (ABL)">
+                            Allied Bank Limited (ABL)
+                          </option>
+                          <option value="Faysal Bank">Faysal Bank</option>
+                          <option value="Askari Bank">Askari Bank</option>
+                          <option value="Bank Alfalah">Bank Alfalah</option>
+                          <option value="Bank Al Habib">Bank Al Habib</option>
+                          <option value="Habib Metropolitan Bank">
+                            Habib Metropolitan Bank
+                          </option>
+                          <option value="The Bank of Punjab (BOP)">
+                            The Bank of Punjab (BOP)
+                          </option>
+                          <option value="JS Bank">JS Bank</option>
+                          <option value="The Bank of Khyber">
+                            The Bank of Khyber
+                          </option>
+                          <option value="Samba Bank Limited">
+                            Samba Bank Limited
+                          </option>
+                          <option value="Soneri Bank">Soneri Bank</option>
+                          <option value="MCB Bank Limited">
+                            MCB Bank Limited
+                          </option>
+                          <option value="United Bank Limited (UBL)">
+                            United Bank Limited (UBL)
+                          </option>
+                          <option value="Dubai Islamic Bank Pakistan (DIB)">
+                            Dubai Islamic Bank Pakistan (DIB)
+                          </option>
+                          <option value="Muslim Commercial Bank (MCB)">
+                            Muslim Commercial Bank (MCB)
+                          </option>
+                          <option value="Deutsche Bank AG, Pakistan Branch">
+                            Deutsche Bank AG, Pakistan Branch
+                          </option>
                         </select>
                       </div>
+
                       <div className="flex-1">
                         <label className="block text-gray-700 font-medium mb-2">
                           A/C Number <span className="text-red-500">*</span>
                         </label>
-                        <select
+                        <input
+                          type="text"
                           value={bankData.accountNumber}
                           onChange={(e) =>
                             setBankData({
@@ -638,15 +706,10 @@ const FbrPaymentReceipt = () => {
                               accountNumber: e.target.value,
                             })
                           }
+                          placeholder="Enter Account Number"
                           className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
-                        >
-                          <option value="">Select Account</option>
-                          <option value="1234567890">1234567890</option>
-                          <option value="9876543210">9876543210</option>
-                          <option value="1122334455">1122334455</option>
-                          {/* Add more account numbers here */}
-                        </select>
+                        />
                       </div>
                     </div>
 
@@ -670,6 +733,7 @@ const FbrPaymentReceipt = () => {
                           required
                         />
                       </div>
+
                       <div className="flex-1">
                         <label className="block text-gray-700 font-medium mb-2">
                           Amount <span className="text-red-500">*</span>
@@ -687,6 +751,25 @@ const FbrPaymentReceipt = () => {
                           required
                         />
                       </div>
+                    </div>
+
+                    {/* Remarks Field */}
+                    <div>
+                      <label className="block text-gray-700 font-medium mb-2">
+                        Remarks
+                      </label>
+                      <textarea
+                        value={bankData.remarks}
+                        onChange={(e) =>
+                          setBankData({
+                            ...bankData,
+                            remarks: e.target.value,
+                          })
+                        }
+                        placeholder="Enter any remarks or notes"
+                        className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows="3"
+                      />
                     </div>
                   </div>
                 )}

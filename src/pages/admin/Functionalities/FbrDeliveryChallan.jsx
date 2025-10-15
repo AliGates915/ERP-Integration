@@ -869,8 +869,8 @@ console.log({itemsList});
                       <input
                         type="text"
                         value={specification}
-                        onChange={(e) => setSpecification(e.target.value)}
                         readOnly
+                        onChange={(e) => setSpecification(e.target.value)}
                         className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
                         placeholder="Enter specifications"
                       />
