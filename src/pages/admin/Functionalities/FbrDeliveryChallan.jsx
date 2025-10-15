@@ -24,23 +24,30 @@ const FbrDeliveryChallan = () => {
 
   const [qty, setQty] = useState(1);
   const [total, setTotal] = useState(0);
-  const timeoutRef = useRef(null);
 
 
   const handleAddItem = () => {
-    if (!product) return;
-    const newItem = {
-      product,
-      specification,
-      weight: 0,
-      packing: "",
-      inStock,
-      qty: 1,
-      rate,
-      total: rate,
-    };
-    setItemsList([...itemsList, newItem]);
+  if (!product) return;
+
+  const newItem = {
+    name:product,
+    specification,
+    qty,
+    rate,
+    total,
   };
+
+  setItemsList([...itemsList, newItem]);
+
+  // ✅ Reset input fields after adding
+  setProduct("");
+  setSpecification("");
+  setQty(1);
+  setRate("");
+  setTotal(0);
+  setInStock("");
+};
+
 
   const handleRemoveItem = (idx) => {
     setItemsList(itemsList.filter((_, i) => i !== idx));
@@ -134,8 +141,6 @@ const FbrDeliveryChallan = () => {
 
   console.log({ bookingOrders });
 
-
-
   // Delivery challan search
   // useEffect(() => {
   //   if (!searchTerm || !searchTerm.startsWith("DC-")) {
@@ -214,80 +219,37 @@ const FbrDeliveryChallan = () => {
     setStatus("Pending");
     setEditingChallan(null);
     setErrors({});
+    setItemsList([])
     setActiveTab("orderDetails");
     setIsSliderOpen(false);
   };
 
   // Validate form fields
-  const validateForm = () => {
-    const newErrors = {};
-    const trimmedDcNo = dcNo.trim();
-    const trimmedDate = date.trim();
-    const trimmedOrderNo = orderNo.trim();
-    const trimmedOrderDate = orderDate.trim();
-    const {
-      customer,
-      person,
-      phone,
-      address,
-      orderType,
-      mode,
-      deliveryAddress,
-      deliveryDate,
-      totalWeight,
-    } = orderDetails;
-    const {
-      truckNo,
-      driverName,
-      cnic,
-      mobileNo,
-      containerNo1,
-      batchNo1,
-      forLocation1,
-      firstWeight,
-      weightBridgeName,
-      weightBridgeSlipNo,
-    } = vehicleDetails;
+ const validateForm = () => {
+  const newErrors = {};
 
-    if (!trimmedDcNo) newErrors.dcNo = "DC No is required";
-    if (!trimmedDate) newErrors.date = "Date is required";
-    if (!trimmedOrderNo) newErrors.orderNo = "Order No is required";
-    if (!trimmedOrderDate) newErrors.orderDate = "Order Date is required";
+  // Basic fields
+ 
+  if (!orderNo?.trim()) newErrors.orderNo = "Booking Order is required";
+  if (!orderDate?.trim()) newErrors.orderDate = "Order Date is required";
 
-    if (!customer.trim()) newErrors.customer = "Customer is required";
-    if (!person.trim()) newErrors.person = "Person is required";
-    if (!phone.trim()) newErrors.phone = "Phone is required";
-    if (!address.trim()) newErrors.address = "Address is required";
-    if (!orderType.trim()) newErrors.orderType = "Order Type is required";
-    if (!mode.trim()) newErrors.mode = "Mode is required";
-    if (!deliveryAddress.trim())
-      newErrors.deliveryAddress = "Delivery Address is required";
-    if (!deliveryDate.trim())
-      newErrors.deliveryDate = "Delivery Date is required";
-    if (!totalWeight || isNaN(totalWeight) || totalWeight <= 0) {
-      newErrors.totalWeight = "Total Weight must be a positive number";
-    }
+  // Order details (auto-filled)
+  if (!orderDetails.customer?.trim()) newErrors.customer = "Customer is required";
+  if (!orderDetails.phone?.trim()) newErrors.phone = "Phone is required";
+  if (!orderDetails.address?.trim()) newErrors.address = "Address is required";
+  if (!orderDetails.deliveryAddress?.trim())
+    newErrors.deliveryAddress = "Delivery Address is required";
 
-    if (!truckNo.trim()) newErrors.truckNo = "Truck No is required";
-    if (!driverName.trim()) newErrors.driverName = "Driver Name is required";
-    if (!cnic.trim()) newErrors.cnic = "CNIC is required";
-    if (!mobileNo.trim()) newErrors.mobileNo = "Mobile No is required";
-    if (!containerNo1.trim())
-      newErrors.containerNo1 = "Container No 1 is required";
-    if (!batchNo1.trim()) newErrors.batchNo1 = "Batch No 1 is required";
-    if (!forLocation1.trim())
-      newErrors.forLocation1 = "For Location 1 is required";
-    if (!firstWeight || isNaN(firstWeight) || firstWeight <= 0) {
-      newErrors.firstWeight = "First Weight must be a positive number";
-    }
-    if (!weightBridgeName.trim())
-      newErrors.weightBridgeName = "Weight Bridge Name is required";
-    if (!weightBridgeSlipNo.trim())
-      newErrors.weightBridgeSlipNo = "Weight Bridge Slip No is required";
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+ 
+
+  // Remarks optional — no strict check
+  setErrors(newErrors);
+
+  // Return true if no errors
+  return Object.keys(newErrors).length === 0;
+};
+
 
   // Handlers for form and table actions
   const handleAddChallan = () => {
@@ -310,70 +272,45 @@ const FbrDeliveryChallan = () => {
     setIsSliderOpen(true);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!validateForm()) {
-      return;
-    }
+  // if (!validateForm()) return;
 
-    const newChallan = {
-      dcNo: editingChallan ? dcNo : `DC-${nextDcNo}`,
-      date: date.trim(),
-      orderNo: orderNo.trim(),
-      orderDate: orderDate.trim(),
-      orderDetails: {
-        ...orderDetails,
-        totalWeight: parseFloat(orderDetails.totalWeight),
-      },
-      vehicleDetails: {
-        ...vehicleDetails,
-        firstWeight: parseFloat(vehicleDetails.firstWeight),
-      },
-      remarks: remarks.trim(),
-      approvalRemarks: approvalRemarks.trim(),
-      status,
-    };
-
-    try {
-      if (editingChallan) {
-        setDeliveryChallans((prev) =>
-          prev.map((c) =>
-            c._id === editingChallan._id
-              ? { ...c, ...newChallan, _id: c._id }
-              : c
-          )
-        );
-        Swal.fire({
-          icon: "success",
-          title: "Updated!",
-          text: "Delivery Challan updated successfully.",
-          confirmButtonColor: "#3085d6",
-        });
-      } else {
-        setDeliveryChallans((prev) => [
-          ...prev,
-          { ...newChallan, _id: `temp-${Date.now()}` },
-        ]);
-        Swal.fire({
-          icon: "success",
-          title: "Added!",
-          text: "Delivery Challan added successfully.",
-          confirmButtonColor: "#3085d6",
-        });
-      }
-      fetchDeliveryChallans();
-      resetForm();
-    } catch (error) {
-      console.error("Error saving delivery challan:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error!",
-        text: "Failed to save delivery challan.",
-        confirmButtonColor: "#d33",
-      });
-    }
+  // ✅ Prepare payload for backend
+  const payload = {
+    dcNo: editingChallan ? dcNo : `DC-${nextDcNo}`,
+    dcDate: date,
+    bookingOrder: orderNo, // This should be the _id of the selected order
+    products: itemsList.map((item) => ({
+      name: item.name,
+      rate: item.rate || 0,
+      qty: item.qty || 0,
+      total: item.total || 0,
+    })),
+    remarks: remarks.trim(),
+    status,
   };
+
+ 
+
+  try {
+    if (editingChallan) {
+      await api.put(`/delivery-challan/${editingChallan._id}`, payload, { headers });
+      Swal.fire("Updated!", "Delivery Challan updated successfully.", "success");
+    } else {
+      await api.post("/delivery-challan", payload, { headers });
+      Swal.fire("Added!", "Delivery Challan added successfully.", "success");
+    }
+
+    fetchDeliveryChallans();
+    resetForm();
+  } catch (error) {
+    console.error("Error saving delivery challan:", error);
+    Swal.fire("Error!", "Failed to save delivery challan.", "error");
+  }
+};
+
 
   const handleDelete = (id) => {
     const swalWithTailwindButtons = Swal.mixin({
@@ -452,32 +389,32 @@ const FbrDeliveryChallan = () => {
   const handleProductSelect = (selectedName) => {
     setProduct(selectedName);
 
-    // Find selected product details
     const selectedProd = availableProducts.find((p) => p.name === selectedName);
     console.log("Selected product:", selectedProd);
 
     if (selectedProd) {
-      // 🕒 Wait 2 seconds before filling fields
       setTimeout(() => {
-        // Auto-fill fields
         setSpecification(selectedProd.details || "");
 
-        // Use remainingQty (if available), otherwise orderedQty or 1
         const initialQty = selectedProd.orderedQty || 1;
-        setQty(initialQty);
 
-        // Auto-calc total
-        setTotal(selectedProd.total || 0);
-      },500);
+        // 🧮 calculate base total from orderedQty and total
+        const baseTotal = selectedProd.total || 0;
+
+        // store orderedQty and total-based calc
+        setQty(initialQty);
+        setTotal(baseTotal);
+        setRate(selectedProd.rate)
+      }, 300);
     } else {
-      // Reset fields
       setSpecification("");
       setRate("");
       setInStock("");
       setQty(1);
-      setTotal("0");
+      setTotal(0);
     }
   };
+console.log({itemsList});
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
@@ -876,8 +813,7 @@ const FbrDeliveryChallan = () => {
                         <option value="">Select Product</option>
                         {availableProducts.map((p, idx) => (
                           <option key={idx} value={p.name}>
-                            {p.name} — Remaining:{" "}
-                            {p.remainingQty ?? p.orderedQty ?? 0}
+                            {p.name}
                           </option>
                         ))}
                       </select>
@@ -888,10 +824,23 @@ const FbrDeliveryChallan = () => {
                         Qty
                       </label>
                       <input
-                        type="number"
+                        type="text"
                         min="1"
                         value={qty}
-                        onChange={(e) => setQty(e.target.value)}
+                        onChange={(e) => {
+                          const newQty = Number(e.target.value);
+                          setQty(newQty);
+
+                          const selectedProd = availableProducts.find(
+                            (p) => p.name === product
+                          );
+                          if (selectedProd) {
+                            const perUnit =
+                              (selectedProd.total || 0) /
+                              (selectedProd.orderedQty || 1);
+                            setTotal(perUnit * newQty);
+                          }
+                        }}
                         className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
                         placeholder="Enter quantity"
                       />
@@ -921,6 +870,7 @@ const FbrDeliveryChallan = () => {
                         type="text"
                         value={specification}
                         onChange={(e) => setSpecification(e.target.value)}
+                        readOnly
                         className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
                         placeholder="Enter specifications"
                       />
@@ -948,10 +898,7 @@ const FbrDeliveryChallan = () => {
                             <th className="px-4 py-2 border-b">
                               Specifications
                             </th>
-
-                            <th className="px-4 py-2 border-b">Stock</th>
                             <th className="px-4 py-2 border-b">Qty</th>
-                            <th className="px-4 py-2 border-b">Rate</th>
                             <th className="px-4 py-2 border-b">Total</th>
                             <th className="px-4 py-2 border-b">Remove</th>
                           </tr>
@@ -963,22 +910,16 @@ const FbrDeliveryChallan = () => {
                                 {idx + 1}
                               </td>
                               <td className="px-4 py-2 border-b text-center">
-                                {productList.find((p) => p._id === item.product)
-                                  ?.productName || "N/A"}
+                                {item.name}
                               </td>
                               <td className="px-4 py-2 border-b text-center">
                                 {item.specification}
                               </td>
 
                               <td className="px-4 py-2 border-b text-center">
-                                {item.inStock}
-                              </td>
-                              <td className="px-4 py-2 border-b text-center">
                                 {item.qty}
                               </td>
-                              <td className="px-4 py-2 border-b text-center">
-                                {item.rate}
-                              </td>
+
                               <td className="px-4 py-2 border-b text-center">
                                 {item.total}
                               </td>
