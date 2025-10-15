@@ -14,7 +14,6 @@ const FbrDeliveryChallan = () => {
   const [availableProducts, setAvailableProducts] = useState([]);
 
   const [date, setDate] = useState("");
-  const [productList, setProductList] = useState([]);
   const [product, setProduct] = useState("");
   const [rate, setRate] = useState("");
   const [inStock, setInStock] = useState("");
@@ -25,29 +24,55 @@ const FbrDeliveryChallan = () => {
   const [qty, setQty] = useState(1);
   const [total, setTotal] = useState(0);
 
-
   const handleAddItem = () => {
-  if (!product) return;
+    if (!product) return;
 
-  const newItem = {
-    name:product,
-    specification,
-    qty,
-    rate,
-    total,
+    // Update availableProducts table visually
+    const updatedProducts = availableProducts.map((p) =>
+      p.name === product ? { ...p, orderedQty: qty, total: qty * p.rate } : p
+    );
+    setAvailableProducts(updatedProducts);
+
+    // Update or add the modified product in itemsList
+    const existingIndex = itemsList.findIndex((i) => i.name === product);
+    const updatedItem = {
+      name: product,
+      specification,
+      qty,
+      rate,
+      total: qty * rate,
+    };
+
+    let newList = [];
+    if (existingIndex !== -1) {
+      newList = [...itemsList];
+      newList[existingIndex] = updatedItem;
+    } else {
+      newList = [...itemsList, updatedItem];
+    }
+
+    setItemsList(newList);
+
+    // ✅ NEW: Ensure all updated products are in itemsList before submit
+    const syncedList = updatedProducts
+      .filter((p) => p.orderedQty > 0)
+      .map((p) => ({
+        name: p.name,
+        rate: p.rate,
+        qty: p.orderedQty,
+        total: p.total,
+        specification: p.details || "",
+      }));
+
+    setItemsList(syncedList);
+
+    // Reset fields
+    setProduct("");
+    setSpecification("");
+    setQty(1);
+    setRate("");
+    setTotal(0);
   };
-
-  setItemsList([...itemsList, newItem]);
-
-  // ✅ Reset input fields after adding
-  setProduct("");
-  setSpecification("");
-  setQty(1);
-  setRate("");
-  setTotal(0);
-  setInStock("");
-};
-
 
   const handleRemoveItem = (idx) => {
     setItemsList(itemsList.filter((_, i) => i !== idx));
@@ -66,22 +91,7 @@ const FbrDeliveryChallan = () => {
     deliveryDate: "",
     totalWeight: "",
   });
-  const [vehicleDetails, setVehicleDetails] = useState({
-    truckNo: "",
-    driverName: "",
-    father: "",
-    cnic: "",
-    mobileNo: "",
-    containerNo1: "",
-    batchNo1: "",
-    forLocation1: "",
-    containerNo2: "",
-    batchNo2: "",
-    forLocation2: "",
-    firstWeight: "",
-    weightBridgeName: "",
-    weightBridgeSlipNo: "",
-  });
+ 
   const [remarks, setRemarks] = useState("");
   const [approvalRemarks, setApprovalRemarks] = useState("");
   const [status, setStatus] = useState("Pending");
@@ -139,32 +149,25 @@ const FbrDeliveryChallan = () => {
     fetchBookingOrders();
   }, [fetchBookingOrders]);
 
-  console.log({ bookingOrders });
-
   // Delivery challan search
-  // useEffect(() => {
-  //   if (!searchTerm || !searchTerm.startsWith("DC-")) {
-  //     fetchDeliveryChallans();
-  //     return;
-  //   }
+  // 🔍 Delivery challan search (same logic as booking order search)
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      fetchDeliveryChallans(); // only when cleared
+      return;
+    }
 
-  //   const delayDebounce = setTimeout(() => {
-  //     try {
-  //       setLoading(true);
-  //       const filtered = deliveryChallans.filter((challan) =>
-  //         challan.dcNo.toUpperCase().includes(searchTerm.toUpperCase())
-  //       );
-  //       setDeliveryChallans(filtered);
-  //     } catch (error) {
-  //       console.error("Search delivery challan failed:", error);
-  //       setDeliveryChallans([]);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }, 1000);
+    const delayDebounce = setTimeout(() => {
+      setLoading(true);
+      const filtered = deliveryChallans.filter((challan) =>
+        challan?.dcNo?.toUpperCase().includes(searchTerm.toUpperCase())
+      );
+      setDeliveryChallans(filtered);
+      setLoading(false);
+    }, 500);
 
-  //   return () => clearTimeout(delayDebounce);
-  // }, [searchTerm, fetchDeliveryChallans, deliveryChallans]);
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, fetchDeliveryChallans]);
 
   // Generate next DC No
   useEffect(() => {
@@ -219,37 +222,35 @@ const FbrDeliveryChallan = () => {
     setStatus("Pending");
     setEditingChallan(null);
     setErrors({});
-    setItemsList([])
+    setItemsList([]);
     setActiveTab("orderDetails");
     setIsSliderOpen(false);
   };
 
   // Validate form fields
- const validateForm = () => {
-  const newErrors = {};
+  const validateForm = () => {
+    const newErrors = {};
 
-  // Basic fields
- 
-  if (!orderNo?.trim()) newErrors.orderNo = "Booking Order is required";
-  if (!orderDate?.trim()) newErrors.orderDate = "Order Date is required";
+    // Basic fields
 
-  // Order details (auto-filled)
-  if (!orderDetails.customer?.trim()) newErrors.customer = "Customer is required";
-  if (!orderDetails.phone?.trim()) newErrors.phone = "Phone is required";
-  if (!orderDetails.address?.trim()) newErrors.address = "Address is required";
-  if (!orderDetails.deliveryAddress?.trim())
-    newErrors.deliveryAddress = "Delivery Address is required";
+    if (!orderNo?.trim()) newErrors.orderNo = "Booking Order is required";
+    if (!orderDate?.trim()) newErrors.orderDate = "Order Date is required";
 
+    // Order details (auto-filled)
+    if (!orderDetails.customer?.trim())
+      newErrors.customer = "Customer is required";
+    if (!orderDetails.phone?.trim()) newErrors.phone = "Phone is required";
+    if (!orderDetails.address?.trim())
+      newErrors.address = "Address is required";
+    if (!orderDetails.deliveryAddress?.trim())
+      newErrors.deliveryAddress = "Delivery Address is required";
 
- 
+    // Remarks optional — no strict check
+    setErrors(newErrors);
 
-  // Remarks optional — no strict check
-  setErrors(newErrors);
-
-  // Return true if no errors
-  return Object.keys(newErrors).length === 0;
-};
-
+    // Return true if no errors
+    return Object.keys(newErrors).length === 0;
+  };
 
   // Handlers for form and table actions
   const handleAddChallan = () => {
@@ -259,12 +260,64 @@ const FbrDeliveryChallan = () => {
 
   const handleEditClick = (challan) => {
     setEditingChallan(challan);
+    console.log({ challan });
+
     setDcNo(challan.dcNo || "");
-    setDate(challan.date || "");
-    setOrderNo(challan.orderNo || "");
-    setOrderDate(challan.orderDate || "");
-    setOrderDetails(challan.orderDetails || {});
-    setVehicleDetails(challan.vehicleDetails || {});
+    setDate(challan.dcDate ? challan.dcDate.split("T")[0] : "");
+    setOrderNo(challan.bookingOrder?._id || "");
+    setOrderDate(
+      challan.bookingOrder?.orderDate
+        ? challan.bookingOrder.orderDate.split("T")[0]
+        : challan.dcDate?.split("T")[0] || ""
+    );
+
+    setOrderDetails({
+      customer: challan.bookingOrder?.customer?.customerName || "",
+      phone: challan.bookingOrder?.customer?.phoneNumber || "",
+      address: challan.bookingOrder?.customer?.address || "",
+      deliveryAddress: challan.bookingOrder?.deliveryAddress || "",
+    });
+
+    // ✅ FIX: Use challan.products if bookingOrder.products is missing
+    const productSource =
+      challan.bookingOrder?.products?.length > 0
+        ? challan.bookingOrder.products
+        : challan.products || [];
+
+    // Normalize structure for your table
+    const formattedProducts = productSource.map((p) => {
+      const qty = p.qty || p.orderedQty || 0;
+      const total = p.total || 0;
+      const rate =
+        p.rate && p.rate > 0
+          ? p.rate
+          : p.invoiceRate && p.invoiceRate > 0
+          ? p.invoiceRate
+          : qty > 0
+          ? total / qty
+          : 0;
+
+      return {
+        name: p.name,
+        rate,
+        orderedQty: qty,
+        remainingQty: p.remainingQty || 0,
+        total,
+      };
+    });
+
+    setAvailableProducts(formattedProducts);
+
+    setItemsList(
+      challan.products?.map((item) => ({
+        name: item.name,
+        qty: item.qty,
+        rate: item.invoiceRate || item.rate || 0,
+        total: item.total,
+        specification: item.specification || "",
+      })) || []
+    );
+
     setRemarks(challan.remarks || "");
     setApprovalRemarks(challan.approvalRemarks || "");
     setStatus(challan.status || "Pending");
@@ -272,45 +325,49 @@ const FbrDeliveryChallan = () => {
     setIsSliderOpen(true);
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  // if (!validateForm()) return;
+    // if (!validateForm()) return;
 
-  // ✅ Prepare payload for backend
-  const payload = {
-    dcNo: editingChallan ? dcNo : `DC-${nextDcNo}`,
-    dcDate: date,
-    bookingOrder: orderNo, // This should be the _id of the selected order
-    products: itemsList.map((item) => ({
-      name: item.name,
-      rate: item.rate || 0,
-      qty: item.qty || 0,
-      total: item.total || 0,
-    })),
-    remarks: remarks.trim(),
-    status,
-  };
+    // ✅ Prepare payload for backend
+    const payload = {
+      dcNo: editingChallan ? dcNo : `DC-${nextDcNo}`,
+      dcDate: date,
+      bookingOrder: orderNo, // This should be the _id of the selected order
+      products: itemsList.map((item) => ({
+        name: item.name,
+        rate: item.rate || 0,
+        qty: item.qty || 0,
+        total: item.total || 0,
+      })),
+      remarks: remarks.trim(),
+      status,
+    };
+    console.log({ payload });
 
- 
+    try {
+      if (editingChallan) {
+        await api.put(`/delivery-challan/${editingChallan._id}`, payload, {
+          headers,
+        });
+        Swal.fire(
+          "Updated!",
+          "Delivery Challan updated successfully.",
+          "success"
+        );
+      } else {
+        await api.post("/delivery-challan", payload, { headers });
+        Swal.fire("Added!", "Delivery Challan added successfully.", "success");
+      }
 
-  try {
-    if (editingChallan) {
-      await api.put(`/delivery-challan/${editingChallan._id}`, payload, { headers });
-      Swal.fire("Updated!", "Delivery Challan updated successfully.", "success");
-    } else {
-      await api.post("/delivery-challan", payload, { headers });
-      Swal.fire("Added!", "Delivery Challan added successfully.", "success");
+      fetchDeliveryChallans();
+      resetForm();
+    } catch (error) {
+      console.error("Error saving delivery challan:", error);
+      Swal.fire("Error!", "Failed to save delivery challan.", "error");
     }
-
-    fetchDeliveryChallans();
-    resetForm();
-  } catch (error) {
-    console.error("Error saving delivery challan:", error);
-    Swal.fire("Error!", "Failed to save delivery challan.", "error");
-  }
-};
-
+  };
 
   const handleDelete = (id) => {
     const swalWithTailwindButtons = Swal.mixin({
@@ -337,6 +394,8 @@ const handleSubmit = async (e) => {
       .then(async (result) => {
         if (result.isConfirmed) {
           try {
+            setLoading(true);
+            await api.delete(`/delivery-challan/${id}`, { headers });
             setDeliveryChallans((prev) => prev.filter((c) => c._id !== id));
             swalWithTailwindButtons.fire(
               "Deleted!",
@@ -350,6 +409,8 @@ const handleSubmit = async (e) => {
               "Failed to delete delivery challan.",
               "error"
             );
+          } finally {
+            setLoading(false);
           }
         } else if (result.dismiss === Swal.DismissReason.cancel) {
           swalWithTailwindButtons.fire(
@@ -404,7 +465,7 @@ const handleSubmit = async (e) => {
         // store orderedQty and total-based calc
         setQty(initialQty);
         setTotal(baseTotal);
-        setRate(selectedProd.rate)
+        setRate(selectedProd.rate);
       }, 300);
     } else {
       setSpecification("");
@@ -414,7 +475,7 @@ const handleSubmit = async (e) => {
       setTotal(0);
     }
   };
-console.log({itemsList});
+  console.log({ deliveryChallans });
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
@@ -461,7 +522,7 @@ console.log({itemsList});
               <div className="flex flex-col divide-y divide-gray-100">
                 {loading ? (
                   <TableSkeleton
-                    rows={recordsPerPage}
+                    rows={currentRecords.length || 5}
                     cols={9}
                     className="lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]"
                   />
@@ -527,38 +588,25 @@ console.log({itemsList});
 
                       {/* Actions */}
                       <div className="flex gap-3 justify-start">
-                        <button
-                          onClick={() => handleEditClick(challan)}
-                          className="py-1 text-sm rounded text-blue-600 hover:bg-blue-50 transition-colors"
-                          title="Edit"
-                        >
-                          <SquarePen size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(challan._id)}
-                          className="py-1 text-sm rounded text-red-600 hover:bg-red-50 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleStatusChange(challan._id, "Approved")
-                          }
-                          className="py-1 text-sm rounded text-green-600 hover:bg-green-50 transition-colors"
-                          title="Approve"
-                        >
-                          <CheckCircle size={18} />
-                        </button>
-                        <button
-                          onClick={() =>
-                            handleStatusChange(challan._id, "Rejected")
-                          }
-                          className="py-1 text-sm rounded text-red-600 hover:bg-red-50 transition-colors"
-                          title="Reject"
-                        >
-                          <XCircle size={18} />
-                        </button>
+                        {challan.status !== "Dispatched" && (
+                          <>
+                            <button
+                              onClick={() => handleEditClick(challan)}
+                              className="py-1 text-sm rounded text-blue-600 hover:bg-blue-50 transition-colors"
+                              title="Edit"
+                            >
+                              <SquarePen size={18} />
+                            </button>
+
+                            <button
+                              onClick={() => handleDelete(challan._id)}
+                              className="py-1 text-sm rounded text-red-600 hover:bg-red-50 transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   ))
@@ -661,6 +709,7 @@ console.log({itemsList});
                       </label>
                       <select
                         value={orderNo}
+                        disabled={!!editingChallan}
                         onChange={(e) => {
                           const selectedId = e.target.value;
                           setOrderNo(selectedId);
@@ -670,29 +719,34 @@ console.log({itemsList});
                           );
 
                           if (selectedOrder) {
-                            // 🟢 Set order date automatically
                             setOrderDate(selectedOrder.orderDate.split("T")[0]);
-
-                            // 🟢 Populate available products for this order
                             setAvailableProducts(selectedOrder.products || []);
-
-                            // 🟢 Also auto-fill customer & delivery info
-                            setOrderDetails((prev) => ({
-                              ...prev,
+                            setOrderDetails({
                               customer:
                                 selectedOrder.customer?.customerName || "",
                               phone: selectedOrder.customer?.phoneNumber || "",
                               address: selectedOrder.customer?.address || "",
                               deliveryAddress:
                                 selectedOrder.deliveryAddress || "",
-                            }));
-                          } else {
-                            setAvailableProducts([]);
+                            });
                           }
                         }}
                         className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
                       >
                         <option value="">Select Booking Order</option>
+
+                        {/* 🧩 Inject current challan’s booking order if not loaded yet */}
+                        {editingChallan &&
+                          !bookingOrders.some(
+                            (b) => b._id === editingChallan.bookingOrder?._id
+                          ) && (
+                            <option value={editingChallan.bookingOrder?._id}>
+                              {editingChallan.bookingOrder?.orderNo ||
+                                "Unknown Order"}
+                            </option>
+                          )}
+
+                        {/* Regular fetched options */}
                         {bookingOrders.map((order) => (
                           <option key={order._id} value={order._id}>
                             {order.orderNo}
@@ -800,15 +854,18 @@ console.log({itemsList});
                 {/* 3️⃣ SECTION — PRODUCT ITEMS */}
                 <div className="border bg-gray-100 p-4 rounded-lg space-y-4">
                   {/* Line 1 */}
-                  <div className="flex gap-4">
-                    <div className="flex-1">
+                  <div className="flex flex-wrap items-end gap-4">
+                    {/* Product */}
+                    <div className="flex-1 min-w-[180px]">
                       <label className="block text-gray-700 font-medium mb-2">
                         Product
                       </label>
                       <select
                         value={product}
                         onChange={(e) => handleProductSelect(e.target.value)}
-                        className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                        readOnly
+                        disabled
+                        className="w-full h-[48px] px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary bg-gray-100 text-gray-600 cursor-not-allowed"
                       >
                         <option value="">Select Product</option>
                         {availableProducts.map((p, idx) => (
@@ -819,68 +876,57 @@ console.log({itemsList});
                       </select>
                     </div>
 
-                    <div className="flex-1">
+                    {/* Qty */}
+                    <div className="flex-1 min-w-[120px]">
                       <label className="block text-gray-700 font-medium mb-2">
                         Qty
                       </label>
                       <input
-                        type="text"
+                        type="number"
                         min="1"
                         value={qty}
                         onChange={(e) => {
                           const newQty = Number(e.target.value);
                           setQty(newQty);
-
                           const selectedProd = availableProducts.find(
                             (p) => p.name === product
                           );
                           if (selectedProd) {
                             const perUnit =
-                              (selectedProd.total || 0) /
-                              (selectedProd.orderedQty || 1);
+                              selectedProd.rate && selectedProd.rate > 0
+                                ? selectedProd.rate
+                                : (selectedProd.total || 0) /
+                                  (selectedProd.orderedQty ||
+                                    selectedProd.qty ||
+                                    1);
                             setTotal(perUnit * newQty);
                           }
                         }}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                        className="w-full h-[48px] px-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary"
                         placeholder="Enter quantity"
                       />
                     </div>
 
-                    <div className="flex-1">
+                    {/* Total */}
+                    <div className="flex-1 min-w-[160px]">
                       <label className="block text-gray-700 font-medium mb-2">
                         Total
                       </label>
                       <input
                         type="number"
                         value={total}
-                        onChange={(e) => setTotal(e.target.value)}
                         readOnly
-                        className="w-full p-3 border border-gray-300 rounded-md bg-gray-100"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Line 2 */}
-                  <div className="flex gap-4 items-end">
-                    <div className="flex-1">
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Specifications
-                      </label>
-                      <input
-                        type="text"
-                        value={specification}
-                        readOnly
-                        onChange={(e) => setSpecification(e.target.value)}
-                        className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                        placeholder="Enter specifications"
+                        className="w-full h-[48px] px-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-700"
+                        placeholder="Total"
                       />
                     </div>
 
-                    <div className="flex items-end">
+                    {/* Add Button */}
+                    <div className="flex items-end min-w-[120px]">
                       <button
                         type="button"
                         onClick={handleAddItem}
-                        className="w-24 h-12 bg-newPrimary text-white rounded-lg hover:bg-newPrimary/80 transition flex justify-center items-center gap-2"
+                        className="w-full h-[48px] bg-newPrimary text-white font-semibold rounded-lg hover:bg-newPrimary/80 transition flex justify-center items-center gap-2"
                       >
                         + Add
                       </button>
@@ -888,45 +934,48 @@ console.log({itemsList});
                   </div>
 
                   {/* Table */}
-                  {itemsList.length > 0 && (
-                    <div className="overflow-x-auto">
+                  {/* Available Product Table */}
+                  {availableProducts.length > 0 && (
+                    <div className="overflow-x-auto mt-4">
                       <table className="w-full border border-gray-200 rounded-lg overflow-hidden">
                         <thead className="bg-gray-100 text-gray-600 text-sm">
                           <tr>
                             <th className="px-4 py-2 border-b">Sr #</th>
-                            <th className="px-4 py-2 border-b">Item</th>
-                            <th className="px-4 py-2 border-b">
-                              Specifications
-                            </th>
-                            <th className="px-4 py-2 border-b">Qty</th>
+                            <th className="px-4 py-2 border-b">Product</th>
+
+                            <th className="px-4 py-2 border-b">Ordered Qty</th>
+
                             <th className="px-4 py-2 border-b">Total</th>
-                            <th className="px-4 py-2 border-b">Remove</th>
                           </tr>
                         </thead>
                         <tbody className="text-gray-700 text-sm">
-                          {itemsList.map((item, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
+                          {availableProducts.map((item, idx) => (
+                            <tr
+                              key={idx}
+                              className="hover:bg-gray-50 cursor-pointer"
+                              onClick={() => {
+                                setProduct(item.name);
+                                setRate(item.rate);
+                                setQty(item.orderedQty);
+                                setSpecification(item.details || "");
+                                setTotal(item.rate * item.orderedQty);
+                              }}
+                            >
                               <td className="px-4 py-2 border-b text-center">
                                 {idx + 1}
                               </td>
                               <td className="px-4 py-2 border-b text-center">
                                 {item.name}
                               </td>
-                              <td className="px-4 py-2 border-b text-center">
-                                {item.specification}
-                              </td>
 
                               <td className="px-4 py-2 border-b text-center">
-                                {item.qty}
+                                <span className="text-blue-600 underline">
+                                  {item.orderedQty}
+                                </span>
                               </td>
 
                               <td className="px-4 py-2 border-b text-center">
                                 {item.total}
-                              </td>
-                              <td className="px-4 py-2 border-b text-center">
-                                <button onClick={() => handleRemoveItem(idx)}>
-                                  <X size={18} className="text-red-500" />
-                                </button>
                               </td>
                             </tr>
                           ))}

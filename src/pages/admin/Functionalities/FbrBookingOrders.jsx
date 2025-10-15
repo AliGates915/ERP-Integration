@@ -433,11 +433,11 @@ const FbrBookingOrders = () => {
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
-const handleView = (order) => {
-  setSelectedOrder(order);
-  setIsView(true);
-};
-console.log({bookingOrders});
+  const handleView = (order) => {
+    setSelectedOrder(order);
+    setIsView(true);
+  };
+  console.log({ bookingOrders });
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
@@ -469,12 +469,13 @@ console.log({bookingOrders});
         <div className="rounded-xl shadow border border-gray-200 overflow-hidden">
           <div className="overflow-y-auto lg:overflow-x-auto max-h-[900px]">
             <div className="min-w-[1400px]">
-              <div className="hidden lg:grid grid-cols-7 gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+              <div className="hidden lg:grid grid-cols-8 gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
                 <div>Order No</div>
                 <div>Customer</div>
                 <div>Order Date</div>
                 <div>Delivery Date</div>
-                <div>Order Type</div>
+                <div>Total</div>
+                <div>Status</div>
                 <div>Payment Method</div>
                 <div>Actions</div>
               </div>
@@ -484,7 +485,7 @@ console.log({bookingOrders});
                   <TableSkeleton
                     rows={currentRecords.length || 5}
                     cols={7}
-                    className="lg:grid-cols-7"
+                    className="lg:grid-cols-8"
                   />
                 ) : currentRecords.length === 0 ? (
                   <div className="text-center py-4 text-gray-500 bg-white">
@@ -494,7 +495,7 @@ console.log({bookingOrders});
                   currentRecords.map((order) => (
                     <div
                       key={order._id}
-                      className="grid grid-cols-1 lg:grid-cols-7 items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                      className="grid grid-cols-1 lg:grid-cols-8 items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
                       <div className="text-gray-600">{order.orderNo}</div>
                       <div className="text-gray-600">
@@ -508,8 +509,28 @@ console.log({bookingOrders});
                         {new Date(order.deliveryDate).toLocaleDateString() ||
                           "N/A"}
                       </div>
-                      <div className="text-gray-600">
-                        {order.orderType || "N/A"}
+                      {/* ✅ Total */}
+                      <div className="text-gray-600 font-medium">
+                        {order.products && order.products.length > 0
+                          ? order.products
+                              .reduce((sum, item) => sum + (item.total || 0), 0)
+                              .toLocaleString()
+                          : 0}
+                      </div>
+
+                      {/* ✅ Status */}
+                      <div
+                        className={`font-semibold ${
+                          order.status === "Delivered"
+                            ? "text-green-600"
+                            : order.status === "Dispatched"
+                            ? "text-red-600"
+                            : order.status === "Cancelled"
+                            ? "text-red-600"
+                            : "text-amber-600" // default → Pending or anything else
+                        }`}
+                      >
+                        {order.status || "Pending"}
                       </div>
                       <div className="text-gray-600">
                         {order.paymentMethod || "N/A"}
@@ -1050,16 +1071,15 @@ console.log({bookingOrders});
                 </button>
               </form>
             </div>
-           
           </div>
         )}
-      {isView && selectedOrder && (
-              <ViewModel
-                data={selectedOrder}
-                type="bookingOrder" // 👈 You can define a new case for booking orders inside ViewModel
-                onClose={() => setIsView(false)}
-              />
-            )}
+        {isView && selectedOrder && (
+          <ViewModel
+            data={selectedOrder}
+            type="bookingOrder" // 👈 You can define a new case for booking orders inside ViewModel
+            onClose={() => setIsView(false)}
+          />
+        )}
         <style jsx>{`
           .custom-scrollbar::-webkit-scrollbar {
             width: 6px;
