@@ -29,7 +29,7 @@ const FbrDeliveryChallan = () => {
 
     // Update availableProducts table visually
     const updatedProducts = availableProducts.map((p) =>
-      p.name === product ? { ...p, orderedQty: qty, total: qty * p.rate } : p
+      p.name === product ? { ...p, deliverQty: qty, total: qty * p.rate } : p
     );
     setAvailableProducts(updatedProducts);
 
@@ -55,20 +55,19 @@ const FbrDeliveryChallan = () => {
 
     // ✅ NEW: Ensure all updated products are in itemsList before submit
     const syncedList = updatedProducts
-      .filter((p) => p.orderedQty > 0)
+      .filter((p) => p.deliverQty > 0)
       .map((p) => ({
         name: p.name,
         rate: p.rate,
-        qty: p.orderedQty,
+        qty: p.deliverQty,
         total: p.total,
-        specification: p.details || "",
       }));
 
     setItemsList(syncedList);
 
     // Reset fields
     setProduct("");
-    setSpecification("");
+
     setQty(1);
     setRate("");
     setTotal(0);
@@ -91,7 +90,7 @@ const FbrDeliveryChallan = () => {
     deliveryDate: "",
     totalWeight: "",
   });
- 
+
   const [remarks, setRemarks] = useState("");
   const [approvalRemarks, setApprovalRemarks] = useState("");
   const [status, setStatus] = useState("Pending");
@@ -201,7 +200,7 @@ const FbrDeliveryChallan = () => {
       deliveryDate: "",
       totalWeight: "",
     });
-  
+
     setRemarks("");
     setApprovalRemarks("");
     setStatus("Pending");
@@ -240,22 +239,43 @@ const FbrDeliveryChallan = () => {
   // Handlers for form and table actions
   const handleAddChallan = () => {
     resetForm();
+    setDate(new Date().toISOString().split("T")[0]);
     setIsSliderOpen(true);
   };
+
+  // ✅ Helper function to convert "16-Oct-2025" → "2025-10-16"
+const formatToISODate = (dateStr) => {
+  if (!dateStr) return "";
+  if (dateStr.includes("T")) return dateStr.split("T")[0]; // already ISO
+
+  const months = {
+    Jan: "01", Feb: "02", Mar: "03", Apr: "04",
+    May: "05", Jun: "06", Jul: "07", Aug: "08",
+    Sep: "09", Oct: "10", Nov: "11", Dec: "12",
+  };
+
+  const parts = dateStr.split("-");
+  if (parts.length === 3) {
+    const [day, mon, year] = parts;
+    return `${year}-${months[mon]}-${day.padStart(2, "0")}`;
+  }
+  return "";
+};
+
 
   const handleEditClick = (challan) => {
     setEditingChallan(challan);
     console.log({ challan });
 
+    // ✅ DC basic info
     setDcNo(challan.dcNo || "");
-    setDate(challan.dcDate ? challan.dcDate.split("T")[0] : "");
-    setOrderNo(challan.bookingOrder?._id || "");
-    setOrderDate(
-      challan.bookingOrder?.orderDate
-        ? challan.bookingOrder.orderDate.split("T")[0]
-        : challan.dcDate?.split("T")[0] || ""
-    );
+   setDate(formatToISODate(challan.dcDate));
 
+    // ✅ Booking order info
+    setOrderNo(challan.bookingOrder?._id || "");
+   setOrderDate(formatToISODate(challan.bookingOrder?.orderDate));
+
+    // ✅ Customer and delivery details
     setOrderDetails({
       customer: challan.bookingOrder?.customer?.customerName || "",
       phone: challan.bookingOrder?.customer?.phoneNumber || "",
@@ -263,13 +283,13 @@ const FbrDeliveryChallan = () => {
       deliveryAddress: challan.bookingOrder?.deliveryAddress || "",
     });
 
-    // ✅ FIX: Use challan.products if bookingOrder.products is missing
+    // ✅ Source of product list (fallback if bookingOrder.products missing)
     const productSource =
       challan.bookingOrder?.products?.length > 0
         ? challan.bookingOrder.products
         : challan.products || [];
 
-    // Normalize structure for your table
+    // ✅ Format products for editable table
     const formattedProducts = productSource.map((p) => {
       const qty = p.qty || p.orderedQty || 0;
       const total = p.total || 0;
@@ -286,13 +306,17 @@ const FbrDeliveryChallan = () => {
         name: p.name,
         rate,
         orderedQty: qty,
+        deliverQty: p.qty || qty,
         remainingQty: p.remainingQty || 0,
         total,
+        details: p.details || "",
       };
     });
 
+    // ✅ Load into state for editable product table
     setAvailableProducts(formattedProducts);
 
+    // ✅ Also populate itemsList for submit payload
     setItemsList(
       challan.products?.map((item) => ({
         name: item.name,
@@ -303,6 +327,23 @@ const FbrDeliveryChallan = () => {
       })) || []
     );
 
+    // ✅ Fill current product fields (auto-select first one for editing)
+    if (formattedProducts.length > 0) {
+      const firstProd = formattedProducts[0];
+      setProduct(firstProd.name);
+      setRate(firstProd.rate);
+      setQty(firstProd.deliverQty || firstProd.orderedQty);
+      setSpecification(firstProd.details || "");
+      setTotal(firstProd.total || firstProd.rate * (firstProd.deliverQty || 1));
+    } else {
+      setProduct("");
+      setRate("");
+      setQty(1);
+      setSpecification("");
+      setTotal(0);
+    }
+
+    // ✅ Other details
     setRemarks(challan.remarks || "");
     setApprovalRemarks(challan.approvalRemarks || "");
     setStatus(challan.status || "Pending");
@@ -316,20 +357,25 @@ const FbrDeliveryChallan = () => {
     // if (!validateForm()) return;
 
     // ✅ Prepare payload for backend
+    const finalProducts =
+      itemsList.length > 0
+        ? itemsList
+        : availableProducts.map((p) => ({
+            name: p.name,
+            rate: p.rate || 0,
+            qty: p.deliverQty ?? p.orderedQty ?? p.qty ?? 0,
+            total: (p.rate || 0) * (p.deliverQty ?? p.orderedQty ?? p.qty ?? 0),
+          }));
+
+    // ✅ Prepare payload for backend
     const payload = {
       dcNo: editingChallan ? dcNo : `DC-${nextDcNo}`,
       dcDate: date,
-      bookingOrder: orderNo, // This should be the _id of the selected order
-      products: itemsList.map((item) => ({
-        name: item.name,
-        rate: item.rate || 0,
-        qty: item.qty || 0,
-        total: item.total || 0,
-      })),
+      bookingOrder: orderNo, // Booking order ID
+      products: finalProducts,
       remarks: remarks.trim(),
       status,
     };
-    console.log({ payload });
 
     try {
       if (editingChallan) {
@@ -407,18 +453,6 @@ const FbrDeliveryChallan = () => {
       });
   };
 
-  const handleStatusChange = (id, newStatus) => {
-    setDeliveryChallans((prev) =>
-      prev.map((c) => (c._id === id ? { ...c, status: newStatus } : c))
-    );
-    Swal.fire({
-      icon: "success",
-      title: `${newStatus}!`,
-      text: `Delivery Challan ${newStatus.toLowerCase()} successfully.`,
-      confirmButtonColor: "#3085d6",
-    });
-  };
-
   // Pagination logic
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
@@ -460,7 +494,7 @@ const FbrDeliveryChallan = () => {
       setTotal(0);
     }
   };
-  console.log({ deliveryChallans });
+  console.log({ deliveryChallans, total });
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
@@ -705,7 +739,14 @@ const FbrDeliveryChallan = () => {
 
                           if (selectedOrder) {
                             setOrderDate(selectedOrder.orderDate.split("T")[0]);
-                            setAvailableProducts(selectedOrder.products || []);
+                            setAvailableProducts(
+                              (selectedOrder.products || []).map((p) => ({
+                                ...p,
+                                deliverQty:
+                                  p.deliverQty ?? p.orderedQty ?? p.qty ?? 0, // 🟢 Default deliverQty = orderedQty
+                              }))
+                            );
+
                             setOrderDetails({
                               customer:
                                 selectedOrder.customer?.customerName || "",
@@ -771,7 +812,7 @@ const FbrDeliveryChallan = () => {
                           })
                         }
                         readOnly
-                        className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                        className="w-full p-3 border bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
                       />
                     </div>
 
@@ -789,7 +830,7 @@ const FbrDeliveryChallan = () => {
                           })
                         }
                         readOnly
-                        className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                        className="w-full p-3 border bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
                       />
                     </div>
                   </div>
@@ -809,7 +850,7 @@ const FbrDeliveryChallan = () => {
                           })
                         }
                         readOnly
-                        className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                        className="w-full p-3 border bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
                         placeholder="Enter address"
                       />
                     </div>
@@ -829,7 +870,7 @@ const FbrDeliveryChallan = () => {
                           })
                         }
                         readOnly
-                        className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                        className="w-full p-3 border bg-gray-50 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
                         placeholder="Enter delivery address"
                       />
                     </div>
@@ -837,11 +878,11 @@ const FbrDeliveryChallan = () => {
                 </div>
 
                 {/* 3️⃣ SECTION — PRODUCT ITEMS */}
-                <div className="border bg-gray-100 p-4 rounded-lg space-y-4">
+                <div className="border bg-gray-100 p-4 w-[590px] rounded-lg space-y-4">
                   {/* Line 1 */}
                   <div className="flex flex-wrap items-end gap-4">
                     {/* Product */}
-                    <div className="flex-1 min-w-[180px]">
+                    <div className=" min-w-[180px]">
                       <label className="block text-gray-700 font-medium mb-2">
                         Product
                       </label>
@@ -862,7 +903,7 @@ const FbrDeliveryChallan = () => {
                     </div>
 
                     {/* Qty */}
-                    <div className="flex-1 min-w-[120px]">
+                    <div className=" min-w-[120px]">
                       <label className="block text-gray-700 font-medium mb-2">
                         Qty
                       </label>
@@ -872,16 +913,39 @@ const FbrDeliveryChallan = () => {
                         value={qty}
                         onChange={(e) => {
                           const newQty = Number(e.target.value);
-                          setQty(newQty);
+
                           const selectedProd = availableProducts.find(
                             (p) => p.name === product
                           );
+
+                          // 🧠 Check if newQty > orderedQty
+                          if (
+                            selectedProd &&
+                            newQty > (selectedProd.orderedQty || 0)
+                          ) {
+                            Swal.fire({
+                              icon: "warning",
+                              title: "Invalid Quantity",
+                              html: `You entered <b>${newQty}</b>, but ordered quantity is only <b>${selectedProd.orderedQty}</b>.`,
+                              text: "Deliver quantity cannot be greater than ordered quantity!",
+                              timer: 4000,
+                              showConfirmButton: false,
+                              showCloseButton: true, // 🟢 adds the top-right close (X) button
+                              position: "center",
+                              timerProgressBar: true, // ⏳ adds a small progress bar for timeout
+                            });
+                            return; // ❌ stop further execution
+                          }
+
+                          setQty(newQty);
+
                           if (selectedProd) {
                             const perUnit =
                               selectedProd.rate && selectedProd.rate > 0
                                 ? selectedProd.rate
                                 : (selectedProd.total || 0) /
-                                  (selectedProd.orderedQty ||
+                                  (selectedProd.deliverQty ||
+                                    selectedProd.orderedQty ||
                                     selectedProd.qty ||
                                     1);
                             setTotal(perUnit * newQty);
@@ -893,7 +957,7 @@ const FbrDeliveryChallan = () => {
                     </div>
 
                     {/* Total */}
-                    <div className="flex-1 min-w-[160px]">
+                    {/* <div className="flex-1 min-w-[160px]">
                       <label className="block text-gray-700 font-medium mb-2">
                         Total
                       </label>
@@ -904,10 +968,10 @@ const FbrDeliveryChallan = () => {
                         className="w-full h-[48px] px-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-700"
                         placeholder="Total"
                       />
-                    </div>
+                    </div> */}
 
                     {/* Add Button */}
-                    <div className="flex items-end min-w-[120px]">
+                    <div className="flex items-end min-w-[90px]">
                       <button
                         type="button"
                         onClick={handleAddItem}
@@ -921,51 +985,56 @@ const FbrDeliveryChallan = () => {
                   {/* Table */}
                   {/* Available Product Table */}
                   {availableProducts.length > 0 && (
-                    <div className="overflow-x-auto mt-4">
-                      <table className="w-full border border-gray-200 rounded-lg overflow-hidden">
-                        <thead className="bg-gray-100 text-gray-600 text-sm">
-                          <tr>
-                            <th className="px-4 py-2 border-b">Sr #</th>
-                            <th className="px-4 py-2 border-b">Product</th>
+                    <div className="overflow-x-auto mt-4 w-[510px]">
+                      {/* Header */}
+                      <div className="grid grid-cols-[50px_100px_200px_200px] bg-gray-100 text-gray-600 text-sm font-medium border-[1px] border-gray-200 rounded-t-lg">
+                        <div className="px-3 py-2 text-center border-b">
+                          Sr #
+                        </div>
+                        <div className="px-3 py-2 text-center border-b">
+                          Product
+                        </div>
+                        <div className="px-3 py-2 text-center border-b">
+                          Ordered Qty
+                        </div>
+                        <div className="px-3 py-2 text-center border-b">
+                          deliver Quntity
+                        </div>
+                      </div>
 
-                            <th className="px-4 py-2 border-b">Ordered Qty</th>
-
-                            <th className="px-4 py-2 border-b">Total</th>
-                          </tr>
-                        </thead>
-                        <tbody className="text-gray-700 text-sm">
-                          {availableProducts.map((item, idx) => (
-                            <tr
-                              key={idx}
-                              className="hover:bg-gray-50 cursor-pointer"
-                              onClick={() => {
-                                setProduct(item.name);
-                                setRate(item.rate);
-                                setQty(item.orderedQty);
-                                setSpecification(item.details || "");
-                                setTotal(item.rate * item.orderedQty);
-                              }}
-                            >
-                              <td className="px-4 py-2 border-b text-center">
-                                {idx + 1}
-                              </td>
-                              <td className="px-4 py-2 border-b text-center">
-                                {item.name}
-                              </td>
-
-                              <td className="px-4 py-2 border-b text-center">
-                                <span className="text-blue-600 underline">
-                                  {item.orderedQty}
-                                </span>
-                              </td>
-
-                              <td className="px-4 py-2 border-b text-center">
-                                {item.total}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                      {/* Rows */}
+                      <div className="border border-t-0 border-gray-200 rounded-b-lg divide-y">
+                        {availableProducts.map((item, idx) => (
+                          <div
+                            key={idx}
+                            className="grid grid-cols-[50px_100px_200px_200px] text-gray-700 text-sm hover:bg-gray-50 cursor-pointer transition-colors"
+                            onClick={() => {
+                              setProduct(item.name);
+                              setRate(item.rate);
+                              setQty(item.deliverQty || item.orderedQty); // prioritize deliverQty
+                              setSpecification(item.details || "");
+                              setTotal(
+                                item.rate * (item.deliverQty || item.orderedQty)
+                              );
+                            }}
+                          >
+                            <div className="px-3 py-2 text-center">
+                              {idx + 1}
+                            </div>
+                            <div className="px-3 py-2 text-center">
+                              {item.name}
+                            </div>
+                            <div className="px-3 py-2 text-center">
+                              <span className="text-blue-600 underline">
+                                {item.orderedQty}
+                              </span>
+                            </div>
+                            <div className="px-3 py-2 text-center">
+                              {item.deliverQty || 0}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
