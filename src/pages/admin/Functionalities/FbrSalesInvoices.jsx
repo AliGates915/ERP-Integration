@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { SquarePen, Trash2 } from "lucide-react";
+import { Download, SquarePen, Trash2 } from "lucide-react";
 import CommanHeader from "../../../components/CommanHeader";
 import TableSkeleton from "../Skeleton";
 import Swal from "sweetalert2";
 import { api } from "../../../context/ApiService";
 import toast from "react-hot-toast";
+import { InvoiceTemplate } from "./InvoiceTemplate";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 const FbrSalesInvoices = () => {
   const [invoices, setInvoices] = useState([]);
@@ -18,6 +21,8 @@ const FbrSalesInvoices = () => {
   const [deliveryDate, setDeliveryDate] = useState("");
   const [medicineType, setMedicineType] = useState("");
   const [bookingNo, setBookingNo] = useState("");
+  const invoiceRef = useRef(null);
+const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [orderDate, setOrderDate] = useState("");
   const [vendor, setVendor] = useState("");
   const [selectedDcNos, setSelectedDcNos] = useState([]);
@@ -516,6 +521,44 @@ useEffect(() => {
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
+  
+
+async function handleDownlode(invoice) {
+  // Store selected invoice for rendering
+  setSelectedInvoice(invoice);
+
+  // Wait a bit to ensure the hidden invoice template is rendered
+  setTimeout(async () => {
+    if (!invoiceRef.current) return;
+
+    try {
+      // Capture the invoice as an image
+      const canvas = await html2canvas(invoiceRef.current, {
+        scale: 2, // Higher scale = sharper PDF
+        useCORS: true, // Allow external images (like logos)
+        scrollX: 0,
+        scrollY: 0,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      // Add image to PDF
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+      // Save file with invoice number as name
+      pdf.save(`${invoice.bookingOrder?.customer?.customerName || "Customer"}-${invoice.invoiceNo || "Invoice"}.pdf`);
+
+      toast.success(`Invoice ${invoice.invoiceNo} downloaded successfully!`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Failed to generate invoice PDF.");
+    }
+  }, 400); // Wait a short delay for DOM render
+}
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
@@ -619,13 +662,13 @@ useEffect(() => {
                         {invoice?.totalAmount || "-"}
                       </div>
                       <div className="flex gap-3 justify-start">
-                        {/* <button
-                          onClick={() => handleEditClick(invoice)}
+                        <button
+                        onClick={()=>handleDownlode(invoice)}
                           className="py-1 text-sm rounded text-blue-600 hover:bg-blue-50 transition-colors"
                           title="Edit"
                         >
-                          <SquarePen size={18} />
-                        </button> */}
+                          <Download size={18} />
+                        </button>
                         <button
                           onClick={() => handleDelete(invoice._id)}
                           className="py-1 text-sm rounded text-red-600 hover:bg-red-50 transition-colors"
@@ -1204,6 +1247,11 @@ useEffect(() => {
           }
         `}</style>
       </div>
+      {/* Hidden Invoice Template for Download */}
+<div style={{ position: "absolute", left: "-9999px", top: "0" }}>
+  <InvoiceTemplate ref={invoiceRef} invoice={selectedInvoice} />
+</div>
+
     </div>
   );
 };
