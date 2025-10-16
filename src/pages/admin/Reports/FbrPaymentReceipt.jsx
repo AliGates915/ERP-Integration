@@ -180,6 +180,7 @@ const FbrPaymentReceipt = () => {
     setIsSliderOpen(false);
   };
 
+
   // Validate form fields
   const validateForm = () => {
     const newErrors = {};
