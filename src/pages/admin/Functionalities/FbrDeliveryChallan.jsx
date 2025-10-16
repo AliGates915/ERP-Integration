@@ -201,22 +201,7 @@ const FbrDeliveryChallan = () => {
       deliveryDate: "",
       totalWeight: "",
     });
-    setVehicleDetails({
-      truckNo: "",
-      driverName: "",
-      father: "",
-      cnic: "",
-      mobileNo: "",
-      containerNo1: "",
-      batchNo1: "",
-      forLocation1: "",
-      containerNo2: "",
-      batchNo2: "",
-      forLocation2: "",
-      firstWeight: "",
-      weightBridgeName: "",
-      weightBridgeSlipNo: "",
-    });
+  
     setRemarks("");
     setApprovalRemarks("");
     setStatus("Pending");
