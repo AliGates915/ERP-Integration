@@ -418,11 +418,11 @@ const FbrLedger = () => {
         </div>
         <div className="flex gap-6">
           {/* Left Filter Section */}
-          <div className="w-1/3">
+          <div className="w-full">
             <div className="space-y-5">
               <div className="flex gap-5">
                 {/* Customer Selection */}
-                <div className="w-1/2">
+                <div className="w-[400px]">
                   <label className="block text-gray-700 font-medium mb-2">
                     Customer Name <span className="text-red-500">*</span>
                   </label>
@@ -442,7 +442,7 @@ const FbrLedger = () => {
                 </div>
 
                 {/* Date From */}
-                <div className="w-1/2">
+                <div className="w-[200px]">
                   <label className="block text-gray-700 font-medium mb-2">
                     Date From
                   </label>
@@ -455,7 +455,7 @@ const FbrLedger = () => {
                 </div>
 
                 {/* Date To */}
-                <div className="w-1/2">
+                <div className="w-[200px]">
                   <label className="block text-gray-700 font-medium mb-2">
                     Date To
                   </label>
@@ -482,10 +482,10 @@ const FbrLedger = () => {
               <div className="overflow-y-auto lg:overflow-x-auto max-h-[900px]">
                 <div className="min-w-full custom-scrollbar">
                   {/* Table Header */}
-                  <div className="hidden lg:grid grid-cols-[0.2fr_0.5fr_1fr_repeat(4,1fr)] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+                  <div className="hidden lg:grid grid-cols-[0.2fr_0.5fr_0.5fr_2.5fr_repeat(3,0.7fr)] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
                     <div>SR</div>
-                    <div>ID</div>
                     <div>Date</div>
+                    <div>ID</div>
                     <div>Description</div>
                     <div>Paid</div>
                     <div>Received</div>
@@ -507,11 +507,11 @@ const FbrLedger = () => {
                         {ledgerEntries.map((entry, index) => (
                           <div
                             key={entry.id || index}
-                            className="grid grid-cols-[0.2fr_0.5fr_1fr_repeat(4,1fr)] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                            className="grid grid-cols-[0.2fr_0.5fr_0.5fr_2.5fr_repeat(3,0.7fr)] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                           >
                             <div className="text-gray-600">{index + 1}</div>
-                            <div className="text-gray-600">{entry.ID}</div>
                             <div className="text-gray-600">{entry.Date}</div>
+                            <div className="text-gray-600">{entry.ID}</div>
                             <div className="text-gray-600">
                               {entry.Description}
                             </div>
@@ -524,7 +524,7 @@ const FbrLedger = () => {
                         ))}
 
                         {/* Totals Row */}
-                        <div className="hidden lg:grid grid-cols-[0.2fr_0.5fr_1fr_repeat(4,1fr)] justify-items-start gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+                        <div className="hidden lg:grid grid-cols-[0.2fr_0.5fr_0.5fr_2.5fr_repeat(3,0.7fr)] justify-items-start gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
                           <div className="col-span-4"></div>
 
                           {/* Calculate totals */}
