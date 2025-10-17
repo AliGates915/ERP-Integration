@@ -29,7 +29,6 @@ const Category = () => {
         `${import.meta.env.VITE_API_BASE_URL}/categories`
       );
       setCategories(res.data); // store actual categories array
-    
     } catch (error) {
       console.error("Failed to fetch Supplier", error);
     } finally {
@@ -140,8 +139,6 @@ const Category = () => {
   };
 
   const handleToggleEnable = async (category) => {
-  
-
     const swalWithTailwindButtons = Swal.mixin({
       customClass: {
         actions: "space-x-2",
@@ -257,7 +254,6 @@ const Category = () => {
       });
   };
 
-
   // if (loading) {
   //   return (
   //     <div className="container mx-auto px-4 py-8 min-h-screen flex items-center justify-center">
@@ -295,11 +291,11 @@ const Category = () => {
             <div className="min-w-full">
               {/* ✅ Table Header Style (sticky look) */}
               <div className="hidden lg:grid grid-cols-[80px_1fr_150px_150px_200px] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
-                <div>S.No.</div>
+                <div>SR</div>
                 <div>Name</div>
                 <div>Status</div>
                 <div>Created At</div>
-                <div className="text-right">Actions</div>
+                <div className="text-center">Actions</div>
               </div>
 
               {/* ✅ Table Body */}
@@ -346,7 +342,7 @@ const Category = () => {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex justify-end gap-2">
+                      <div className="text-center">
                         <button
                           onClick={() => handleEditClick(category)}
                           className="px-3 py-1 text-sm rounded  text-blue-600 "
