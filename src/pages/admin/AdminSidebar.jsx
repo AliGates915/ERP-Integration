@@ -287,16 +287,17 @@ const AdminSidebar = () => {
             )
           )}
         </nav>
-      </div>
-
-      {/* Logout */}
+          {/* Logout */}
       <button
         onClick={handleLogout}
-        className="flex items-center justify-center sm:justify-start gap-2 px-2 sm:px-4 py-2 rounded font-semibold text-gray-700 hover:bg-red-600 hover:text-white transition"
+        className="inline-flex items-center w-full gap-2 px-2 sm:px-4 py-2 rounded font-semibold text-gray-700 hover:bg-red-600 hover:text-white transition"
       >
         <RiLogoutBoxRLine />
         <span className="hidden sm:inline">Logout</span>
       </button>
+      </div>
+
+    
     </aside>
   );
 };
