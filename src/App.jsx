@@ -53,7 +53,7 @@ import FbrPaymentReceipt from "./pages/admin/Reports/FbrPaymentReceipt.jsx";
 import FbrLedger from "./pages/admin/Reports/FbrLedger.jsx";
 import FbrReceivable from "./pages/admin/Reports/FbrReceivable.jsx";
 import FbrPage from "./pages/admin/Functionalities/FbrPage.jsx";
-
+import Bank from "./pages/admin/SetUp/Bank.jsx";
 function AppContent() {
   return (
     <div className="max-h-screen flex flex-col bg-gray-50">
@@ -97,7 +97,7 @@ function AppContent() {
             <Route path="groups" element={<GroupManagement />} />
             <Route path="access-rights" element={<AccessControll />} />
             <Route path="modules" element={<Modules />} />
-         
+            <Route path="bank" element={<Bank />} />
             <Route path="delivery-challan" element={<DeliveryChallan />} />
          
             <Route path="sales-invoices" element={<SalesInvoices />} />
