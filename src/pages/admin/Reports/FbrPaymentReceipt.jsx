@@ -53,9 +53,8 @@ const FbrPaymentReceipt = () => {
   const sliderRef = useRef(null);
   const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
 
-  const API_URL = `${
-    import.meta.env.VITE_API_BASE_URL
-  }/payment-receipt-voucher`;
+  const API_URL = `${import.meta.env.VITE_API_BASE_URL
+    }/payment-receipt-voucher`;
 
   // Fixed fetchVouchers - remove useCallback or add proper dependencies
   const fetchVouchers = async () => {
@@ -218,35 +217,10 @@ const FbrPaymentReceipt = () => {
   };
 
 
-const handleEditClick = (voucher) => {
-  setEditingVoucher(voucher); // Keep the full object (must include _id)
-  setErrors({});
-  setIsSliderOpen(true);
-
-  if (voucher.mode === "Cash") {
-    setPaymentType("Cash");
-    setCashData({
-      receiptId: voucher.receiptId || "",
-      date: voucher.date ? voucher.date.split("T")[0] : "",
-      customer: voucher.customer?._id || "",
-      amountReceived: voucher.amountReceived || "",
-      newBalance: voucher.newBalance || "",
-      remarks: voucher.remarks || "",
-    });
-  } else {
-    setPaymentType("Bank");
-    setBankData({
-      receiptId: voucher.receiptId || "",
-      date: voucher.date ? voucher.date.split("T")[0] : "",
-      customer: voucher.customer?._id || "",
-      bankName: voucher.bankSection?.bankName || "",
-      accountName: voucher.bankSection?.accountName || "", // Updated to accountName
-      accountNumber: voucher.bankSection?.accountNumber || "",
-      amountReceived: voucher.amountReceived || "",
-      remarks: voucher.remarks || "",
-    });
-  }
-};
+  const handleEditClick = (voucher) => {
+    setEditingVoucher(voucher); // Keep the full object (must include _id)
+    setErrors({});
+    setIsSliderOpen(true);
 
     if (voucher.mode === "Cash") {
       setPaymentType("Cash");
@@ -259,23 +233,22 @@ const handleEditClick = (voucher) => {
         remarks: voucher.remarks || "",
       });
     } else {
-
-      voucherData = {
-        receiptId: editingVoucher ? bankData.receiptId : nextReceiptId,
-        date: bankData.date || new Date().toISOString().split("T")[0],
-        mode: "Bank",
-        customer: bankData.customer,
-        amountReceived: bankData.amountReceived,
-        bankSection: {
-          bankName: bankData.bankName,
-          accountName: bankData.accountName, // Updated to accountName
-          accountNumber: bankData.accountNumber,
-        },
-        remarks: bankData.remarks,
-      };
-
+      setPaymentType("Bank");
+      setBankData({
+        receiptId: voucher.receiptId || "",
+        date: voucher.date ? voucher.date.split("T")[0] : "",
+        customer: voucher.customer?._id || "",
+        bankName: voucher.bankSection?.bankName || "",
+        accountName: voucher.bankSection?.accountName || "",
+        accountNumber: voucher.bankSection?.accountNumber || "",
+        amountReceived: voucher.amountReceived || "",
+        remarks: voucher.remarks || "",
+      });
     }
   };
+
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -312,7 +285,38 @@ const handleEditClick = (voucher) => {
 
       const isUpdate = Boolean(editingVoucher?._id);
 
+      // 🟢 Save or update voucher
+      if (isUpdate) {
+        await axios.put(`${API_URL}/${editingVoucher._id}`, voucherData, {
+          headers: {
+            Authorization: `Bearer ${userInfo?.token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        toast.success("Payment receipt updated successfully");
+      } else {
+        await axios.post(API_URL, voucherData, {
+          headers: {
+            Authorization: `Bearer ${userInfo?.token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        toast.success("Payment receipt created successfully");
+      }
 
+      // Refresh and close form
+      await fetchVouchers();
+      resetForm();
+
+    } catch (error) {
+      console.error("Error submitting payment receipt:", error);
+      toast.error("Failed to save payment receipt");
+    }
+  };
+
+
+
+  // 🗑️ Delete Voucher
   const handleDelete = async (id) => {
     const swalWithTailwindButtons = Swal.mixin({
       customClass: {
@@ -325,67 +329,57 @@ const handleEditClick = (voucher) => {
       buttonsStyling: false,
     });
 
-    swalWithTailwindButtons
-      .fire({
-        title: "Are you sure?",
-        text: "This action cannot be undone!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, delete it!",
-        cancelButtonText: "No, cancel!",
-        reverseButtons: true,
-      })
-      .then(async (result) => {
-        if (result.isConfirmed) {
-          try {
-            const response = await axios.delete(`${API_URL}/${id}`, {
-              headers: {
-                Authorization: `Bearer ${userInfo?.token}`,
-                "Content-Type": "application/json",
-              },
-            });
+    const result = await swalWithTailwindButtons.fire({
+      title: "Are you sure?",
+      text: "This action cannot be undone!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "No, cancel!",
+      reverseButtons: true,
+    });
 
-            if (response.data.success) {
-              setVouchers((prev) => prev.filter((v) => v._id !== id));
-              setFilteredVouchers((prev) => prev.filter((v) => v._id !== id));
+    if (result.isConfirmed) {
+      try {
+        const response = await axios.delete(`${API_URL}/${id}`, {
+          headers: {
+            Authorization: `Bearer ${userInfo?.token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-              swalWithTailwindButtons.fire(
-                "Deleted!",
-                "Payment Receipt Voucher deleted successfully.",
-                "success"
-              );
-            } else {
-              swalWithTailwindButtons.fire(
-                "Error!",
-                response.data.message || "Failed to delete voucher.",
-                "error"
-              );
-            }
-          } catch (error) {
-            console.error("Delete error:", error);
-            swalWithTailwindButtons.fire(
-              "Error!",
-              "Server error while deleting voucher.",
-              "error"
-            );
-          }
-        } else if (result.dismiss === Swal.DismissReason.cancel) {
+        if (response.data.success) {
+          setVouchers((prev) => prev.filter((v) => v._id !== id));
+          setFilteredVouchers((prev) => prev.filter((v) => v._id !== id));
           swalWithTailwindButtons.fire(
-            "Cancelled",
-            "Payment Receipt Voucher is safe 🙂",
+            "Deleted!",
+            "Payment Receipt Voucher deleted successfully.",
+            "success"
+          );
+        } else {
+          swalWithTailwindButtons.fire(
+            "Error!",
+            response.data.message || "Failed to delete voucher.",
             "error"
           );
         }
-
-      } else if (result.dismiss === Swal.DismissReason.cancel) {
+      } catch (error) {
+        console.error("Delete error:", error);
         swalWithTailwindButtons.fire(
-          "Cancelled",
-          "Payment Receipt Voucher is safe 🙂",
+          "Error!",
+          "Server error while deleting voucher.",
           "error"
         );
       }
-    });
-};
+    } else if (result.dismiss === Swal.DismissReason.cancel) {
+      swalWithTailwindButtons.fire(
+        "Cancelled",
+        "Payment Receipt Voucher is safe 🙂",
+        "error"
+      );
+    }
+  };
+
 
 
   // Pagination logic - UPDATED to use filteredVouchers
@@ -521,22 +515,20 @@ const handleEditClick = (voucher) => {
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className={`px-3 py-1 rounded-md ${
-                    currentPage === 1
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-newPrimary text-white hover:bg-newPrimary/80"
-                  }`}
+                  className={`px-3 py-1 rounded-md ${currentPage === 1
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-newPrimary text-white hover:bg-newPrimary/80"
+                    }`}
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className={`px-3 py-1 rounded-md ${
-                    currentPage === totalPages
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-newPrimary text-white hover:bg-newPrimary/80"
-                  }`}
+                  className={`px-3 py-1 rounded-md ${currentPage === totalPages
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-newPrimary text-white hover:bg-newPrimary/80"
+                    }`}
                 >
                   Next
                 </button>
@@ -701,11 +693,10 @@ const handleEditClick = (voucher) => {
                           type="text"
                           value={Math.max(0, Math.round(cashData.newBalance))} // prevent negative display
                           readOnly
-                          className={`w-full p-3 border rounded-md ${
-                            cashData.newBalance < 0
-                              ? "bg-red-100 text-red-600"
-                              : "bg-gray-100"
-                          }`}
+                          className={`w-full p-3 border rounded-md ${cashData.newBalance < 0
+                            ? "bg-red-100 text-red-600"
+                            : "bg-gray-100"
+                            }`}
                         />
                       </div>
                     </div>
