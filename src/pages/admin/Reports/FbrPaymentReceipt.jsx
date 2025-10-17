@@ -25,9 +25,10 @@ const FbrPaymentReceipt = () => {
   const [bankData, setBankData] = useState({
     receiptId: "",
     date: "",
+    customer: "", // Added customer field
     bankName: "",
+    accountName: "", // Changed from accountHolderName to accountName
     accountNumber: "",
-    accountHolderName: "",
     amountReceived: 0,
     remarks: "",
   });
@@ -52,9 +53,8 @@ const FbrPaymentReceipt = () => {
   const sliderRef = useRef(null);
   const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
 
-  const API_URL = `${
-    import.meta.env.VITE_API_BASE_URL
-  }/payment-receipt-voucher`;
+  const API_URL = `${import.meta.env.VITE_API_BASE_URL
+    }/payment-receipt-voucher`;
 
   // Fixed fetchVouchers - remove useCallback or add proper dependencies
   const fetchVouchers = async () => {
@@ -113,7 +113,7 @@ const FbrPaymentReceipt = () => {
         .map((v) => ({
           bankName: v.bankSection.bankName,
           accountNumber: v.bankSection.accountNumber,
-          accountHolderName: v.bankSection.accountHolderName,
+          accountName: v.bankSection.accountName, // Updated to accountName
         }))
         .filter(
           (b, index, self) =>
@@ -169,7 +169,16 @@ const FbrPaymentReceipt = () => {
     setReceiptId("");
     setCustomerName("");
     setBalance("");
-    setBankData("");
+    setBankData({
+      receiptId: "",
+      date: "",
+      customer: "",
+      bankName: "",
+      accountName: "", // Updated to accountName
+      accountNumber: "",
+      amountReceived: 0,
+      remarks: "",
+    });
     setMode("");
     setDate("");
     setReceivedBy(userInfo.employeeName || "");
@@ -207,6 +216,7 @@ const FbrPaymentReceipt = () => {
     setIsSliderOpen(true);
   };
 
+
   const handleEditClick = (voucher) => {
     setEditingVoucher(voucher); // Keep the full object (must include _id)
     setErrors({});
@@ -227,14 +237,18 @@ const FbrPaymentReceipt = () => {
       setBankData({
         receiptId: voucher.receiptId || "",
         date: voucher.date ? voucher.date.split("T")[0] : "",
-        amountReceived: voucher.amountReceived || "",
+        customer: voucher.customer?._id || "",
         bankName: voucher.bankSection?.bankName || "",
+        accountName: voucher.bankSection?.accountName || "",
         accountNumber: voucher.bankSection?.accountNumber || "",
-        accountHolderName: voucher.bankSection?.accountHolderName || "",
+        amountReceived: voucher.amountReceived || "",
         remarks: voucher.remarks || "",
       });
     }
   };
+
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -271,41 +285,38 @@ const FbrPaymentReceipt = () => {
 
       const isUpdate = Boolean(editingVoucher?._id);
 
-      // ✅ FIXED: Added missing slash before ID
-      const url = isUpdate ? `${API_URL}/${editingVoucher._id}` : API_URL;
-
-      const method = isUpdate ? "put" : "post";
-
-      const response = await axios({
-        method,
-        url,
-        data: voucherData,
-        headers: {
-          Authorization: `Bearer ${userInfo?.token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.data.success) {
-        toast.success(
-          isUpdate
-            ? "Voucher updated successfully!"
-            : "Voucher added successfully!"
-        );
-        resetForm();
-        fetchVouchers();
-        setEditingVoucher(null);
+      // 🟢 Save or update voucher
+      if (isUpdate) {
+        await axios.put(`${API_URL}/${editingVoucher._id}`, voucherData, {
+          headers: {
+            Authorization: `Bearer ${userInfo?.token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        toast.success("Payment receipt updated successfully");
       } else {
-        toast.error(response.data.message || "Failed to save voucher");
+        await axios.post(API_URL, voucherData, {
+          headers: {
+            Authorization: `Bearer ${userInfo?.token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        toast.success("Payment receipt created successfully");
       }
+
+      // Refresh and close form
+      await fetchVouchers();
+      resetForm();
+
     } catch (error) {
-      console.error("Submit Error:", error.response?.data || error);
-      toast.error(
-        error.response?.data?.message || "Server error while saving voucher."
-      );
+      console.error("Error submitting payment receipt:", error);
+      toast.error("Failed to save payment receipt");
     }
   };
 
+
+
+  // 🗑️ Delete Voucher
   const handleDelete = async (id) => {
     const swalWithTailwindButtons = Swal.mixin({
       customClass: {
@@ -318,59 +329,58 @@ const FbrPaymentReceipt = () => {
       buttonsStyling: false,
     });
 
-    swalWithTailwindButtons
-      .fire({
-        title: "Are you sure?",
-        text: "This action cannot be undone!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, delete it!",
-        cancelButtonText: "No, cancel!",
-        reverseButtons: true,
-      })
-      .then(async (result) => {
-        if (result.isConfirmed) {
-          try {
-            const response = await axios.delete(`${API_URL}/${id}`, {
-              headers: {
-                Authorization: `Bearer ${userInfo?.token}`,
-                "Content-Type": "application/json",
-              },
-            });
+    const result = await swalWithTailwindButtons.fire({
+      title: "Are you sure?",
+      text: "This action cannot be undone!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "No, cancel!",
+      reverseButtons: true,
+    });
 
-            if (response.data.success) {
-              setVouchers((prev) => prev.filter((v) => v._id !== id));
-              setFilteredVouchers((prev) => prev.filter((v) => v._id !== id));
+    if (result.isConfirmed) {
+      try {
+        const response = await axios.delete(`${API_URL}/${id}`, {
+          headers: {
+            Authorization: `Bearer ${userInfo?.token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-              swalWithTailwindButtons.fire(
-                "Deleted!",
-                "Payment Receipt Voucher deleted successfully.",
-                "success"
-              );
-            } else {
-              swalWithTailwindButtons.fire(
-                "Error!",
-                response.data.message || "Failed to delete voucher.",
-                "error"
-              );
-            }
-          } catch (error) {
-            console.error("Delete error:", error);
-            swalWithTailwindButtons.fire(
-              "Error!",
-              "Server error while deleting voucher.",
-              "error"
-            );
-          }
-        } else if (result.dismiss === Swal.DismissReason.cancel) {
+        if (response.data.success) {
+          setVouchers((prev) => prev.filter((v) => v._id !== id));
+          setFilteredVouchers((prev) => prev.filter((v) => v._id !== id));
           swalWithTailwindButtons.fire(
-            "Cancelled",
-            "Payment Receipt Voucher is safe 🙂",
+            "Deleted!",
+            "Payment Receipt Voucher deleted successfully.",
+            "success"
+          );
+        } else {
+          swalWithTailwindButtons.fire(
+            "Error!",
+            response.data.message || "Failed to delete voucher.",
             "error"
           );
         }
-      });
+      } catch (error) {
+        console.error("Delete error:", error);
+        swalWithTailwindButtons.fire(
+          "Error!",
+          "Server error while deleting voucher.",
+          "error"
+        );
+      }
+    } else if (result.dismiss === Swal.DismissReason.cancel) {
+      swalWithTailwindButtons.fire(
+        "Cancelled",
+        "Payment Receipt Voucher is safe 🙂",
+        "error"
+      );
+    }
   };
+
+
 
   // Pagination logic - UPDATED to use filteredVouchers
   const indexOfLastRecord = currentPage * recordsPerPage;
@@ -454,14 +464,10 @@ const FbrPaymentReceipt = () => {
                         {indexOfFirstRecord + index + 1}
                       </div>
                       <div className="text-gray-600">{voucher.receiptId}</div>
-                      <div className="text-gray-600">
-                        {voucher.customer?.customerName ||
-                          voucher.bankSection.accountHolderName ||
-                          "-"}
-                      </div>
-                      <div className="text-gray-600">
-                        Rs.{voucher.amountReceived || "-"}
-                      </div>
+
+                      <div className="text-gray-600">{voucher.customer?.customerName || voucher.bankSection.accountName || "-"}</div>
+                      <div className="text-gray-600">Rs.{voucher.amountReceived || "-"}</div>
+
                       <div className="text-gray-600">{voucher.mode}</div>
                       <div className="text-gray-600">
                         {voucher.date
@@ -509,22 +515,20 @@ const FbrPaymentReceipt = () => {
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className={`px-3 py-1 rounded-md ${
-                    currentPage === 1
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-newPrimary text-white hover:bg-newPrimary/80"
-                  }`}
+                  className={`px-3 py-1 rounded-md ${currentPage === 1
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-newPrimary text-white hover:bg-newPrimary/80"
+                    }`}
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className={`px-3 py-1 rounded-md ${
-                    currentPage === totalPages
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-newPrimary text-white hover:bg-newPrimary/80"
-                  }`}
+                  className={`px-3 py-1 rounded-md ${currentPage === totalPages
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-newPrimary text-white hover:bg-newPrimary/80"
+                    }`}
                 >
                   Next
                 </button>
@@ -689,11 +693,10 @@ const FbrPaymentReceipt = () => {
                           type="text"
                           value={Math.max(0, Math.round(cashData.newBalance))} // prevent negative display
                           readOnly
-                          className={`w-full p-3 border rounded-md ${
-                            cashData.newBalance < 0
-                              ? "bg-red-100 text-red-600"
-                              : "bg-gray-100"
-                          }`}
+                          className={`w-full p-3 border rounded-md ${cashData.newBalance < 0
+                            ? "bg-red-100 text-red-600"
+                            : "bg-gray-100"
+                            }`}
                         />
                       </div>
                     </div>
@@ -721,20 +724,43 @@ const FbrPaymentReceipt = () => {
                 {/* Bank Form */}
                 {paymentType === "Bank" && (
                   <div className="space-y-4">
-                    {/* Bank Name & Account Number */}
+
+                    {/* Customer & Bank Name */}
                     <div className="flex gap-4">
-                      {/* Bank Name */}
+                      <div className="flex-1">
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Customer <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={bankData.customer}
+                          onChange={(e) =>
+                            setBankData({
+                              ...bankData,
+                              customer: e.target.value,
+                            })
+                          }
+                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        >
+                          <option value="">Select Customer</option>
+                          {customers.map((c) => (
+                            <option key={c._id} value={c._id}>
+                              {c.customerName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                       <div className="flex-1">
                         <label className="block text-gray-700 font-medium mb-2">
                           Bank Name <span className="text-red-500">*</span>
                         </label>
                         <select
-                          value={bankData?.bankName || ""} // ensure controlled value
+                          value={bankData.bankName}
                           onChange={(e) =>
-                            setBankData((prev) => ({
-                              ...prev,
+                            setBankData({
+                              ...bankData,
                               bankName: e.target.value,
-                            }))
+                            })
                           }
                           className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
@@ -747,20 +773,41 @@ const FbrPaymentReceipt = () => {
                           ))}
                         </select>
                       </div>
+                    </div>
 
-                      {/* Account Number */}
+                    {/* Account Name & Account Number */}
+                    <div className="flex gap-4">
                       <div className="flex-1">
                         <label className="block text-gray-700 font-medium mb-2">
-                          A/C Number <span className="text-red-500">*</span>
+                          Account Name <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
-                          value={bankData?.accountNumber || ""} // ensure controlled input
+                          value={bankData.accountName}
                           onChange={(e) =>
-                            setBankData((prev) => ({
-                              ...prev,
+                            setBankData({
+                              ...bankData,
+                              accountName: e.target.value,
+                            })
+                          }
+                          placeholder="Enter Account Name"
+                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        />
+                      </div>
+
+                      <div className="flex-1">
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Account No. <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={bankData.accountNumber}
+                          onChange={(e) =>
+                            setBankData({
+                              ...bankData,
                               accountNumber: e.target.value,
-                            }))
+                            })
                           }
                           placeholder="Enter Account Number"
                           className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -769,30 +816,11 @@ const FbrPaymentReceipt = () => {
                       </div>
                     </div>
 
-                    {/* Account Holder & Amount */}
+                    {/* Amount Received & Remarks */}
                     <div className="flex gap-4">
                       <div className="flex-1">
                         <label className="block text-gray-700 font-medium mb-2">
-                          Account Holder Name{" "}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={bankData.accountHolderName}
-                          onChange={(e) =>
-                            setBankData({
-                              ...bankData,
-                              accountHolderName: e.target.value,
-                            })
-                          }
-                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          required
-                        />
-                      </div>
-
-                      <div className="flex-1">
-                        <label className="block text-gray-700 font-medium mb-2">
-                          Amount <span className="text-red-500">*</span>
+                          Amount Received <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="number"
@@ -807,25 +835,23 @@ const FbrPaymentReceipt = () => {
                           required
                         />
                       </div>
-                    </div>
-
-                    {/* Remarks Field */}
-                    <div>
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Remarks
-                      </label>
-                      <textarea
-                        value={bankData.remarks}
-                        onChange={(e) =>
-                          setBankData({
-                            ...bankData,
-                            remarks: e.target.value,
-                          })
-                        }
-                        placeholder="Enter any remarks or notes"
-                        className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows="3"
-                      />
+                      <div className="flex-1">
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Remarks
+                        </label>
+                        <input
+                          value={bankData.remarks}
+                          onChange={(e) =>
+                            setBankData({
+                              ...bankData,
+                              remarks: e.target.value,
+                            })
+                          }
+                          placeholder="Enter any remarks or notes"
+                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          rows="3"
+                        />
+                      </div>
                     </div>
                   </div>
                 )}

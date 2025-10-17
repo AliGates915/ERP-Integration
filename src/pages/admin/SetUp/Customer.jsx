@@ -9,38 +9,7 @@ import { SquarePen, Trash2 } from "lucide-react";
 import TableSkeleton from "../Skeleton";
 
 const CustomerList = () => {
-  const [customerList, setCustomerList] = useState([
-    // {
-    //   _id: "cust1",
-    //   customerName: "Prime Retail",
-    //   contactPerson: "Alice Johnson",
-    //   email: "alice@primeretail.com",
-    //   address: "789 Market St, Los Angeles, CA",
-    //   phoneNumber: "+1-213-555-9876",
-    //   mobileNumber: "03005678901",
-    //   designation: "Purchasing Manager",
-    //   ntn: "NTN456789123",
-    //   gst: "27DEFGH5678J2K4",
-    //   paymentTerms: "Credit",
-    //   creditLimit: "150000",
-    //   creditTime: "45",
-    //   status: true,
-    // },
-    // {
-    //   _id: "cust2",
-    //   customerName: "Urban Buyers",
-    //   contactPerson: "Bob Wilson",
-    //   email: "bob@urbanbuyers.com",
-    //   address: "321 Oak Ave, Miami, FL",
-    //   phoneNumber: "+1-305-555-4321",
-    //   mobileNumber: "03008765432",
-    //   designation: "Store Manager",
-    //   ntn: "NTN654321987",
-    //   gst: "27KLMNO9876P3Q2",
-    //   paymentTerms: "Cash",
-    //   status: false,
-    // },
-  ]);
+  const [customerList, setCustomerList] = useState([]);
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [contactPerson, setContactPerson] = useState("");
@@ -51,14 +20,15 @@ const CustomerList = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [designation, setDesignation] = useState("");
+  const [department, setDepartment] = useState(""); // Added department
   const [ntn, setNtn] = useState("");
   const [gst, setGst] = useState("");
-  const [creditLimit, setCreditLimit] = useState("");
-  const [creditTime, setCreditTime] = useState("");
+  const [openingBalanceDate, setOpeningBalanceDate] = useState(""); // Added opening balance date
+  const [balanceReceived, setBalanceReceived] = useState(""); // Added balance received
   const [isEdit, setIsEdit] = useState(false);
   const [editId, setEditId] = useState(null);
-  const sliderRef = useRef(null);
   const [loading, setLoading] = useState(true);
+  const sliderRef = useRef(null);
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
 
   // GSAP Animation for Modal
@@ -95,7 +65,6 @@ const CustomerList = () => {
       setLoading(true);
       const res = await axios.get(`${API_URL}`);
       setCustomerList(res.data);
-    
     } catch (error) {
       console.error("Failed to fetch Customers", error);
     } finally {
@@ -120,10 +89,11 @@ const CustomerList = () => {
     setPhoneNumber("");
     setMobileNumber("");
     setDesignation("");
+    setDepartment(""); // Reset department
     setNtn("");
     setGst("");
-    setCreditLimit("");
-    setCreditTime("");
+    setOpeningBalanceDate(""); // Reset opening balance date
+    setBalanceReceived(""); // Reset balance received
     setStatus(true);
   };
 
@@ -134,12 +104,8 @@ const CustomerList = () => {
 
   // Save or Update Customer
   const handleSave = async () => {
-    if (
-      paymentTerms === "CreditCard" &&
-      status &&
-      (!creditLimit || creditLimit > 5000000)
-    ) {
-      toast.error("❌ Credit limit is required and must not exceed 50 lac");
+    if (paymentTerms === "Credit" && status && (!balanceReceived || parseFloat(balanceReceived) <= 0)) {
+      toast.error("❌ Balance Received is required and must be a positive number for Credit payment terms");
       return;
     }
 
@@ -156,8 +122,10 @@ const CustomerList = () => {
       mobileNumber,
       phoneNumber,
       designation,
+      department, // Added department
       ntn,
       gst,
+
       paymentTerms: paymentTerms === "CreditCard" ? "Credit" : paymentTerms,
       creditTime: paymentTerms === "CreditCard" ? creditTime : undefined,
       creditLimit: paymentTerms === "CreditCard" ? creditLimit : undefined,
@@ -186,11 +154,13 @@ const CustomerList = () => {
       setAddress("");
       setPaymentTerms("");
       setPhoneNumber("");
+      setMobileNumber("");
       setDesignation("");
+      setDepartment("");
       setNtn("");
       setGst("");
-      setCreditLimit("");
-      setCreditTime("");
+      setOpeningBalanceDate("");
+      setBalanceReceived("");
       setStatus(true);
       setIsSliderOpen(false);
       setIsEdit(false);
@@ -212,15 +182,12 @@ const CustomerList = () => {
     setPhoneNumber(customer.phoneNumber || "");
     setMobileNumber(customer.mobileNumber || "");
     setDesignation(customer.designation || "");
+    setDepartment(customer.department || ""); // Added department
     setNtn(customer.ntn || "");
     setGst(customer.gst || "");
-    setPaymentTerms(
-      customer.paymentTerms === "Credit"
-        ? "CreditCard"
-        : customer.paymentTerms || ""
-    );
-    setCreditLimit(customer.creditLimit || "");
-    setCreditTime(customer.creditTime || "");
+    setOpeningBalanceDate(customer.openingBalanceDate || ""); // Added opening balance date
+    setBalanceReceived(customer.balanceReceived || ""); // Added balance received
+    setPaymentTerms(customer.paymentTerms || "");
     setStatus(customer.status);
     setIsSliderOpen(true);
   };
@@ -303,14 +270,16 @@ const CustomerList = () => {
       <div className="rounded-xl border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <div className="min-w-[1100px]">
-            <div className="hidden lg:grid grid-cols-[100px_1.5fr_1fr_1.5fr_2fr_1fr_1fr_100px_auto] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
-              <div>ID</div>
-              <div>Name</div>
-              <div>Contact</div>
-              <div>Email</div>
+            <div className="hidden lg:grid grid-cols-[80px_1.5fr_2fr_1fr_1fr_1fr_1fr_1fr_1fr_100px_auto] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+              <div>SR#</div>
+              <div>Company</div>
               <div>Address</div>
               <div>Phone</div>
-              <div>Payment</div>
+              <div>Person</div>
+              <div>Designation</div>
+              <div>Department</div>
+              <div>Mobile</div>
+              <div>Balance</div>
               <div>Status</div>
               {userInfo?.isAdmin && <div className="text-right">Actions</div>}
             </div>
@@ -319,34 +288,29 @@ const CustomerList = () => {
               {loading ? (
                 <TableSkeleton
                   rows={customerList.length > 0 ? customerList.length : 5}
-                  cols={userInfo?.isAdmin ? 9 : 8}
-                  className="lg:grid-cols-[100px_1.5fr_1fr_1.5fr_2fr_1fr_1fr_100px_auto]"
+                  cols={userInfo?.isAdmin ? 11 : 10}
+                  className="lg:grid-cols-[80px_1.5fr_2fr_1fr_1fr_1fr_1fr_1fr_1fr_100px_auto]"
                 />
               ) : customerList.length === 0 ? (
                 <div className="text-center py-4 text-gray-500 bg-white">
                   No customers found.
                 </div>
               ) : (
-                customerList?.map((c) => (
+                customerList?.map((c, index) => (
                   <>
                     <div
                       key={c._id}
-                      className="hidden lg:grid grid-cols-[100px_1.5fr_1fr_1.5fr_2fr_1fr_1fr_100px_auto] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                      className="hidden lg:grid grid-cols-[80px_1.5fr_2fr_1fr_1fr_1fr_1fr_1fr_1fr_100px_auto] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
-                      <div className="font-medium text-gray-900">
-                        {c._id?.slice(0, 6)}
-                      </div>
+                      <div className="font-medium text-gray-900">{index + 1}</div>
                       <div className="text-gray-700">{c.customerName}</div>
-                      <div className="text-gray-600">{c.contactPerson}</div>
-                      <div className="text-gray-600">{c.email}</div>
                       <div className="text-gray-600 truncate">{c.address}</div>
                       <div className="text-gray-600">{c.phoneNumber}</div>
-                      <div className="text-gray-600">
-                        {c.paymentTerms}
-                        {c.paymentTerms === "Credit" && c.creditLimit
-                          ? ` (${c.creditLimit})`
-                          : ""}
-                      </div>
+                      <div className="text-gray-600">{c.contactPerson}</div>
+                      <div className="text-gray-600">{c.designation}</div>
+                      <div className="text-gray-600">{c.department}</div>
+                      <div className="text-gray-600">{c.mobileNumber}</div>
+                      <div className="text-gray-600">{c.balanceReceived || "0"}</div>
                       <div className="font-semibold">
                         {c.status ? (
                           <span className="text-green-600 bg-green-50 px-3 py-1 rounded-[5px]">
@@ -383,18 +347,14 @@ const CustomerList = () => {
                       <h3 className="font-semibold text-gray-800">
                         {c.customerName}
                       </h3>
-                      <p className="text-sm text-gray-600">{c.contactPerson}</p>
-                      <p className="text-sm text-gray-600">{c.email}</p>
-                      <p className="text-sm text-gray-600">{c.phoneNumber}</p>
-                      <p className="text-sm text-gray-600 truncate">
-                        {c.address}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {c.paymentTerms}{" "}
-                        {c.paymentTerms === "Credit" && c.creditLimit
-                          ? `(Limit: ${c.creditLimit})`
-                          : ""}
-                      </p>
+                      <p className="text-sm text-gray-600">SR#: {index + 1}</p>
+                      <p className="text-sm text-gray-600">Address: {c.address}</p>
+                      <p className="text-sm text-gray-600">Phone: {c.phoneNumber}</p>
+                      <p className="text-sm text-gray-600">Person: {c.contactPerson}</p>
+                      <p className="text-sm text-gray-600">Designation: {c.designation}</p>
+                      <p className="text-sm text-gray-600">Department: {c.department}</p>
+                      <p className="text-sm text-gray-600">Mobile: {c.mobileNumber}</p>
+                      <p className="text-sm text-gray-600">Balance: {c.balanceReceived || "0"}</p>
                       <p
                         className={`text-sm font-semibold ${
                           c.status ? "text-green-600" : "text-red-600"
@@ -402,7 +362,6 @@ const CustomerList = () => {
                       >
                         {c.status ? "Active" : "Inactive"}
                       </p>
-
                       {userInfo?.isAdmin && (
                         <div className="mt-3 flex justify-end gap-3">
                           <button
@@ -450,11 +409,13 @@ const CustomerList = () => {
                   setAddress("");
                   setPaymentTerms("");
                   setPhoneNumber("");
+                  setMobileNumber("");
                   setDesignation("");
+                  setDepartment("");
                   setNtn("");
                   setGst("");
-                  setCreditLimit("");
-                  setCreditTime("");
+                  setOpeningBalanceDate("");
+                  setBalanceReceived("");
                   setStatus(true);
                 }}
               >
@@ -584,6 +545,33 @@ const CustomerList = () => {
                   />
                 </div>
               </div>
+              <div className="flex gap-4">
+                <div className="flex-1 min-w-0">
+                  <label className="block text-gray-700 font-medium">
+                    Opening Balance Date <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={openingBalanceDate}
+                    required
+                    onChange={(e) => setOpeningBalanceDate(e.target.value)}
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <label className="block text-gray-700 font-medium">
+                    Balance Received <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    value={balanceReceived}
+                    required
+                    onChange={(e) => setBalanceReceived(e.target.value)}
+                    className="w-full p-2 border rounded"
+                    placeholder="Enter balance received"
+                  />
+                </div>
+              </div>
               <div>
                 <label className="block text-gray-700 font-medium">
                   Payment Terms <span className="text-red-500">*</span>
@@ -592,8 +580,8 @@ const CustomerList = () => {
                   <label className="flex items-center gap-2">
                     <input
                       type="radio"
-                      value="CreditCard"
-                      checked={paymentTerms === "CreditCard"}
+                      value="Credit"
+                      checked={paymentTerms === "Credit"}
                       onChange={(e) => setPaymentTerms(e.target.value)}
                       className="form-radio"
                     />
@@ -611,6 +599,7 @@ const CustomerList = () => {
                   </label>
                 </div>
               </div>
+
               {paymentTerms === "CreditCard" && (
                 <div className="flex gap-4">
                   <div className="w-1/2">
@@ -641,6 +630,7 @@ const CustomerList = () => {
                   </div>
                 </div>
               )}
+
             
               <button
                 className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-newPrimary/80 w-full"
@@ -672,13 +662,13 @@ const CustomerList = () => {
           background: #718096;
         }
         @media (max-width: 1024px) {
-          .grid-cols-[100px_1.5fr_1fr_1.5fr_2fr_1fr_1fr_100px_auto] {
-            grid-template-columns: 1fr 1.5fr 1fr 1.5fr 2fr 1fr 1fr 0.8fr 0.5fr;
+          .grid-cols-[80px_1.5fr_2fr_1fr_1fr_1fr_1fr_1fr_1fr_100px_auto] {
+            grid-template-columns: 80px 1.5fr 2fr 1fr 1fr 1fr 1fr 1fr 1fr 100px auto;
           }
         }
         @media (max-width: 640px) {
-          .grid-cols-[100px_1.5fr_1fr_1.5fr_2fr_1fr_1fr_100px_auto] {
-            grid-template-columns: 1fr 1.5fr 1fr 1.5fr 2fr 1fr 1fr 0.8fr 0.5fr;
+          .grid-cols-[80px_1.5fr_2fr_1fr_1fr_1fr_1fr_1fr_1fr_100px_auto] {
+            grid-template-columns: 80px 1.5fr 2fr 1fr 1fr 1fr 1fr 1fr 1fr 100px auto;
           }
         }
       `}</style>
