@@ -16,15 +16,34 @@ const staticCustomers = [
 ];
 
 const staticBanks = [
-  { bankName: "National Bank" },
-  { bankName: "City Bank" },
-  { bankName: "United Bank" },
+  { bankName: "National Bank of Pakistan" },
+  { bankName: "Habib Bank Limited" },
+  { bankName: "United Bank Limited" },
+  { bankName: "MCB Bank Limited" },
+  { bankName: "Allied Bank Limited" },
+  { bankName: "Bank Alfalah Limited" },
+  { bankName: "Faysal Bank Limited" },
+  { bankName: "Askari Bank Limited" },
+  { bankName: "BankIslami Pakistan Limited" },
+  { bankName: "Meezan Bank Limited" },
+  { bankName: "Dubai Islamic Bank Pakistan Limited" },
+  { bankName: "Standard Chartered Bank Pakistan Limited" },
+  { bankName: "Soneri Bank Limited" },
+  { bankName: "Bank of Punjab" },
+  { bankName: "Sindh Bank Limited" },
+  { bankName: "JS Bank Limited" },
+  { bankName: "Summit Bank Limited" },
+  { bankName: "First Women Bank Limited" },
+  { bankName: "Silkbank Limited" },
+  { bankName: "Al Baraka Bank Pakistan Limited" },
 ];
+
 
 const Bank = () => {
   const [bankList, setBankList] = useState([]);
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [customer, setCustomer] = useState("");
+  const [customerList, setCustomerList] = useState([]);
   const [bankName, setBankName] = useState("");
   const [accountName, setAccountName] = useState("");
   const [accountNo, setAccountNo] = useState("");
@@ -61,28 +80,35 @@ const Bank = () => {
     }
   }, [isSliderOpen]);
 
+//fetch customer
+  const fetchCustomersList = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/customers`);
+      setCustomerList(res.data);
+    } catch (error) {
+      console.error("Failed to fetch Customers", error);
+    } finally {
+      setTimeout(() => setLoading(false), 1000);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCustomersList();
+  }, [fetchCustomersList]);
+
+  // Fetch Banks
+
   const API_URL = `${import.meta.env.VITE_API_BASE_URL}/banks`;
 
   const fetchBankList = useCallback(async () => {
     try {
       setLoading(true);
       const res = await axios.get(`${API_URL}`);
-      setBankList(res.data || staticBanks.map((b, index) => ({
-        _id: `bank${index + 1}`,
-        customer: staticCustomers[Math.floor(Math.random() * staticCustomers.length)],
-        bankName: b.bankName,
-        accountName: `Account ${b.bankName}`,
-        accountNo: `ACC${Math.floor(100000 + Math.random() * 900000)}`,
-      })));
+      setBankList(res.data.data);
     } catch (error) {
       console.error("Failed to fetch Banks", error);
-      setBankList(staticBanks.map((b, index) => ({
-        _id: `bank${index + 1}`,
-        customer: staticCustomers[Math.floor(Math.random() * staticCustomers.length)],
-        bankName: b.bankName,
-        accountName: `Account ${b.bankName}`,
-        accountNo: `ACC${Math.floor(100000 + Math.random() * 900000)}`,
-      })));
+      
     } finally {
       setTimeout(() => setLoading(false), 1000);
     }
@@ -131,7 +157,7 @@ const Bank = () => {
       customer, // Store customer ID
       bankName,
       accountName,
-      accountNo,
+      accountNumber:accountNo,
     };
 
     try {
@@ -170,7 +196,7 @@ const Bank = () => {
     setCustomer(bank.customer?._id || "");
     setBankName(bank.bankName || "");
     setAccountName(bank.accountName || "");
-    setAccountNo(bank.accountNo || "");
+    setAccountNo(bank.accountNumber || "");
     setIsSliderOpen(true);
   };
 
@@ -229,6 +255,7 @@ const Bank = () => {
       });
   };
 
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <CommanHeader />
@@ -278,10 +305,10 @@ const Bank = () => {
                       key={b._id}
                       className="hidden lg:grid grid-cols-[80px_1.5fr_1.5fr_1.5fr_auto] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
-                      <div className="font-medium text-gray-900">{index + 1}</div>
+                      <div className=" text-gray-900">{index + 1}</div>
                       <div className="text-gray-700">{b.customer?.customerName || "N/A"}</div>
                       <div className="text-gray-600">{b.bankName}</div>
-                      <div className="text-gray-600">{b.accountNo}</div>
+                      <div className="text-gray-600">{b.accountNumber}</div>
                       {userInfo?.isAdmin && (
                         <div className="flex justify-end gap-3">
                           <button
@@ -374,7 +401,7 @@ const Bank = () => {
                     required
                   >
                     <option value="">Select Customer</option>
-                    {staticCustomers.map((c) => (
+                    {customerList.map((c) => (
                       <option key={c._id} value={c._id}>
                         {c.customerName}
                       </option>
@@ -403,7 +430,7 @@ const Bank = () => {
               <div className="flex gap-4">
                 <div className="flex-1 min-w-0">
                   <label className="block text-gray-700 font-medium">
-                    Account Name <span className="text-red-500">*</span>
+                    Account Holder Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
