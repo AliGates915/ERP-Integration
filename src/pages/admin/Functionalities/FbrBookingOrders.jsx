@@ -614,7 +614,7 @@ const FbrBookingOrders = () => {
           {totalPages > 1 && (
             <div className="flex justify-between my-4 px-10">
               <div className="text-sm text-gray-600">
-                Showing {indexOfLastRecord + 1} to{" "}
+                Showing {indexOfFirstRecord + 1} to{" "}
                 {Math.min(indexOfLastRecord, bookingOrders.length)} of{" "}
                 {bookingOrders.length} records
               </div>
@@ -925,7 +925,7 @@ const FbrBookingOrders = () => {
                   </div>
                 </div>
 
-                <div className="border bg-gray-100 p-4 rounded-lg space-y-4">
+                <div className="border p-4 rounded-lg space-y-4">
                   {/* Line 1: Product, Rate, Qty, Total */}
                   <div className="flex gap-4">
                     <div className="flex-1 min-w-0">

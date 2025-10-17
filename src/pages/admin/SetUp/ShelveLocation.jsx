@@ -98,13 +98,19 @@ const ShelveLocation = () => {
           headers,
         });
 
-        toast.success("✅ Shelve Location updated successfully");
+        toast.success("Shelve Location updated successfully");
       } else {
-        const res = await axios.post(API_URL, formData, {
+        try {
+           const res = await axios.post(API_URL, formData, {
           headers,
         });
+         toast.success("Shelve Location added successfully");
+        } catch (error) {
+          toast.error(error.response.data.message);
+        }
+       
 
-        toast.success("✅ Shelve Location added successfully");
+       
       }
       fetchLocation();
       // Reset form
@@ -117,15 +123,17 @@ const ShelveLocation = () => {
       setEditId(null);
     } catch (error) {
       console.error(error);
-      toast.error(`❌ ${isEdit ? "Update" : "Add"} shelve location failed`);
+      // toast.error(error.response.data.message);
     }
   };
 
   // Edit Shelve Location
   const handleEdit = (shelveLocation) => {
+    console.log({shelveLocation});
+    
     setIsEdit(true);
     setEditId(shelveLocation._id);
-    setShelfName(shelveLocation.shelfName);
+    setShelfName(shelveLocation.shelfNameCode);
     // setSection(shelveLocation.section);
     // setCurrentStockCount(shelveLocation.currentStockCount.toString());
     setDescription(shelveLocation.description);
