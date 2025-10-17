@@ -25,9 +25,10 @@ const FbrPaymentReceipt = () => {
   const [bankData, setBankData] = useState({
     receiptId: "",
     date: "",
+    customer: "", // Added customer field
     bankName: "",
+    accountName: "", // Changed from accountHolderName to accountName
     accountNumber: "",
-    accountHolderName: "",
     amountReceived: 0,
     remarks: "",
   });
@@ -113,7 +114,7 @@ const FbrPaymentReceipt = () => {
         .map((v) => ({
           bankName: v.bankSection.bankName,
           accountNumber: v.bankSection.accountNumber,
-          accountHolderName: v.bankSection.accountHolderName,
+          accountName: v.bankSection.accountName, // Updated to accountName
         }))
         .filter(
           (b, index, self) =>
@@ -169,7 +170,16 @@ const FbrPaymentReceipt = () => {
     setReceiptId("");
     setCustomerName("");
     setBalance("");
-    setBankData("");
+    setBankData({
+      receiptId: "",
+      date: "",
+      customer: "",
+      bankName: "",
+      accountName: "", // Updated to accountName
+      accountNumber: "",
+      amountReceived: 0,
+      remarks: "",
+    });
     setMode("");
     setDate("");
     setReceivedBy(userInfo.employeeName || "");
@@ -207,10 +217,36 @@ const FbrPaymentReceipt = () => {
     setIsSliderOpen(true);
   };
 
-  const handleEditClick = (voucher) => {
-    setEditingVoucher(voucher); // Keep the full object (must include _id)
-    setErrors({});
-    setIsSliderOpen(true);
+
+const handleEditClick = (voucher) => {
+  setEditingVoucher(voucher); // Keep the full object (must include _id)
+  setErrors({});
+  setIsSliderOpen(true);
+
+  if (voucher.mode === "Cash") {
+    setPaymentType("Cash");
+    setCashData({
+      receiptId: voucher.receiptId || "",
+      date: voucher.date ? voucher.date.split("T")[0] : "",
+      customer: voucher.customer?._id || "",
+      amountReceived: voucher.amountReceived || "",
+      newBalance: voucher.newBalance || "",
+      remarks: voucher.remarks || "",
+    });
+  } else {
+    setPaymentType("Bank");
+    setBankData({
+      receiptId: voucher.receiptId || "",
+      date: voucher.date ? voucher.date.split("T")[0] : "",
+      customer: voucher.customer?._id || "",
+      bankName: voucher.bankSection?.bankName || "",
+      accountName: voucher.bankSection?.accountName || "", // Updated to accountName
+      accountNumber: voucher.bankSection?.accountNumber || "",
+      amountReceived: voucher.amountReceived || "",
+      remarks: voucher.remarks || "",
+    });
+  }
+};
 
     if (voucher.mode === "Cash") {
       setPaymentType("Cash");
@@ -223,16 +259,21 @@ const FbrPaymentReceipt = () => {
         remarks: voucher.remarks || "",
       });
     } else {
-      setPaymentType("Bank");
-      setBankData({
-        receiptId: voucher.receiptId || "",
-        date: voucher.date ? voucher.date.split("T")[0] : "",
-        amountReceived: voucher.amountReceived || "",
-        bankName: voucher.bankSection?.bankName || "",
-        accountNumber: voucher.bankSection?.accountNumber || "",
-        accountHolderName: voucher.bankSection?.accountHolderName || "",
-        remarks: voucher.remarks || "",
-      });
+
+      voucherData = {
+        receiptId: editingVoucher ? bankData.receiptId : nextReceiptId,
+        date: bankData.date || new Date().toISOString().split("T")[0],
+        mode: "Bank",
+        customer: bankData.customer,
+        amountReceived: bankData.amountReceived,
+        bankSection: {
+          bankName: bankData.bankName,
+          accountName: bankData.accountName, // Updated to accountName
+          accountNumber: bankData.accountNumber,
+        },
+        remarks: bankData.remarks,
+      };
+
     }
   };
 
@@ -271,40 +312,6 @@ const FbrPaymentReceipt = () => {
 
       const isUpdate = Boolean(editingVoucher?._id);
 
-      // ✅ FIXED: Added missing slash before ID
-      const url = isUpdate ? `${API_URL}/${editingVoucher._id}` : API_URL;
-
-      const method = isUpdate ? "put" : "post";
-
-      const response = await axios({
-        method,
-        url,
-        data: voucherData,
-        headers: {
-          Authorization: `Bearer ${userInfo?.token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.data.success) {
-        toast.success(
-          isUpdate
-            ? "Voucher updated successfully!"
-            : "Voucher added successfully!"
-        );
-        resetForm();
-        fetchVouchers();
-        setEditingVoucher(null);
-      } else {
-        toast.error(response.data.message || "Failed to save voucher");
-      }
-    } catch (error) {
-      console.error("Submit Error:", error.response?.data || error);
-      toast.error(
-        error.response?.data?.message || "Server error while saving voucher."
-      );
-    }
-  };
 
   const handleDelete = async (id) => {
     const swalWithTailwindButtons = Swal.mixin({
@@ -369,8 +376,17 @@ const FbrPaymentReceipt = () => {
             "error"
           );
         }
-      });
-  };
+
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+        swalWithTailwindButtons.fire(
+          "Cancelled",
+          "Payment Receipt Voucher is safe 🙂",
+          "error"
+        );
+      }
+    });
+};
+
 
   // Pagination logic - UPDATED to use filteredVouchers
   const indexOfLastRecord = currentPage * recordsPerPage;
@@ -454,14 +470,10 @@ const FbrPaymentReceipt = () => {
                         {indexOfFirstRecord + index + 1}
                       </div>
                       <div className="text-gray-600">{voucher.receiptId}</div>
-                      <div className="text-gray-600">
-                        {voucher.customer?.customerName ||
-                          voucher.bankSection.accountHolderName ||
-                          "-"}
-                      </div>
-                      <div className="text-gray-600">
-                        Rs.{voucher.amountReceived || "-"}
-                      </div>
+
+                      <div className="text-gray-600">{voucher.customer?.customerName || voucher.bankSection.accountName || "-"}</div>
+                      <div className="text-gray-600">Rs.{voucher.amountReceived || "-"}</div>
+
                       <div className="text-gray-600">{voucher.mode}</div>
                       <div className="text-gray-600">
                         {voucher.date
@@ -721,20 +733,43 @@ const FbrPaymentReceipt = () => {
                 {/* Bank Form */}
                 {paymentType === "Bank" && (
                   <div className="space-y-4">
-                    {/* Bank Name & Account Number */}
+
+                    {/* Customer & Bank Name */}
                     <div className="flex gap-4">
-                      {/* Bank Name */}
+                      <div className="flex-1">
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Customer <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={bankData.customer}
+                          onChange={(e) =>
+                            setBankData({
+                              ...bankData,
+                              customer: e.target.value,
+                            })
+                          }
+                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        >
+                          <option value="">Select Customer</option>
+                          {customers.map((c) => (
+                            <option key={c._id} value={c._id}>
+                              {c.customerName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                       <div className="flex-1">
                         <label className="block text-gray-700 font-medium mb-2">
                           Bank Name <span className="text-red-500">*</span>
                         </label>
                         <select
-                          value={bankData?.bankName || ""} // ensure controlled value
+                          value={bankData.bankName}
                           onChange={(e) =>
-                            setBankData((prev) => ({
-                              ...prev,
+                            setBankData({
+                              ...bankData,
                               bankName: e.target.value,
-                            }))
+                            })
                           }
                           className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
@@ -747,20 +782,41 @@ const FbrPaymentReceipt = () => {
                           ))}
                         </select>
                       </div>
+                    </div>
 
-                      {/* Account Number */}
+                    {/* Account Name & Account Number */}
+                    <div className="flex gap-4">
                       <div className="flex-1">
                         <label className="block text-gray-700 font-medium mb-2">
-                          A/C Number <span className="text-red-500">*</span>
+                          Account Name <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
-                          value={bankData?.accountNumber || ""} // ensure controlled input
+                          value={bankData.accountName}
                           onChange={(e) =>
-                            setBankData((prev) => ({
-                              ...prev,
+                            setBankData({
+                              ...bankData,
+                              accountName: e.target.value,
+                            })
+                          }
+                          placeholder="Enter Account Name"
+                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        />
+                      </div>
+
+                      <div className="flex-1">
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Account No. <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={bankData.accountNumber}
+                          onChange={(e) =>
+                            setBankData({
+                              ...bankData,
                               accountNumber: e.target.value,
-                            }))
+                            })
                           }
                           placeholder="Enter Account Number"
                           className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -769,30 +825,11 @@ const FbrPaymentReceipt = () => {
                       </div>
                     </div>
 
-                    {/* Account Holder & Amount */}
+                    {/* Amount Received & Remarks */}
                     <div className="flex gap-4">
                       <div className="flex-1">
                         <label className="block text-gray-700 font-medium mb-2">
-                          Account Holder Name{" "}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={bankData.accountHolderName}
-                          onChange={(e) =>
-                            setBankData({
-                              ...bankData,
-                              accountHolderName: e.target.value,
-                            })
-                          }
-                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          required
-                        />
-                      </div>
-
-                      <div className="flex-1">
-                        <label className="block text-gray-700 font-medium mb-2">
-                          Amount <span className="text-red-500">*</span>
+                          Amount Received <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="number"
@@ -807,25 +844,23 @@ const FbrPaymentReceipt = () => {
                           required
                         />
                       </div>
-                    </div>
-
-                    {/* Remarks Field */}
-                    <div>
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Remarks
-                      </label>
-                      <textarea
-                        value={bankData.remarks}
-                        onChange={(e) =>
-                          setBankData({
-                            ...bankData,
-                            remarks: e.target.value,
-                          })
-                        }
-                        placeholder="Enter any remarks or notes"
-                        className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows="3"
-                      />
+                      <div className="flex-1">
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Remarks
+                        </label>
+                        <input
+                          value={bankData.remarks}
+                          onChange={(e) =>
+                            setBankData({
+                              ...bankData,
+                              remarks: e.target.value,
+                            })
+                          }
+                          placeholder="Enter any remarks or notes"
+                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          rows="3"
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
