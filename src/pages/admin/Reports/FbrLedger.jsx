@@ -37,41 +37,11 @@ const FbrLedger = () => {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
-  // fetch FBR Ledger
-  const fetchBookingOrders = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await api.get("/customer-ledger");
-
-      // Remove decimals from numeric fields
-      const roundedData = response.data.map((entry) => ({
-        ...entry,
-        Paid: Math.round(parseFloat(entry.Paid) || 0),
-        Received: Math.round(parseFloat(entry.Received) || 0),
-        Balance: Math.round(parseFloat(entry.Balance) || 0),
-        amount: Math.round(parseFloat(entry.amount) || 0),
-      }));
-
-      setLedgerEntries(roundedData);
-      console.log(roundedData);
-    } catch (error) {
-      console.error("Failed to fetch FBR Ledger", error);
-    } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchBookingOrders();
-  }, [fetchBookingOrders]);
-
   // fetch Customer List
   const fetchCustomerList = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await api.get("/customers/status");
+      const response = await api.get("/customers");
       setCustomerList(response);
       console.log("Customers:", response);
     } catch (error) {
@@ -88,24 +58,32 @@ const FbrLedger = () => {
   }, [fetchCustomerList]);
 
   // fetch Customer ID
-  const fetchCustomerId = useCallback(async () => {
+
+  // ✅ Fetch customer ledger by selectedCustomer
+  const fetchCustomerId = useCallback(async (id) => {
+    if (!id) {
+      console.log("⚠️ No customer selected yet");
+      return; // don’t run when nothing selected
+    }
+
     try {
       setLoading(true);
-      const response = await api.get(
-        "/customer-ledger?customer=68de36db09c8211ed0774caa"
-      );
-      setLedgerId(response.data);
-      console.log("Customer Data:", response.data);
+      console.log("Fetching ledger for:", id);
+
+      const response = await api.get(`/customer-ledger?customer=${id}`);
+      setLedgerEntries(response.data);
+      console.log("Customer Ledger Data:", response.data);
     } catch (error) {
-      console.error("Failed to fetch customer list", error);
+      console.error("Failed to fetch customer ledger", error);
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
+      setTimeout(() => setLoading(false), 1000);
     }
   }, []);
+
   useEffect(() => {
-    fetchCustomerId(selectedCustomer);
+    if (selectedCustomer) {
+      fetchCustomerId(selectedCustomer);
+    }
   }, [selectedCustomer, fetchCustomerId]);
 
   // fetch Date
@@ -116,7 +94,7 @@ const FbrLedger = () => {
         "/customer-ledger?customer=68de36db09c8211ed0774caa&from=2025-10-01&to=2025-10-15"
       );
       setDate(response.data);
-      console.log("Date:", response.data);
+      // console.log("Date:", response.data);
     } catch (error) {
       console.error("Failed to fetch date", error);
     } finally {

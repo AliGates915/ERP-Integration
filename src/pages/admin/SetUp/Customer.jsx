@@ -76,6 +76,7 @@ const CustomerList = () => {
     fetchCustomersList();
   }, [fetchCustomersList]);
 
+
   // Handlers
   const handleAddCustomer = () => {
     setIsSliderOpen(true);
@@ -136,8 +137,10 @@ const CustomerList = () => {
       creditTime: paymentTerms === "CreditCard" ? creditTime : undefined,
       creditLimit: paymentTerms === "CreditCard" ? creditLimit : undefined,
       status: "Pending",
+      openingBalanceDate,
+      balance:balanceReceived
     };
-
+   
     try {
       const { token } = userInfo || {};
       const headers = {
@@ -191,8 +194,12 @@ const CustomerList = () => {
     setDepartment(customer.department || ""); // Added department
     setNtn(customer.ntn || "");
     setGst(customer.gst || "");
-    setOpeningBalanceDate(customer.openingBalanceDate || ""); // Added opening balance date
-    setBalanceReceived(customer.balanceReceived || ""); // Added balance received
+     const formattedDate = customer.openingBalanceDate
+    ? customer.openingBalanceDate.split("T")[0]
+    : "";
+  setOpeningBalanceDate(formattedDate);
+    
+    setBalanceReceived(customer.balance || ""); // Added balance received
     setPaymentTerms(customer.paymentTerms || "");
     setStatus(customer.status);
     setIsSliderOpen(true);
@@ -272,14 +279,13 @@ const CustomerList = () => {
       <div className="rounded-xl border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <div className="min-w-[1100px]">
-            <div className="hidden lg:grid grid-cols-[80px_1.5fr_2fr_1fr_1fr_1fr_1fr_1fr_1fr_100px_auto] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+            <div className="hidden lg:grid grid-cols-[80px_1.5fr_2fr_1fr_1fr_1fr_1fr_1fr_100px_auto] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
               <div>SR</div>
               <div>Company</div>
               <div>Address</div>
               <div>Phone</div>
               <div>Person</div>
               <div>Designation</div>
-              <div>Department</div>
               <div>Mobile</div>
               <div>Balance</div>
               <div>Status</div>
@@ -290,8 +296,8 @@ const CustomerList = () => {
               {loading ? (
                 <TableSkeleton
                   rows={customerList.length > 0 ? customerList.length : 5}
-                  cols={userInfo?.isAdmin ? 11 : 10}
-                  className="lg:grid-cols-[80px_1.5fr_2fr_1fr_1fr_1fr_1fr_1fr_1fr_100px_auto]"
+                  cols={userInfo?.isAdmin ? 10 : 10}
+                  className="lg:grid-cols-[80px_1.5fr_2fr_1fr_1fr_1fr_1fr_1fr_100px_auto]"
                 />
               ) : customerList.length === 0 ? (
                 <div className="text-center py-4 text-gray-500 bg-white">
@@ -302,7 +308,7 @@ const CustomerList = () => {
                   <>
                     <div
                       key={c._id}
-                      className="hidden lg:grid grid-cols-[80px_1.5fr_2fr_1fr_1fr_1fr_1fr_1fr_1fr_100px_auto] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                      className="hidden lg:grid grid-cols-[80px_1.5fr_2fr_1fr_1fr_1fr_1fr_1fr_100px_auto] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
                       <div className="text-gray-900">{index + 1}</div>
                       <div className="text-gray-700">{c.customerName}</div>
@@ -310,10 +316,9 @@ const CustomerList = () => {
                       <div className="text-gray-600">{c.phoneNumber}</div>
                       <div className="text-gray-600">{c.contactPerson}</div>
                       <div className="text-gray-600">{c.designation}</div>
-                      <div className="text-gray-600">{c.department}</div>
                       <div className="text-gray-600">{c.mobileNumber}</div>
                       <div className="text-gray-600">
-                        {c.balanceReceived || "0"}
+                        {c.balance || "0"}
                       </div>
                       <div className="font-semibold">
                         {c.status ? (
