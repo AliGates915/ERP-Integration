@@ -46,7 +46,7 @@ const salesChildren = [
 
 // setupChildren
 const setupChildren = [
-  { to: "/admin/company", label: "Company", icon: <FaBuilding /> },
+  // { to: "/admin/company", label: "Company", icon: <FaBuilding /> },
   { to: "/admin/customers-list", label: "Customer", icon: <FaUsers /> },
   {
     to: "/admin/category-item",
@@ -59,11 +59,11 @@ const setupChildren = [
     label: "Manufacture",
     icon: <FaIndustry />,
   },
-  {
-    to: "/admin/supplier",
-    label: "Supplier",
-    icon: <FaTruck />,
-  },
+  // {
+  //   to: "/admin/supplier",
+  //   label: "Supplier",
+  //   icon: <FaTruck />,
+  // },
   {
     to: "/admin/shelve-location",
     label: "Shelve Location",

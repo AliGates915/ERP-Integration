@@ -554,7 +554,8 @@ const FbrProduct = () => {
           <div className="max-h-screen overflow-y-auto custom-scrollbar">
             <div className="inline-block w-full align-middle">
               {/* Header */}
-              <div className="hidden lg:grid grid-cols-[200px,200px,200px,200px,200px,200px,120px] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+              <div className="hidden lg:grid grid-cols-[0.2fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+                <div>SR</div>
                 <div>Item Category</div>
                 <div>Item Name</div>
                 <div>Purchase</div>
@@ -569,8 +570,8 @@ const FbrProduct = () => {
                 {loading ? (
                   <TableSkeleton
                     rows={itemList.length || 5}
-                    cols={userInfo?.isAdmin ? 7 : 6}
-                    className="lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_auto]"
+                    cols={userInfo?.isAdmin ? 8 : 6}
+                    className="lg:grid-cols-[0.2fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]"
                   />
                 ) : itemList.length === 0 ? (
                   <div className="text-center py-4 text-gray-500 bg-white">
@@ -580,8 +581,11 @@ const FbrProduct = () => {
                   currentRecords.map((item, index) => (
                     <div
                       key={item._id}
-                      className="grid grid-cols-1 lg:grid-cols-[200px,200px,200px,200px,200px,100px,200px,_auto] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                      className="grid grid-cols-1 lg:grid-cols-[0.2fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
+                      <div className="text-gray-600">
+                        {indexOfFirstRecord + index + 1}
+                      </div>
                       {/* Item Category (with icon) */}
                       <div className="flex items-center gap-3">
                         <img
@@ -619,7 +623,7 @@ const FbrProduct = () => {
 
                       {/* Actions */}
                       {userInfo?.isAdmin && (
-                        <div className="flex justify-end gap-3">
+                        <div className="flex justify-start gap-3">
                           <button
                             onClick={() => handleEdit(item)}
                             className="text-blue-500 hover:underline"

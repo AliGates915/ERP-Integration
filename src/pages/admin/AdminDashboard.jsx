@@ -1,18 +1,7 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
+
 import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "../../components/ui/table";
-import { HashLoader } from "react-spinners";
-import {
-  PieChart,
-  Pie,
-  Cell,
   BarChart,
   Bar,
   XAxis,
@@ -31,13 +20,7 @@ import {
   UserCheck,
   Calendar,
   CreditCard,
-  DollarSign,
   PieChart as PieChartIcon,
-  Bell,
-  X,
-  Sun,
-  Moon,
-  Cloud,
 } from "lucide-react";
 import CommanHeader from "../../components/CommanHeader";
 
@@ -57,13 +40,19 @@ const AdminDashboard = () => {
   const [bookingRejected, setBookingRejected] = useState(0);
   const [revenue, setRevenue] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [chartData, setChartData] = useState([]);
+  const [saleschartData, setSalesChartData] = useState([]);
   const [recentCustomer, setRecentCustomer] = useState([]);
+  const [activePeriod, setActivePeriod] = useState("weekly");
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const dropdownRef = useRef(null);
   const [search, setSearch] = useState("");
+  const [customerCount, setCustomerCount] = useState([]);
+  const [totalProducts, setTotalProducts] = useState([]);
+  const [totalStaff, setTotalStaff] = useState([]);
+  const [totalSales, setTotalSales] = useState([]);
+  const [totalBooking, setTotalBooking] = useState([]);
   const dummyBookings = [
     {
       id: 1,
@@ -150,6 +139,127 @@ const AdminDashboard = () => {
     Pending: "bg-amber-100 text-amber-800",
     Denied: "bg-rose-100 text-rose-800",
   };
+
+  // fetch Customer Count
+  const fetchCustomerCount = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${base}/dashboard/customers-count`, {
+        headers: {
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+      });
+      setCustomerCount(response.data);
+      // console.log("Customers:", response.data);
+    } catch (error) {
+      console.error("Failed to fetch customer list", error);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+    }
+  }, [userInfo.token, base]);
+
+  useEffect(() => {
+    fetchCustomerCount();
+  }, [fetchCustomerCount]);
+  // console.log({ customerCount });
+
+  // fetch Total Products
+  const fetchTotalProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${base}/dashboard/product-count`, {
+        headers: {
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+      });
+      setTotalProducts(response.data);
+      console.log("Products:", response.data);
+    } catch (error) {
+      console.error("Failed to fetch customer list", error);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTotalProducts();
+  }, [fetchTotalProducts]);
+
+  // fetch Total Staff
+  const fetchTotalStaff = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${base}/dashboard/staff-count`, {
+        headers: {
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+      });
+      setTotalStaff(response.data);
+      console.log("Staff:", response.data);
+    } catch (error) {
+      console.error("Failed to fetch customer list", error);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTotalStaff();
+  }, [fetchTotalStaff]);
+
+  // fetch Total Sales
+  const fetchTotalSales = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${base}/dashboard/sales-count`, {
+        headers: {
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+      });
+      setTotalSales(response.data);
+      console.log("Sales:", response.data);
+    } catch (error) {
+      console.error("Failed to fetch Total Sales", error);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTotalSales();
+  }, [fetchTotalSales]);
+
+  // fetch Total Sales
+  const fetchTotalBookings = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${base}/dashboard/order-count`, {
+        headers: {
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+      });
+      setTotalBooking(response.data);
+      console.log("Booking:", response.data);
+    } catch (error) {
+      console.error("Failed to fetch Total Bookings", error);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTotalBookings();
+  }, [fetchTotalBookings]);
 
   // Update time every minute
   useEffect(() => {
@@ -313,45 +423,44 @@ const AdminDashboard = () => {
     };
   }, []);
 
-  useEffect(() => {
-    fetchSalesChart("weekly");
-  });
-
-  const fetchSalesChart = async (period = "daily") => {
+  const fetchSalesChart = async (period = "weekly") => {
     try {
       const res = await axios.get(
-        `${base}/saleInvoices/chart?period=${period}`
+        `${base}/dashboard/sales-overview?type=${period}`,
+        {
+          headers: { Authorization: `Bearer ${userInfo.token}` },
+        }
       );
 
-      const transformedData = res.data.map((item) => {
+      const transformedData = (res.data.data || res.data).map((item) => {
         const date = new Date(item._id);
-        let name;
-
-        if (period === "daily" || period === "weekly") {
-          const month = date.toLocaleString("default", { month: "short" });
-          const day = date.getDate();
-          name = `${month} ${day}`;
+        let label;
+        if (period === "weekly") {
+          label = `${date.getDate()}th`;
         } else if (period === "monthly") {
-          name = date.toLocaleString("default", {
-            month: "short",
-            year: "numeric",
-          });
+          label = date.toLocaleString("default", { month: "short" });
         } else if (period === "yearly") {
-          name = date.getFullYear();
+          label = date.getFullYear();
         }
-
         return {
-          name,
-          sales: item.count,
-          revenue: item.totalAmount || (Math.random() * 1000).toFixed(2),
+          day: label,
+          thisWeek: item.total,
+          lastWeek: Math.floor(item.total * 0.6),
         };
       });
 
-      setChartData(transformedData);
+      setSalesChartData([]);
+      setTimeout(() => setSalesChartData(transformedData), 0);
     } catch (err) {
       console.error("Sales chart fetch failed:", err);
     }
   };
+
+  console.log(saleschartData);
+
+  useEffect(() => {
+    fetchSalesChart("weekly");
+  }, []);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -365,73 +474,13 @@ const AdminDashboard = () => {
   }, []);
 
   // ✅ Mark single notification as read
-  const clearNotification = async (id) => {
-    try {
-      await axios.put(`${base}/notifications/${id}/read`);
-      setNotifications((prev) => prev.filter((n) => n._id !== id));
-    } catch (err) {
-      console.error("Clear failed:", err);
-    }
-  };
 
   // ✅ Mark all notifications as read
-  const clearAll = async () => {
-    try {
-      await axios.put(`${base}/notifications/mark-all`, {
-        headers: {
-          Authorization: `Bearer ${userInfo.token}`,
-        },
-      });
-      setNotifications([]);
-    } catch (err) {
-      console.error("Clear all failed:", err);
-    }
-  };
-
-  // Format time for display
-  const formatTime = (date) => {
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  };
-
-  // Format date for display
-  const formatDate = (date) => {
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  // Get greeting based on time of day
-  const getGreeting = () => {
-    const hour = currentTime.getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 17) return "Good Afternoon";
-    return "Good Evening";
-  };
-
-  // Get appropriate icon based on time of day
-  const getGreetingIcon = () => {
-    const hour = currentTime.getHours();
-    if (hour < 12) return <Sun className="text-amber-500" size={24} />;
-    if (hour < 17) return <Cloud className="text-blue-400" size={24} />;
-    return <Moon className="text-indigo-500" size={24} />;
-  };
-  const data = [
-    { day: "22th", thisWeek: 100, lastWeek: 60 },
-    { day: "23th", thisWeek: 120, lastWeek: 80 },
-    { day: "24th", thisWeek: 160, lastWeek: 70 },
-    { day: "25th", thisWeek: 155, lastWeek: 65 },
-    { day: "26th", thisWeek: 170, lastWeek: 75 },
-    { day: "27th", thisWeek: 177, lastWeek: 77 },
-    { day: "28th", thisWeek: 150, lastWeek: 90 },
-  ];
 
   const summaryData = [
     {
       name: "Total Customers",
-      value: customers,
+      value: customerCount.count,
       icon: <Users size={24} />,
       change: "+12%",
       color: "bg-blue-100 text-blue-600",
@@ -439,7 +488,7 @@ const AdminDashboard = () => {
     },
     {
       name: "Total Products",
-      value: items,
+      value: totalProducts.count,
       icon: <Package size={24} />,
       change: "+5%",
       color: "bg-green-100 text-green-600",
@@ -447,7 +496,7 @@ const AdminDashboard = () => {
     },
     {
       name: "Total Staff",
-      value: users,
+      value: totalStaff.count,
       icon: <UserCheck size={24} />,
       change: "+2%",
       color: "bg-purple-100 text-purple-600",
@@ -455,23 +504,23 @@ const AdminDashboard = () => {
     },
     {
       name: "Total Sales",
-      value: sales,
+      value: totalSales.totalSales,
       icon: <CreditCard size={24} />,
       change: "+18%",
       color: "bg-amber-100 text-amber-600",
       border: "border-l-4 border-amber-500",
     },
-    {
-      name: "Total Revenue",
-      value: `$${revenue.toLocaleString()}`,
-      icon: <DollarSign size={24} />,
-      change: "+15%",
-      color: "bg-emerald-100 text-emerald-600",
-      border: "border-l-4 border-emerald-500",
-    },
+    // {
+    //   name: "Total Revenue",
+    //   value: `$${revenue.toLocaleString()}`,
+    //   icon: <DollarSign size={24} />,
+    //   change: "+15%",
+    //   color: "bg-emerald-100 text-emerald-600",
+    //   border: "border-l-4 border-emerald-500",
+    // },
     {
       name: "Bookings",
-      value: booking,
+      value: totalBooking.count,
       icon: <Calendar size={24} />,
       change: "-3%",
       color: "bg-rose-100 text-rose-600",
@@ -488,11 +537,7 @@ const AdminDashboard = () => {
     { month: "NOV", thisYear: 2600, lastYear: 1500 },
     { month: "DEC", thisYear: 3000, lastYear: 2000 },
   ];
-  const statusColors = {
-    Completed: "bg-green-100 text-green-800",
-    Pending: "bg-amber-100 text-amber-800",
-    Refunded: "bg-rose-100 text-rose-800",
-  };
+
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
@@ -506,15 +551,6 @@ const AdminDashboard = () => {
     return null;
   };
 
-  // if (loading) {
-  //   return (
-  //     <div className="flex flex-col justify-center items-center h-[80vh]">
-  //       <HashLoader color="#84CF16" />
-  //       <span className="ml-4 text-gray-500 mt-4">Loading ERP...</span>
-  //     </div>
-  //   );
-  // }
-
   return (
     <div className="p-4 w-full bg-gray-50 min-h-screen">
       {/* Updated Header - Replaced Search Bar */}
@@ -523,7 +559,7 @@ const AdminDashboard = () => {
       {loading ? (
         <SummaryCardSkeleton />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
           {summaryData.map((item, index) => (
             <div
               key={index}
@@ -571,20 +607,43 @@ const AdminDashboard = () => {
                 </h2>
                 <div className="flex space-x-2">
                   <button
-                    onClick={() => fetchSalesChart("weekly")}
-                    className="px-3 py-1 text-xs bg-newPrimary/10 text-newPrimary rounded-full"
+                    onClick={() => {
+                      setActivePeriod("weekly");
+                      fetchSalesChart("weekly");
+                    }}
+                    className={`px-3 py-1 text-xs rounded-full ${
+                      activePeriod === "weekly"
+                        ? "bg-newPrimary/10 text-newPrimary"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
                   >
                     Weekly
                   </button>
+
                   <button
-                    onClick={() => fetchSalesChart("monthly")}
-                    className="px-3 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded-full"
+                    onClick={() => {
+                      setActivePeriod("monthly");
+                      fetchSalesChart("monthly");
+                    }}
+                    className={`px-3 py-1 text-xs rounded-full ${
+                      activePeriod === "monthly"
+                        ? "bg-newPrimary/10 text-newPrimary"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
                   >
                     Monthly
                   </button>
+
                   <button
-                    onClick={() => fetchSalesChart("yearly")}
-                    className="px-3 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded-full"
+                    onClick={() => {
+                      setActivePeriod("yearly");
+                      fetchSalesChart("yearly");
+                    }}
+                    className={`px-3 py-1 text-xs rounded-full ${
+                      activePeriod === "yearly"
+                        ? "bg-newPrimary/10 text-newPrimary"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
                   >
                     Yearly
                   </button>
@@ -593,7 +652,7 @@ const AdminDashboard = () => {
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
-                    data={data}
+                    data={saleschartData}
                     margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />

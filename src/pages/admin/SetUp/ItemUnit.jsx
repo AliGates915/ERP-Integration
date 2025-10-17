@@ -74,7 +74,6 @@ const ItemUnit = () => {
       setLoading(true);
       const res = await axios.get(`${API_URL}`);
       setItemUnitList(res.data); // store actual categories array
-     
     } catch (error) {
       console.error("Failed to fetch Supplier", error);
     } finally {
@@ -136,7 +135,6 @@ const ItemUnit = () => {
 
   // Edit Manufacturer
   const handleEdit = (item) => {
-   
     setIsEdit(true);
     setEditId(item._id);
     setManufacturerName(item.unitName);
@@ -226,7 +224,8 @@ const ItemUnit = () => {
         <div className="overflow-x-auto">
           <div className="min-w-[600px]">
             {/* ✅ Table Header */}
-            <div className="hidden lg:grid grid-cols-[150px_1fr_2fr_auto] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+            <div className="hidden lg:grid grid-cols-[0.2fr_150px_1fr_2fr_auto] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+              <div>SR</div>
               <div>Unit Item ID</div>
               <div>Name</div>
               <div>Description</div>
@@ -239,21 +238,22 @@ const ItemUnit = () => {
                 // Skeleton shown while loading
                 <TableSkeleton
                   rows={itemUnitList.length > 0 ? itemUnitList.length : 5}
-                  cols={userInfo?.isAdmin ? 4 : 6}
-                  className="lg:grid-cols-[150px_1fr_2fr_auto]"
+                  cols={userInfo?.isAdmin ? 5 : 6}
+                  className="lg:grid-cols-[0.2fr_150px_1fr_2fr_auto]"
                 />
               ) : itemUnitList.length === 0 ? (
                 <div className="text-center py-4 text-gray-500 bg-white">
                   No unit items found.
                 </div>
               ) : (
-                itemUnitList.map((manufacturer) => (
+                itemUnitList.map((manufacturer, index) => (
                   <div
                     key={manufacturer._id || `temp-${manufacturer}`}
-                    className="grid grid-cols-[150px_1fr_2fr_auto] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                    className="grid grid-cols-[0.2fr_150px_1fr_2fr_auto] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                   >
+                    <div className="text-gray-600">{index + 1}</div>
                     {/* Unit Item ID */}
-                    <div className="font-medium text-gray-900">
+                    <div className="text-gray-900">
                       {manufacturer._id?.slice(0, 5) || "N/A"}
                     </div>
 
