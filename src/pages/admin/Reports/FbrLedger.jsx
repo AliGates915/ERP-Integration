@@ -87,34 +87,50 @@ const FbrLedger = () => {
   }, [selectedCustomer, fetchCustomerId]);
 
   // fetch Date
-  const fetchDate = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await api.get(
-        "/customer-ledger?customer=68de36db09c8211ed0774caa&from=2025-10-01&to=2025-10-15"
-      );
-      setDate(response.data);
-      // console.log("Date:", response.data);
-    } catch (error) {
-      console.error("Failed to fetch date", error);
-    } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
-    }
-  }, []);
+  // ✅ Dynamic fetch by date and customer
+const fetchDate = useCallback(async () => {
+  if (!selectedCustomer) return; // no customer selected yet
 
-  useEffect(() => {
+  try {
+    setLoading(true);
+
+    // Build dynamic query params
+    let query = `/customer-ledger?customer=${selectedCustomer}`;
+    if (dateFrom) query += `&from=${dateFrom}`;
+    if (dateTo) query += `&to=${dateTo}`;
+
+    const response = await api.get(query);
+
+    // ✅ Store the ledger results instead of overwriting date state
+    setLedgerEntries(response.data?.data || response.data || []);
+
+    console.log("Filtered Ledger (Date Range):", response.data);
+  } catch (error) {
+    console.error("Failed to fetch ledger by date", error);
+  } finally {
+    setTimeout(() => setLoading(false), 1000);
+  }
+}, [selectedCustomer, dateFrom, dateTo]);
+
+
+useEffect(() => {
+  if (selectedCustomer) {
     fetchDate();
-  }, [fetchDate]);
+  }
+}, [selectedCustomer, dateFrom, dateTo, fetchDate]);
 
   // Filter ledger data based on selected customer and date range
-  const filteredLedger = ledgerEntries.filter(
-    (entry) =>
-      entry.customerId === selectedCustomer &&
-      (!dateFrom || entry.date >= dateFrom) &&
-      (!dateTo || entry.date <= dateTo)
+ const filteredLedger = ledgerEntries.filter((entry) => {
+  const entryDate = new Date(entry.date);
+  const from = dateFrom ? new Date(dateFrom) : null;
+  const to = dateTo ? new Date(dateTo) : null;
+
+  return (
+    entry.customerId === selectedCustomer &&
+    (!from || entryDate >= from) &&
+    (!to || entryDate <= to)
   );
+});
 
   // Simulate fetching ledger entries
   const fetchLedgerEntries = useCallback(async () => {

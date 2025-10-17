@@ -15,7 +15,7 @@ const CustomerList = () => {
   const [contactPerson, setContactPerson] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
-  const [paymentTerms, setPaymentTerms] = useState("");
+  const [paymentTerms, setPaymentTerms] = useState("Credit");
   const [status, setStatus] = useState(true);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
@@ -25,6 +25,8 @@ const CustomerList = () => {
   const [gst, setGst] = useState("");
   const [openingBalanceDate, setOpeningBalanceDate] = useState(""); // Added opening balance date
   const [balanceReceived, setBalanceReceived] = useState(""); // Added balance received
+  const [creditTime, setCreditTime] = useState("");
+const [creditLimit, setCreditLimit] = useState("");
   const [isEdit, setIsEdit] = useState(false);
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -86,7 +88,7 @@ const CustomerList = () => {
     setContactPerson("");
     setEmail("");
     setAddress("");
-    setPaymentTerms("");
+  setPaymentTerms("Credit");
     setPhoneNumber("");
     setMobileNumber("");
     setDesignation("");
@@ -96,6 +98,8 @@ const CustomerList = () => {
     setOpeningBalanceDate(""); // Reset opening balance date
     setBalanceReceived(""); // Reset balance received
     setStatus(true);
+    setCreditTime("");
+setCreditLimit("");
   };
 
   const validateEmail = (email) => {
@@ -129,13 +133,11 @@ const CustomerList = () => {
       mobileNumber,
       phoneNumber,
       designation,
-      department, // Added department
       ntn,
       gst,
-
-      paymentTerms: paymentTerms === "CreditCard" ? "Credit" : paymentTerms,
-      creditTime: paymentTerms === "CreditCard" ? creditTime : undefined,
-      creditLimit: paymentTerms === "CreditCard" ? creditLimit : undefined,
+      paymentTerms: paymentTerms === "Credit" ? "Credit" : paymentTerms,
+      creditTime: paymentTerms === "Credit" ? creditTime : undefined,
+      creditLimit: paymentTerms === "Credit" ? creditLimit : undefined,
       status: "Pending",
       openingBalanceDate,
       balance:balanceReceived
@@ -201,6 +203,8 @@ const CustomerList = () => {
     
     setBalanceReceived(customer.balance || ""); // Added balance received
     setPaymentTerms(customer.paymentTerms || "");
+    setCreditTime(customer.creditTime || "");
+setCreditLimit(customer.creditLimit || "");
     setStatus(customer.status);
     setIsSliderOpen(true);
   };
@@ -623,7 +627,7 @@ const CustomerList = () => {
                 </div>
               </div>
 
-              {paymentTerms === "CreditCard" && (
+            {paymentTerms === "Credit" && (
                 <div className="flex gap-4">
                   <div className="w-1/2">
                     <label className="block text-gray-700 font-medium">
