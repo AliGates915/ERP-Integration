@@ -46,7 +46,7 @@ const salesChildren = [
 
 // setupChildren
 const setupChildren = [
-  { to: "/admin/company", label: "Company", icon: <FaBuilding /> },
+  // { to: "/admin/company", label: "Company", icon: <FaBuilding /> },
   { to: "/admin/customers-list", label: "Customer", icon: <FaUsers /> },
   {
     to: "/admin/category-item",

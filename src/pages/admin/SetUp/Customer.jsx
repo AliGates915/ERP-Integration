@@ -104,8 +104,14 @@ const CustomerList = () => {
 
   // Save or Update Customer
   const handleSave = async () => {
-    if (paymentTerms === "Credit" && status && (!balanceReceived || parseFloat(balanceReceived) <= 0)) {
-      toast.error("❌ Balance Received is required and must be a positive number for Credit payment terms");
+    if (
+      paymentTerms === "Credit" &&
+      status &&
+      (!balanceReceived || parseFloat(balanceReceived) <= 0)
+    ) {
+      toast.error(
+        "❌ Balance Received is required and must be a positive number for Credit payment terms"
+      );
       return;
     }
 
@@ -266,9 +272,8 @@ const CustomerList = () => {
       <div className="rounded-xl border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <div className="min-w-[1100px]">
-
             <div className="hidden lg:grid grid-cols-[80px_1.5fr_2fr_1fr_1fr_1fr_1fr_1fr_1fr_100px_auto] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
-              <div>SR#</div>
+              <div>SR</div>
               <div>Company</div>
               <div>Address</div>
               <div>Phone</div>
@@ -285,7 +290,6 @@ const CustomerList = () => {
               {loading ? (
                 <TableSkeleton
                   rows={customerList.length > 0 ? customerList.length : 5}
-
                   cols={userInfo?.isAdmin ? 11 : 10}
                   className="lg:grid-cols-[80px_1.5fr_2fr_1fr_1fr_1fr_1fr_1fr_1fr_100px_auto]"
                 />
@@ -298,10 +302,9 @@ const CustomerList = () => {
                   <>
                     <div
                       key={c._id}
-
                       className="hidden lg:grid grid-cols-[80px_1.5fr_2fr_1fr_1fr_1fr_1fr_1fr_1fr_100px_auto] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
-                      <div className="font-medium text-gray-900">{index + 1}</div>
+                      <div className="text-gray-900">{index + 1}</div>
                       <div className="text-gray-700">{c.customerName}</div>
                       <div className="text-gray-600 truncate">{c.address}</div>
                       <div className="text-gray-600">{c.phoneNumber}</div>
@@ -309,7 +312,9 @@ const CustomerList = () => {
                       <div className="text-gray-600">{c.designation}</div>
                       <div className="text-gray-600">{c.department}</div>
                       <div className="text-gray-600">{c.mobileNumber}</div>
-                      <div className="text-gray-600">{c.balanceReceived || "0"}</div>
+                      <div className="text-gray-600">
+                        {c.balanceReceived || "0"}
+                      </div>
                       <div className="font-semibold">
                         {c.status ? (
                           <span className="text-green-600 bg-green-50 px-3 py-1 rounded-[5px]">
@@ -347,13 +352,27 @@ const CustomerList = () => {
                         {c.customerName}
                       </h3>
                       <p className="text-sm text-gray-600">SR#: {index + 1}</p>
-                      <p className="text-sm text-gray-600">Address: {c.address}</p>
-                      <p className="text-sm text-gray-600">Phone: {c.phoneNumber}</p>
-                      <p className="text-sm text-gray-600">Person: {c.contactPerson}</p>
-                      <p className="text-sm text-gray-600">Designation: {c.designation}</p>
-                      <p className="text-sm text-gray-600">Department: {c.department}</p>
-                      <p className="text-sm text-gray-600">Mobile: {c.mobileNumber}</p>
-                      <p className="text-sm text-gray-600">Balance: {c.balanceReceived || "0"}</p>
+                      <p className="text-sm text-gray-600">
+                        Address: {c.address}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Phone: {c.phoneNumber}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Person: {c.contactPerson}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Designation: {c.designation}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Department: {c.department}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Mobile: {c.mobileNumber}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Balance: {c.balanceReceived || "0"}
+                      </p>
                       <p
                         className={`text-sm font-semibold ${
                           c.status ? "text-green-600" : "text-red-600"
@@ -629,7 +648,6 @@ const CustomerList = () => {
                   </div>
                 </div>
               )}
-
 
               <button
                 className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-newPrimary/80 w-full"
