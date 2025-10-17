@@ -171,7 +171,7 @@ const AdminDashboard = () => {
       setCustomerCount(response.data);
       // console.log("Customers:", response.data);
     } catch (error) {
-      console.error("Failed to fetch customer list", error);
+      console.error("Failed to fetch customer count", error);
     } finally {
       setTimeout(() => {
         setLoading(false);
@@ -194,9 +194,9 @@ const AdminDashboard = () => {
         },
       });
       setTotalProducts(response.data);
-      console.log("Products:", response.data);
+      // console.log("Products:", response.data);
     } catch (error) {
-      console.error("Failed to fetch customer list", error);
+      console.error("Failed to fetch total products", error);
     } finally {
       setTimeout(() => {
         setLoading(false);
@@ -218,9 +218,9 @@ const AdminDashboard = () => {
         },
       });
       setTotalStaff(response.data);
-      console.log("Staff:", response.data);
+      // console.log("Staff:", response.data);
     } catch (error) {
-      console.error("Failed to fetch customer list", error);
+      console.error("Failed to fetch total staff", error);
     } finally {
       setTimeout(() => {
         setLoading(false);
@@ -242,7 +242,7 @@ const AdminDashboard = () => {
         },
       });
       setTotalSales(response.data);
-      console.log("Sales:", response.data);
+      // console.log("Sales:", response.data);
     } catch (error) {
       console.error("Failed to fetch Total Sales", error);
     } finally {
@@ -256,7 +256,7 @@ const AdminDashboard = () => {
     fetchTotalSales();
   }, [fetchTotalSales]);
 
-  // fetch Total Sales
+  // fetch Total Bookings
   const fetchTotalBookings = useCallback(async () => {
     try {
       setLoading(true);
@@ -266,7 +266,7 @@ const AdminDashboard = () => {
         },
       });
       setTotalBooking(response.data);
-      console.log("Booking:", response.data);
+      // console.log("Booking:", response.data);
     } catch (error) {
       console.error("Failed to fetch Total Bookings", error);
     } finally {
