@@ -254,7 +254,8 @@ const ItemType = () => {
         <div className="overflow-x-auto">
           <div className="min-w-full">
             {/* ✅ Table Header (Desktop Only) */}
-            <div className="hidden lg:grid grid-cols-[1fr_1fr_auto] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+            <div className="hidden lg:grid grid-cols-[0.1fr_1fr_1fr_auto] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+              <div>SR</div>
               <div>Category</div>
               <div>Item Type</div>
               {userInfo?.isAdmin && <div className="text-right">Actions</div>}
@@ -265,22 +266,23 @@ const ItemType = () => {
               {loading ? (
                 <TableSkeleton
                   rows={itemTypeList.length > 0 ? itemTypeList.length : 5}
-                  cols={userInfo?.isAdmin ? 3 : 2}
-                  className="lg:grid-cols-[1fr_1fr_auto]"
+                  cols={userInfo?.isAdmin ? 4 : 2}
+                  className="lg:grid-cols-[0.1fr_1fr_1fr_auto]"
                 />
               ) : itemTypeList?.length === 0 ? (
                 <div className="text-center py-4 text-gray-500 bg-white">
                   No item types found.
                 </div>
               ) : (
-                itemTypeList.map((item) => (
+                itemTypeList.map((item, index) => (
                   <>
                     {/* ✅ Desktop Grid */}
                     <div
                       key={item._id}
-                      className="hidden lg:grid grid-cols-[1fr_1fr_auto] gap-6 items-center px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                      className="hidden lg:grid grid-cols-[0.1fr_1fr_1fr_auto] gap-6 items-center px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
-                      <div className="font-medium text-gray-900">
+                      <div className="text-gray-600">{index + 1}</div>
+                      <div className="text-gray-900">
                         {item?.category?.categoryName}
                       </div>
                       <div className="text-gray-600">{item.itemTypeName}</div>

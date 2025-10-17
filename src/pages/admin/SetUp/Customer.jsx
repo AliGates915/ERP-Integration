@@ -129,7 +129,7 @@ const CustomerList = () => {
       paymentTerms: paymentTerms === "CreditCard" ? "Credit" : paymentTerms,
       creditTime: paymentTerms === "CreditCard" ? creditTime : undefined,
       creditLimit: paymentTerms === "CreditCard" ? creditLimit : undefined,
-      status: 'Pending',
+      status: "Pending",
     };
 
     try {
@@ -252,12 +252,8 @@ const CustomerList = () => {
       <CommanHeader />
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-newPrimary">
-            Customers List
-          </h1>
-          <p className="text-gray-500 text-sm">
-            Manage your customer details
-          </p>
+          <h1 className="text-2xl font-bold text-newPrimary">Customers List</h1>
+          <p className="text-gray-500 text-sm">Manage your customer details</p>
         </div>
         <button
           className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-newPrimary/90"
@@ -270,6 +266,7 @@ const CustomerList = () => {
       <div className="rounded-xl border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <div className="min-w-[1100px]">
+
             <div className="hidden lg:grid grid-cols-[80px_1.5fr_2fr_1fr_1fr_1fr_1fr_1fr_1fr_100px_auto] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
               <div>SR#</div>
               <div>Company</div>
@@ -288,6 +285,7 @@ const CustomerList = () => {
               {loading ? (
                 <TableSkeleton
                   rows={customerList.length > 0 ? customerList.length : 5}
+
                   cols={userInfo?.isAdmin ? 11 : 10}
                   className="lg:grid-cols-[80px_1.5fr_2fr_1fr_1fr_1fr_1fr_1fr_1fr_100px_auto]"
                 />
@@ -300,6 +298,7 @@ const CustomerList = () => {
                   <>
                     <div
                       key={c._id}
+
                       className="hidden lg:grid grid-cols-[80px_1.5fr_2fr_1fr_1fr_1fr_1fr_1fr_1fr_100px_auto] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
                       <div className="font-medium text-gray-900">{index + 1}</div>
@@ -631,7 +630,7 @@ const CustomerList = () => {
                 </div>
               )}
 
-            
+
               <button
                 className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-newPrimary/80 w-full"
                 onClick={handleSave}

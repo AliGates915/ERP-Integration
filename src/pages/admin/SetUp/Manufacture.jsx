@@ -62,7 +62,6 @@ const Manufacture = () => {
         `${import.meta.env.VITE_API_BASE_URL}/manufacturers`
       );
       setManufacturerList(res.data); // store actual categories array
-     
     } catch (error) {
       console.error("Failed to fetch Supplier", error);
     } finally {
@@ -100,7 +99,6 @@ const Manufacture = () => {
       email,
       status,
     };
-
 
     try {
       const { token } = userInfo || {};
@@ -249,7 +247,8 @@ const Manufacture = () => {
         <div className="overflow-x-auto">
           <div className="min-w-[900px]">
             {/* ✅ Table Header (desktop only) */}
-            <div className="hidden lg:grid grid-cols-[1.5fr_1fr_1.5fr_2fr_1fr_1fr_auto] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+            <div className="hidden lg:grid grid-cols-[0.2fr_1.5fr_1fr_1.5fr_2fr_1fr_1fr_auto] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+              <div>SR</div>
               <div>Name</div>
               <div>Contact</div>
               <div>Email</div>
@@ -266,24 +265,23 @@ const Manufacture = () => {
                   rows={
                     manufacturerList.length > 0 ? manufacturerList.length : 5
                   }
-                  cols={userInfo?.isAdmin ? 7 : 6}
-                  className="lg:grid-cols-[1.5fr_1fr_1.5fr_2fr_1fr_1fr_auto]"
+                  cols={userInfo?.isAdmin ? 8 : 6}
+                  className="lg:grid-cols-[0.2fr_1.5fr_1fr_1.5fr_2fr_1fr_1fr_auto]"
                 />
               ) : manufacturerList.length === 0 ? (
                 <div className="text-center py-4 text-gray-500 bg-white">
                   No manufacturers found.
                 </div>
               ) : (
-                manufacturerList.map((m) => (
+                manufacturerList.map((m, index) => (
                   <>
                     {/* ✅ Desktop Row */}
                     <div
                       key={m._id}
-                      className="hidden lg:grid grid-cols-[1.5fr_1fr_1.5fr_2fr_1fr_1fr_auto] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                      className="hidden lg:grid grid-cols-[0.2fr_1.5fr_1fr_1.5fr_2fr_1fr_1fr_auto] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
-                      <div className="font-medium text-gray-900">
-                        {m.manufacturerName}
-                      </div>
+                      <div className="text-gray-600">{index + 1}</div>
+                      <div className="text-gray-900">{m.manufacturerName}</div>
                       <div className="text-gray-600">{m.personName}</div>
                       <div className="text-gray-600">{m.email || "—"}</div>
                       <div className="text-gray-600 truncate">{m.address}</div>

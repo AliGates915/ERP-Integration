@@ -612,7 +612,7 @@ const FbrSalesInvoices = () => {
                 {loading ? (
                   <TableSkeleton
                     rows={currentRecords.length || 5}
-                    cols={12}
+                    cols={13}
                     className="lg:grid-cols-[0.4fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]"
                   />
                 ) : currentRecords.length === 0 ? (

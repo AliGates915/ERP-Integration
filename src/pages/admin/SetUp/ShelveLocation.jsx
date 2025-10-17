@@ -55,7 +55,6 @@ const ShelveLocation = () => {
       setLoading(true);
       const res = await axios.get(`${API_URL}`);
       setShelveLocationList(res.data); // store actual categories array
-     
     } catch (error) {
       console.error("Failed to fetch Supplier", error);
     } finally {
@@ -83,7 +82,6 @@ const ShelveLocation = () => {
       shelfNameCode: shelfName,
       description,
     };
-  
 
     try {
       const { token } = userInfo || {};
@@ -101,16 +99,13 @@ const ShelveLocation = () => {
         toast.success("Shelve Location updated successfully");
       } else {
         try {
-           const res = await axios.post(API_URL, formData, {
-          headers,
-        });
-         toast.success("Shelve Location added successfully");
+          const res = await axios.post(API_URL, formData, {
+            headers,
+          });
+          toast.success("Shelve Location added successfully");
         } catch (error) {
           toast.error(error.response.data.message);
         }
-       
-
-       
       }
       fetchLocation();
       // Reset form
@@ -129,8 +124,8 @@ const ShelveLocation = () => {
 
   // Edit Shelve Location
   const handleEdit = (shelveLocation) => {
-    console.log({shelveLocation});
-    
+    console.log({ shelveLocation });
+
     setIsEdit(true);
     setEditId(shelveLocation._id);
     setShelfName(shelveLocation.shelfNameCode);
@@ -230,7 +225,8 @@ const ShelveLocation = () => {
         <div className="overflow-x-auto">
           <div className="min-w-full">
             {/* ✅ Table Header (desktop only) */}
-            <div className="hidden lg:grid grid-cols-[1fr_2fr_auto] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+            <div className="hidden lg:grid grid-cols-[0.2fr_1fr_2fr_auto] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+              <div>SR</div>
               <div>Shelf Code</div>
               <div>Description</div>
               {userInfo?.isAdmin && <div className="text-right">Actions</div>}
@@ -245,24 +241,23 @@ const ShelveLocation = () => {
                       ? shelveLocationList.length
                       : 5
                   }
-                  cols={userInfo?.isAdmin ? 3 : 2}
-                  className="lg:grid-cols-[1fr_2fr_auto]"
+                  cols={userInfo?.isAdmin ? 4 : 2}
+                  className="lg:grid-cols-[0.2fr_1fr_2fr_auto]"
                 />
               ) : shelveLocationList.length === 0 ? (
                 <div className="text-center py-4 text-gray-500 bg-white">
                   No shelves found.
                 </div>
               ) : (
-                shelveLocationList.map((s) => (
+                shelveLocationList.map((s, index) => (
                   <>
                     {/* ✅ Desktop Row */}
                     <div
                       key={s._id}
-                      className="hidden lg:grid grid-cols-[1fr_2fr_auto] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                      className="hidden lg:grid grid-cols-[0.2fr_1fr_2fr_auto] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
-                      <div className="font-medium text-gray-900">
-                        {s.shelfNameCode}
-                      </div>
+                      <div className="text-gray-600">{index + 1}</div>
+                      <div className="text-gray-900">{s.shelfNameCode}</div>
                       <div className="text-gray-600">{s.description}</div>
                       {userInfo?.isAdmin && (
                         <div className="flex justify-end gap-3">
