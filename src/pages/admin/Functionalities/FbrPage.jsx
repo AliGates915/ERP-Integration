@@ -75,6 +75,7 @@ const setupChildren = [
     label: "Tax",
     icon: <FaMoneyCheckDollar />,
   },
+  { to: "/admin/bank", label: "Bank", icon: <FaUsersViewfinder /> },
   { to: "/admin/fbr-products", label: "Products", icon: <FaBoxOpen /> },
 ];
 
