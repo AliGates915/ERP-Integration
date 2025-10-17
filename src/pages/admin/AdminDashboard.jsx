@@ -1,9 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
 
-
 import {
- 
   BarChart,
   Bar,
   XAxis,
@@ -23,7 +21,6 @@ import {
   Calendar,
   CreditCard,
   PieChart as PieChartIcon,
-
 } from "lucide-react";
 import CommanHeader from "../../components/CommanHeader";
 
@@ -31,7 +28,6 @@ import HeaderSkeleton from "./HeaderSkeleton";
 import SummaryCardSkeleton from "./SummaryCardSkeleton";
 import ChartSkeleton from "./ChartSkeleton";
 import DasboardTableSkelton from "./DasboardTableSkelton";
-
 
 const AdminDashboard = () => {
   const [customers, setCustomers] = useState(0);
@@ -555,8 +551,6 @@ const AdminDashboard = () => {
     return null;
   };
 
- 
-
   return (
     <div className="p-4 w-full bg-gray-50 min-h-screen">
       {/* Updated Header - Replaced Search Bar */}
@@ -565,7 +559,7 @@ const AdminDashboard = () => {
       {loading ? (
         <SummaryCardSkeleton />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
           {summaryData.map((item, index) => (
             <div
               key={index}
