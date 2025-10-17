@@ -268,22 +268,31 @@ const FbrBookingOrders = () => {
   };
 
   const formatToISODate = (dateStr) => {
-  if (!dateStr) return "";
-  if (dateStr.includes("T")) return dateStr.split("T")[0]; // already ISO
+    if (!dateStr) return "";
+    if (dateStr.includes("T")) return dateStr.split("T")[0]; // already ISO
 
-  const months = {
-    Jan: "01", Feb: "02", Mar: "03", Apr: "04",
-    May: "05", Jun: "06", Jul: "07", Aug: "08",
-    Sep: "09", Oct: "10", Nov: "11", Dec: "12",
+    const months = {
+      Jan: "01",
+      Feb: "02",
+      Mar: "03",
+      Apr: "04",
+      May: "05",
+      Jun: "06",
+      Jul: "07",
+      Aug: "08",
+      Sep: "09",
+      Oct: "10",
+      Nov: "11",
+      Dec: "12",
+    };
+
+    const parts = dateStr.split("-");
+    if (parts.length === 3) {
+      const [day, mon, year] = parts;
+      return `${year}-${months[mon]}-${day.padStart(2, "0")}`;
+    }
+    return "";
   };
-
-  const parts = dateStr.split("-");
-  if (parts.length === 3) {
-    const [day, mon, year] = parts;
-    return `${year}-${months[mon]}-${day.padStart(2, "0")}`;
-  }
-  return "";
-};
 
   const handleAddBookingOrder = () => {
     resetForm();
@@ -292,41 +301,40 @@ const FbrBookingOrders = () => {
   };
 
   const handleEditClick = (order) => {
-  console.log({ order });
+    console.log({ order });
 
-  setEditingOrder(order);
-  setOrderNo(order.orderNo || "");
-  setOrderDate(formatToISODate(order.orderDate));
-  setCustomer(order.customer?._id || "");
-  setPerson(order.person || "");
-  setPhone(order.customer?.phoneNumber || "");
-  setAddress(order.customer?.address || "");
-  setBalance(order.customer?.balance || "");
-  setDeliveryAddress(order.deliveryAddress || "");
-  setOrderType(order.orderType || "");
-  setDeliveryDate(formatToISODate(order.deliveryDate));
-  setMode(order.mode || "");
-  setPaymentMethod(order.paymentMethod || "");
+    setEditingOrder(order);
+    setOrderNo(order.orderNo || "");
+    setOrderDate(formatToISODate(order.orderDate));
+    setCustomer(order.customer?._id || "");
+    setPerson(order.person || "");
+    setPhone(order.customer?.phoneNumber || "");
+    setAddress(order.customer?.address || "");
+    setBalance(order.customer?.balance || "");
+    setDeliveryAddress(order.deliveryAddress || "");
+    setOrderType(order.orderType || "");
+    setDeliveryDate(formatToISODate(order.deliveryDate));
+    setMode(order.mode || "");
+    setPaymentMethod(order.paymentMethod || "");
 
-  // ✅ Fix the products list mapping
-  const formattedItems =
-    order.products?.map((p) => ({
-      name: p.name || "",
-      rate: p.rate || p.invoiceRate || 0,
-      qty: p.orderedQty || p.qty || 0, // 👈 ensure qty is filled
-      total: p.total || (p.rate || 0) * (p.orderedQty || 0),
-      inStock: p.inStock || 0,
-      details: p.details || "",
-    })) || [];
+    // ✅ Fix the products list mapping
+    const formattedItems =
+      order.products?.map((p) => ({
+        name: p.name || "",
+        rate: p.rate || p.invoiceRate || 0,
+        qty: p.orderedQty || p.qty || 0, // 👈 ensure qty is filled
+        total: p.total || (p.rate || 0) * (p.orderedQty || 0),
+        inStock: p.inStock || 0,
+        details: p.details || "",
+      })) || [];
 
-  setItemsList(formattedItems); // ✅ Now Qty will show
-  setTotalWeight(order.totalWeight || 0);
-  setTotalAmount(order.totalAmount || 0);
-  setRemarks(order.remarks || "");
-  setErrors({});
-  setIsSliderOpen(true);
-};
-
+    setItemsList(formattedItems); // ✅ Now Qty will show
+    setTotalWeight(order.totalWeight || 0);
+    setTotalAmount(order.totalAmount || 0);
+    setRemarks(order.remarks || "");
+    setErrors({});
+    setIsSliderOpen(true);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -602,7 +610,7 @@ const FbrBookingOrders = () => {
           {totalPages > 1 && (
             <div className="flex justify-between my-4 px-10">
               <div className="text-sm text-gray-600">
-                Showing {indexOfLastRecord + 1} to{" "}
+                Showing {indexOfFirstRecord + 1} to{" "}
                 {Math.min(indexOfLastRecord, bookingOrders.length)} of{" "}
                 {bookingOrders.length} records
               </div>
@@ -913,7 +921,7 @@ const FbrBookingOrders = () => {
                   </div>
                 </div>
 
-                <div className="border bg-gray-100 p-4 rounded-lg space-y-4">
+                <div className="border p-4 rounded-lg space-y-4">
                   {/* Line 1: Product, Rate, Qty, Total */}
                   <div className="flex gap-4">
                     <div className="flex-1 min-w-0">
@@ -1031,7 +1039,9 @@ const FbrBookingOrders = () => {
                     <table className="w-full border border-gray-200 rounded-lg overflow-hidden">
                       <thead className="bg-gray-100 text-gray-600 text-sm">
                         <tr>
-                         <th className="px-2 py-2 border-b w-14 text-center">Sr #</th>
+                          <th className="px-2 py-2 border-b w-14 text-center">
+                            Sr #
+                          </th>
                           <th className="px-4 py-2 border-b">Item</th>
                           <th className="px-4 py-2 border-b">Specifications</th>
                           <th className="px-4 py-2 border-b">Stock</th>

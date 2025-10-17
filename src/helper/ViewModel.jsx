@@ -280,7 +280,7 @@ const ViewModel = ({ data, type, onClose }) => {
                     {item.details || item.description || "-"}
                   </td>
                   <td className="border px-2 py-1">
-                    {item.qty || item.quantity}
+                    {item.qty || item.quantity || item.orderedQty}
                   </td>
                   {type === "bookingOrder" && (
                     <>
