@@ -511,7 +511,8 @@ const FbrBookingOrders = () => {
         <div className="rounded-xl shadow border border-gray-200 overflow-hidden">
           <div className="overflow-y-auto lg:overflow-x-auto max-h-[900px]">
             <div className="min-w-[1400px]">
-              <div className="hidden lg:grid grid-cols-8 gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+              <div className="hidden lg:grid grid-cols-[0.4fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+                <div>SR</div>
                 <div>Order No</div>
                 <div>Customer</div>
                 <div>Order Date</div>
@@ -526,7 +527,7 @@ const FbrBookingOrders = () => {
                 {loading ? (
                   <TableSkeleton
                     rows={currentRecords.length || 5}
-                    cols={7}
+                    cols={8}
                     className="lg:grid-cols-8"
                   />
                 ) : currentRecords.length === 0 ? (
@@ -534,11 +535,14 @@ const FbrBookingOrders = () => {
                     No booking orders found.
                   </div>
                 ) : (
-                  currentRecords.map((order) => (
+                  currentRecords.map((order, index) => (
                     <div
                       key={order._id}
-                      className="grid grid-cols-1 lg:grid-cols-8 items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                      className="grid lg:grid grid-cols-[0.4fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
+                      <div className="text-gray-600">
+                        {indexOfFirstRecord + index + 1}
+                      </div>
                       <div className="text-gray-600">{order.orderNo}</div>
                       <div className="text-gray-600">
                         {order?.customer?.customerName || "N/A"}

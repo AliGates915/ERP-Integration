@@ -22,7 +22,7 @@ const FbrSalesInvoices = () => {
   const [medicineType, setMedicineType] = useState("");
   const [bookingNo, setBookingNo] = useState("");
   const invoiceRef = useRef(null);
-const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [orderDate, setOrderDate] = useState("");
   const [vendor, setVendor] = useState("");
   const [selectedDcNos, setSelectedDcNos] = useState([]);
@@ -141,25 +141,24 @@ const [selectedInvoice, setSelectedInvoice] = useState(null);
   console.log({ dcList, selectedOrderId });
 
   // Invoice search
-// 🔍 Sales Invoice Search (same logic as Delivery Challan search)
-useEffect(() => {
-  if (searchTerm.trim() === "") {
-    fetchInvoices(); // only when cleared
-    return;
-  }
+  // 🔍 Sales Invoice Search (same logic as Delivery Challan search)
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      fetchInvoices(); // only when cleared
+      return;
+    }
 
-  const delayDebounce = setTimeout(() => {
-    setLoading(true);
-    const filtered = invoices.filter((inv) =>
-      inv?.invoiceNo?.toUpperCase().includes(searchTerm.toUpperCase())
-    );
-    setInvoices(filtered);
-    setLoading(false);
-  }, 500);
+    const delayDebounce = setTimeout(() => {
+      setLoading(true);
+      const filtered = invoices.filter((inv) =>
+        inv?.invoiceNo?.toUpperCase().includes(searchTerm.toUpperCase())
+      );
+      setInvoices(filtered);
+      setLoading(false);
+    }, 500);
 
-  return () => clearTimeout(delayDebounce);
-}, [searchTerm, fetchInvoices]);
-
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, fetchInvoices]);
 
   // Generate next invoice ID
 
@@ -179,7 +178,6 @@ useEffect(() => {
   }, [invoices]);
 
   // Handle DC No. selection
-
 
   // Calculate totals
   useEffect(() => {
@@ -522,44 +520,47 @@ useEffect(() => {
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
-  
 
-async function handleDownlode(invoice) {
-  // Store selected invoice for rendering
-  setSelectedInvoice(invoice);
+  async function handleDownlode(invoice) {
+    // Store selected invoice for rendering
+    setSelectedInvoice(invoice);
 
-  // Wait a bit to ensure the hidden invoice template is rendered
-  setTimeout(async () => {
-    if (!invoiceRef.current) return;
+    // Wait a bit to ensure the hidden invoice template is rendered
+    setTimeout(async () => {
+      if (!invoiceRef.current) return;
 
-    try {
-      // Capture the invoice as an image
-      const canvas = await html2canvas(invoiceRef.current, {
-        scale: 2, // Higher scale = sharper PDF
-        useCORS: true, // Allow external images (like logos)
-        scrollX: 0,
-        scrollY: 0,
-      });
+      try {
+        // Capture the invoice as an image
+        const canvas = await html2canvas(invoiceRef.current, {
+          scale: 2, // Higher scale = sharper PDF
+          useCORS: true, // Allow external images (like logos)
+          scrollX: 0,
+          scrollY: 0,
+        });
 
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF("p", "mm", "a4");
 
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-      // Add image to PDF
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+        // Add image to PDF
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
 
-      // Save file with invoice number as name
-      pdf.save(`${invoice.bookingOrder?.customer?.customerName || "Customer"}-${invoice.invoiceNo || "Invoice"}.pdf`);
+        // Save file with invoice number as name
+        pdf.save(
+          `${invoice.bookingOrder?.customer?.customerName || "Customer"}-${
+            invoice.invoiceNo || "Invoice"
+          }.pdf`
+        );
 
-      toast.success(`Invoice ${invoice.invoiceNo} downloaded successfully!`);
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      toast.error("Failed to generate invoice PDF.");
-    }
-  }, 400); // Wait a short delay for DOM render
-}
+        toast.success(`Invoice ${invoice.invoiceNo} downloaded successfully!`);
+      } catch (error) {
+        console.error("Error generating PDF:", error);
+        toast.error("Failed to generate invoice PDF.");
+      }
+    }, 400); // Wait a short delay for DOM render
+  }
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
@@ -591,7 +592,8 @@ async function handleDownlode(invoice) {
         <div className="rounded-xl shadow border border-gray-200 overflow-hidden">
           <div className="overflow-y-auto lg:overflow-x-auto max-h-[900px]">
             <div className="min-w-[1200px]">
-              <div className="hidden lg:grid grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+              <div className="hidden lg:grid grid-cols-[0.4fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+                <div>SR</div>
                 <div>Invoice No.</div>
                 <div>Invoice Date</div>
                 <div>DC No.</div>
@@ -610,19 +612,22 @@ async function handleDownlode(invoice) {
                 {loading ? (
                   <TableSkeleton
                     rows={currentRecords.length || 5}
-                    cols={11}
-                    className="lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]"
+                    cols={12}
+                    className="lg:grid-cols-[0.4fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]"
                   />
                 ) : currentRecords.length === 0 ? (
                   <div className="text-center py-4 text-gray-500 bg-white">
                     No sales invoices found.
                   </div>
                 ) : (
-                  currentRecords.map((invoice) => (
+                  currentRecords.map((invoice, index) => (
                     <div
                       key={invoice._id}
-                      className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                      className="grid grid-cols-1 lg:grid-cols-[0.4fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
+                      <div className="text-gray-600">
+                        {indexOfFirstRecord + index + 1}
+                      </div>
                       <div className="text-gray-600">{invoice.invoiceNo}</div>
                       <div className="text-gray-600">
                         {new Date(invoice.invoiceDate).toLocaleDateString()}
@@ -664,7 +669,7 @@ async function handleDownlode(invoice) {
                       </div>
                       <div className="flex gap-3 justify-start">
                         <button
-                        onClick={()=>handleDownlode(invoice)}
+                          onClick={() => handleDownlode(invoice)}
                           className="py-1 text-sm rounded text-blue-600 hover:bg-blue-50 transition-colors"
                           title="Edit"
                         >
@@ -972,13 +977,13 @@ async function handleDownlode(invoice) {
                         No items available for this DC No.
                       </div>
                     ) : (
-                      items.map((item,i) => (
+                      items.map((item, i) => (
                         <div
                           key={item.srNo}
                           className="grid grid-cols-[60px_1fr_1fr_1fr_1fr_1fr] text-sm text-gray-700 bg-gray-100 even:bg-white border-t border-gray-300"
                         >
                           <div className="px-4 py-2 border-r border-gray-300 ">
-                            {i+1}
+                            {i + 1}
                           </div>
                           <div className="px-4 py-2 border-r border-gray-300 ">
                             {item.DcNo}
@@ -1250,10 +1255,9 @@ async function handleDownlode(invoice) {
         `}</style>
       </div>
       {/* Hidden Invoice Template for Download */}
-<div style={{ position: "absolute", left: "-9999px", top: "0" }}>
-  <InvoiceTemplate ref={invoiceRef} invoice={selectedInvoice} />
-</div>
-
+      <div style={{ position: "absolute", left: "-9999px", top: "0" }}>
+        <InvoiceTemplate ref={invoiceRef} invoice={selectedInvoice} />
+      </div>
     </div>
   );
 };
