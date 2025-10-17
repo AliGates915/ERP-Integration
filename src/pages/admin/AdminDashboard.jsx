@@ -57,8 +57,9 @@ const AdminDashboard = () => {
   const [bookingRejected, setBookingRejected] = useState(0);
   const [revenue, setRevenue] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [chartData, setChartData] = useState([]);
+  const [saleschartData, setSalesChartData] = useState([]);
   const [recentCustomer, setRecentCustomer] = useState([]);
+  const [activePeriod, setActivePeriod] = useState("weekly");
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -313,45 +314,44 @@ const AdminDashboard = () => {
     };
   }, []);
 
-  useEffect(() => {
-    fetchSalesChart("weekly");
-  });
-
-  const fetchSalesChart = async (period = "daily") => {
+  const fetchSalesChart = async (period = "weekly") => {
     try {
       const res = await axios.get(
-        `${base}/saleInvoices/chart?period=${period}`
+        `${base}/dashboard/sales-overview?type=${period}`,
+        {
+          headers: { Authorization: `Bearer ${userInfo.token}` },
+        }
       );
 
-      const transformedData = res.data.map((item) => {
+      const transformedData = (res.data.data || res.data).map((item) => {
         const date = new Date(item._id);
-        let name;
-
-        if (period === "daily" || period === "weekly") {
-          const month = date.toLocaleString("default", { month: "short" });
-          const day = date.getDate();
-          name = `${month} ${day}`;
+        let label;
+        if (period === "weekly") {
+          label = `${date.getDate()}th`;
         } else if (period === "monthly") {
-          name = date.toLocaleString("default", {
-            month: "short",
-            year: "numeric",
-          });
+          label = date.toLocaleString("default", { month: "short" });
         } else if (period === "yearly") {
-          name = date.getFullYear();
+          label = date.getFullYear();
         }
-
         return {
-          name,
-          sales: item.count,
-          revenue: item.totalAmount || (Math.random() * 1000).toFixed(2),
+          day: label,
+          thisWeek: item.total,
+          lastWeek: Math.floor(item.total * 0.6),
         };
       });
 
-      setChartData(transformedData);
+      setSalesChartData([]);
+      setTimeout(() => setSalesChartData(transformedData), 0);
     } catch (err) {
       console.error("Sales chart fetch failed:", err);
     }
   };
+
+  console.log(saleschartData);
+
+  useEffect(() => {
+    fetchSalesChart("weekly");
+  }, []);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -571,20 +571,43 @@ const AdminDashboard = () => {
                 </h2>
                 <div className="flex space-x-2">
                   <button
-                    onClick={() => fetchSalesChart("weekly")}
-                    className="px-3 py-1 text-xs bg-newPrimary/10 text-newPrimary rounded-full"
+                    onClick={() => {
+                      setActivePeriod("weekly");
+                      fetchSalesChart("weekly");
+                    }}
+                    className={`px-3 py-1 text-xs rounded-full ${
+                      activePeriod === "weekly"
+                        ? "bg-newPrimary/10 text-newPrimary"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
                   >
                     Weekly
                   </button>
+
                   <button
-                    onClick={() => fetchSalesChart("monthly")}
-                    className="px-3 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded-full"
+                    onClick={() => {
+                      setActivePeriod("monthly");
+                      fetchSalesChart("monthly");
+                    }}
+                    className={`px-3 py-1 text-xs rounded-full ${
+                      activePeriod === "monthly"
+                        ? "bg-newPrimary/10 text-newPrimary"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
                   >
                     Monthly
                   </button>
+
                   <button
-                    onClick={() => fetchSalesChart("yearly")}
-                    className="px-3 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded-full"
+                    onClick={() => {
+                      setActivePeriod("yearly");
+                      fetchSalesChart("yearly");
+                    }}
+                    className={`px-3 py-1 text-xs rounded-full ${
+                      activePeriod === "yearly"
+                        ? "bg-newPrimary/10 text-newPrimary"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
                   >
                     Yearly
                   </button>
@@ -593,7 +616,7 @@ const AdminDashboard = () => {
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
-                    data={data}
+                    data={saleschartData}
                     margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />

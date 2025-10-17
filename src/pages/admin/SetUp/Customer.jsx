@@ -161,7 +161,7 @@ const CustomerList = () => {
       paymentTerms: paymentTerms === "CreditCard" ? "Credit" : paymentTerms,
       creditTime: paymentTerms === "CreditCard" ? creditTime : undefined,
       creditLimit: paymentTerms === "CreditCard" ? creditLimit : undefined,
-      status,
+      status: 'Pending',
     };
 
     try {
@@ -641,23 +641,7 @@ const CustomerList = () => {
                   </div>
                 </div>
               )}
-              <div className="flex items-center gap-3">
-                <label className="text-gray-700 font-medium">Status</label>
-                <button
-                  type="button"
-                  onClick={() => setStatus(!status)}
-                  className={`w-14 h-7 flex items-center rounded-full p-1 transition-colors duration-300 ${
-                    status ? "bg-green-500" : "bg-gray-300"
-                  }`}
-                >
-                  <div
-                    className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${
-                      status ? "translate-x-7" : "translate-x-0"
-                    }`}
-                  />
-                </button>
-                <span>{status ? "Active" : "Inactive"}</span>
-              </div>
+            
               <button
                 className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-newPrimary/80 w-full"
                 onClick={handleSave}
