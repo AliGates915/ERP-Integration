@@ -16,7 +16,7 @@ const FbrPaymentReceipt = () => {
   const [cashData, setCashData] = useState({
     receiptId: "",
     date: "",
-    customer: "",        // store customer _id (not name)
+    customer: "", // store customer _id (not name)
     amountReceived: 0,
     newBalance: 0,
     remarks: "",
@@ -32,11 +32,7 @@ const FbrPaymentReceipt = () => {
     remarks: "",
   });
 
-
-
-
-  const [customers, setCustomers] = useState([
-  ]); // Example, replace with API
+  const [customers, setCustomers] = useState([]); // Example, replace with API
   const [banks, setBanks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [receiptId, setReceiptId] = useState("");
@@ -56,9 +52,10 @@ const FbrPaymentReceipt = () => {
   const sliderRef = useRef(null);
   const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
 
-  const API_URL = `${import.meta.env.VITE_API_BASE_URL}/payment-receipt-voucher`;
+  const API_URL = `${
+    import.meta.env.VITE_API_BASE_URL
+  }/payment-receipt-voucher`;
 
-  
   // Fixed fetchVouchers - remove useCallback or add proper dependencies
   const fetchVouchers = async () => {
     try {
@@ -84,9 +81,10 @@ const FbrPaymentReceipt = () => {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/customers/status`);
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/customers/status`
+      );
       setCustomers(res.data);
-
     } catch (error) {
       console.error("Failed to fetch customers:", error);
       toast.error("Failed to fetch customers");
@@ -101,23 +99,25 @@ const FbrPaymentReceipt = () => {
     fetchCustomers();
   }, []);
 
-
   const fetchBanks = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/payment-receipt-voucher`);
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/payment-receipt-voucher`
+      );
       const vouchers = res.data?.data || [];
       console.log("Res ", res.data.data);
 
       // Extract unique bank names from vouchers that have a bankSection
       const uniqueBanks = vouchers
-        .filter(v => v.bankSection)
-        .map(v => ({
+        .filter((v) => v.bankSection)
+        .map((v) => ({
           bankName: v.bankSection.bankName,
           accountNumber: v.bankSection.accountNumber,
           accountHolderName: v.bankSection.accountHolderName,
         }))
-        .filter((b, index, self) =>
-          index === self.findIndex(t => t.bankName === b.bankName)
+        .filter(
+          (b, index, self) =>
+            index === self.findIndex((t) => t.bankName === b.bankName)
         );
 
       setBanks(uniqueBanks);
@@ -169,7 +169,7 @@ const FbrPaymentReceipt = () => {
     setReceiptId("");
     setCustomerName("");
     setBalance("");
-    setBankData("")
+    setBankData("");
     setMode("");
     setDate("");
     setReceivedBy(userInfo.employeeName || "");
@@ -180,7 +180,6 @@ const FbrPaymentReceipt = () => {
     setIsSliderOpen(false);
   };
 
-
   // Validate form fields
   const validateForm = () => {
     const newErrors = {};
@@ -190,7 +189,8 @@ const FbrPaymentReceipt = () => {
     const trimmedDate = date.trim();
     const parsedBalance = parseFloat(balance);
 
-    if (!trimmedCustomerName) newErrors.customerName = "Customer Name is required";
+    if (!trimmedCustomerName)
+      newErrors.customerName = "Customer Name is required";
     if (!trimmedBalance || isNaN(parsedBalance) || parsedBalance <= 0) {
       newErrors.balance = "Balance must be a positive number";
     }
@@ -207,175 +207,178 @@ const FbrPaymentReceipt = () => {
     setIsSliderOpen(true);
   };
 
-const handleEditClick = (voucher) => {
-  setEditingVoucher(voucher); // Keep the full object (must include _id)
-  setErrors({});
-  setIsSliderOpen(true);
+  const handleEditClick = (voucher) => {
+    setEditingVoucher(voucher); // Keep the full object (must include _id)
+    setErrors({});
+    setIsSliderOpen(true);
 
-  if (voucher.mode === "Cash") {
-    setPaymentType("Cash");
-    setCashData({
-      receiptId: voucher.receiptId || "",
-      date: voucher.date ? voucher.date.split("T")[0] : "",
-      customer: voucher.customer?._id || "",
-      amountReceived: voucher.amountReceived || "",
-      newBalance: voucher.newBalance || "",
-      remarks: voucher.remarks || "",
-    });
-  } else {
-    setPaymentType("Bank");
-    setBankData({
-      receiptId: voucher.receiptId || "",
-      date: voucher.date ? voucher.date.split("T")[0] : "",
-      amountReceived: voucher.amountReceived || "",
-      bankName: voucher.bankSection?.bankName || "",
-      accountNumber: voucher.bankSection?.accountNumber || "",
-      accountHolderName: voucher.bankSection?.accountHolderName || "",
-      remarks: voucher.remarks || "",
-    });
-  }
-};
-
-const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  try {
-    let voucherData;
-
-    if (paymentType === "Cash") {
-      voucherData = {
-        receiptId: editingVoucher ? cashData.receiptId : nextReceiptId,
-        date: cashData.date,
-        mode: "Cash",
-        customer: cashData.customer,
-        amountReceived: cashData.amountReceived,
-        newBalance: cashData.newBalance,
-        remarks: cashData.remarks,
-      };
+    if (voucher.mode === "Cash") {
+      setPaymentType("Cash");
+      setCashData({
+        receiptId: voucher.receiptId || "",
+        date: voucher.date ? voucher.date.split("T")[0] : "",
+        customer: voucher.customer?._id || "",
+        amountReceived: voucher.amountReceived || "",
+        newBalance: voucher.newBalance || "",
+        remarks: voucher.remarks || "",
+      });
     } else {
-      voucherData = {
-        receiptId: editingVoucher ? bankData.receiptId : nextReceiptId,
-        date: bankData.date || new Date().toISOString().split("T")[0],
-        mode: "Bank",
-        amountReceived: bankData.amountReceived,
-        bankSection: {
-          bankName: bankData.bankName,
-          accountNumber: bankData.accountNumber,
-          accountHolderName: bankData.accountHolderName,
+      setPaymentType("Bank");
+      setBankData({
+        receiptId: voucher.receiptId || "",
+        date: voucher.date ? voucher.date.split("T")[0] : "",
+        amountReceived: voucher.amountReceived || "",
+        bankName: voucher.bankSection?.bankName || "",
+        accountNumber: voucher.bankSection?.accountNumber || "",
+        accountHolderName: voucher.bankSection?.accountHolderName || "",
+        remarks: voucher.remarks || "",
+      });
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      let voucherData;
+
+      if (paymentType === "Cash") {
+        voucherData = {
+          receiptId: editingVoucher ? cashData.receiptId : nextReceiptId,
+          date: cashData.date,
+          mode: "Cash",
+          customer: cashData.customer,
+          amountReceived: cashData.amountReceived,
+          newBalance: cashData.newBalance,
+          remarks: cashData.remarks,
+        };
+      } else {
+        voucherData = {
+          receiptId: editingVoucher ? bankData.receiptId : nextReceiptId,
+          date: bankData.date || new Date().toISOString().split("T")[0],
+          mode: "Bank",
+          amountReceived: bankData.amountReceived,
+          bankSection: {
+            bankName: bankData.bankName,
+            accountNumber: bankData.accountNumber,
+            accountHolderName: bankData.accountHolderName,
+          },
+          remarks: bankData.remarks,
+        };
+      }
+
+      console.log("Submitting data:", voucherData);
+
+      const isUpdate = Boolean(editingVoucher?._id);
+
+      // ✅ FIXED: Added missing slash before ID
+      const url = isUpdate ? `${API_URL}/${editingVoucher._id}` : API_URL;
+
+      const method = isUpdate ? "put" : "post";
+
+      const response = await axios({
+        method,
+        url,
+        data: voucherData,
+        headers: {
+          Authorization: `Bearer ${userInfo?.token}`,
+          "Content-Type": "application/json",
         },
-        remarks: bankData.remarks,
-      };
+      });
+
+      if (response.data.success) {
+        toast.success(
+          isUpdate
+            ? "Voucher updated successfully!"
+            : "Voucher added successfully!"
+        );
+        resetForm();
+        fetchVouchers();
+        setEditingVoucher(null);
+      } else {
+        toast.error(response.data.message || "Failed to save voucher");
+      }
+    } catch (error) {
+      console.error("Submit Error:", error.response?.data || error);
+      toast.error(
+        error.response?.data?.message || "Server error while saving voucher."
+      );
     }
+  };
 
-    console.log("Submitting data:", voucherData);
-
-    const isUpdate = Boolean(editingVoucher?._id);
-
-    // ✅ FIXED: Added missing slash before ID
-    const url = isUpdate
-      ? `${API_URL}/${editingVoucher._id}`
-      : API_URL;
-
-    const method = isUpdate ? "put" : "post";
-
-    const response = await axios({
-      method,
-      url,
-      data: voucherData,
-      headers: {
-        Authorization: `Bearer ${userInfo?.token}`,
-        "Content-Type": "application/json",
+  const handleDelete = async (id) => {
+    const swalWithTailwindButtons = Swal.mixin({
+      customClass: {
+        actions: "space-x-2",
+        confirmButton:
+          "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300",
+        cancelButton:
+          "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300",
       },
+      buttonsStyling: false,
     });
 
-    if (response.data.success) {
-      toast.success(isUpdate ? "Voucher updated successfully!" : "Voucher added successfully!");
-      resetForm();
-      fetchVouchers();
-      setEditingVoucher(null);
-    } else {
-      toast.error(response.data.message || "Failed to save voucher");
-    }
-  } catch (error) {
-    console.error("Submit Error:", error.response?.data || error);
-    toast.error(error.response?.data?.message || "Server error while saving voucher.");
-  }
-};
+    swalWithTailwindButtons
+      .fire({
+        title: "Are you sure?",
+        text: "This action cannot be undone!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, delete it!",
+        cancelButtonText: "No, cancel!",
+        reverseButtons: true,
+      })
+      .then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            const response = await axios.delete(`${API_URL}/${id}`, {
+              headers: {
+                Authorization: `Bearer ${userInfo?.token}`,
+                "Content-Type": "application/json",
+              },
+            });
 
+            if (response.data.success) {
+              setVouchers((prev) => prev.filter((v) => v._id !== id));
+              setFilteredVouchers((prev) => prev.filter((v) => v._id !== id));
 
-
-
-const handleDelete = async (id) => {
-  const swalWithTailwindButtons = Swal.mixin({
-    customClass: {
-      actions: "space-x-2",
-      confirmButton:
-        "bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300",
-      cancelButton:
-        "bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300",
-    },
-    buttonsStyling: false,
-  });
-
-  swalWithTailwindButtons
-    .fire({
-      title: "Are you sure?",
-      text: "This action cannot be undone!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes, delete it!",
-      cancelButtonText: "No, cancel!",
-      reverseButtons: true,
-    })
-    .then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          const response = await axios.delete(`${API_URL}/${id}`, {
-            headers: {
-              Authorization: `Bearer ${userInfo?.token}`,
-              "Content-Type": "application/json",
-            },
-          });
-
-          if (response.data.success) {
-            setVouchers((prev) => prev.filter((v) => v._id !== id));
-            setFilteredVouchers((prev) => prev.filter((v) => v._id !== id));
-
-            swalWithTailwindButtons.fire(
-              "Deleted!",
-              "Payment Receipt Voucher deleted successfully.",
-              "success"
-            );
-          } else {
+              swalWithTailwindButtons.fire(
+                "Deleted!",
+                "Payment Receipt Voucher deleted successfully.",
+                "success"
+              );
+            } else {
+              swalWithTailwindButtons.fire(
+                "Error!",
+                response.data.message || "Failed to delete voucher.",
+                "error"
+              );
+            }
+          } catch (error) {
+            console.error("Delete error:", error);
             swalWithTailwindButtons.fire(
               "Error!",
-              response.data.message || "Failed to delete voucher.",
+              "Server error while deleting voucher.",
               "error"
             );
           }
-        } catch (error) {
-          console.error("Delete error:", error);
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
           swalWithTailwindButtons.fire(
-            "Error!",
-            "Server error while deleting voucher.",
+            "Cancelled",
+            "Payment Receipt Voucher is safe 🙂",
             "error"
           );
         }
-      } else if (result.dismiss === Swal.DismissReason.cancel) {
-        swalWithTailwindButtons.fire(
-          "Cancelled",
-          "Payment Receipt Voucher is safe 🙂",
-          "error"
-        );
-      }
-    });
-};
-
+      });
+  };
 
   // Pagination logic - UPDATED to use filteredVouchers
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-  const currentRecords = filteredVouchers.slice(indexOfFirstRecord, indexOfLastRecord);
+  const currentRecords = filteredVouchers.slice(
+    indexOfFirstRecord,
+    indexOfLastRecord
+  );
   const totalPages = Math.ceil(filteredVouchers.length / recordsPerPage);
 
   const handlePageChange = (pageNumber) => {
@@ -416,7 +419,8 @@ const handleDelete = async (id) => {
         <div className="rounded-xl shadow border border-gray-200 overflow-hidden">
           <div className="overflow-y-auto lg:overflow-x-auto max-h-[900px]">
             <div className="min-w-[1200px]">
-              <div className="hidden lg:grid grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+              <div className="hidden lg:grid grid-cols-[0.4fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+                <div>SR</div>
                 <div>Voucher ID</div>
                 <div>Payer Name</div>
                 <div>Amount</div>
@@ -431,28 +435,43 @@ const handleDelete = async (id) => {
                 {loading ? (
                   <TableSkeleton
                     rows={recordsPerPage}
-                    cols={8}
-                    className="lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]"
+                    cols={9}
+                    className="lg:grid-cols-[0.4fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]"
                   />
                 ) : currentRecords.length === 0 ? (
                   <div className="text-center py-4 text-gray-500 bg-white">
-                    {searchTerm ? "No vouchers found matching your search." : "No vouchers found."}
+                    {searchTerm
+                      ? "No vouchers found matching your search."
+                      : "No vouchers found."}
                   </div>
                 ) : (
-                  currentRecords.map((voucher) => (
+                  currentRecords.map((voucher, index) => (
                     <div
                       key={voucher._id}
-                      className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                      className="grid grid-cols-1 lg:grid-cols-[0.4fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
+                      <div className="text-gray-600">{index + 1}</div>
                       <div className="text-gray-600">{voucher.receiptId}</div>
-                      <div className="text-gray-600">{voucher.customer?.customerName || voucher.bankSection.accountHolderName || "-"}</div>
-                      <div className="text-gray-600">Rs.{voucher.amountReceived || "-"}</div>
+                      <div className="text-gray-600">
+                        {voucher.customer?.customerName ||
+                          voucher.bankSection.accountHolderName ||
+                          "-"}
+                      </div>
+                      <div className="text-gray-600">
+                        Rs.{voucher.amountReceived || "-"}
+                      </div>
                       <div className="text-gray-600">{voucher.mode}</div>
                       <div className="text-gray-600">
-                        {voucher.date ? new Date(voucher.date).toLocaleDateString() : "-"}
+                        {voucher.date
+                          ? new Date(voucher.date).toLocaleDateString()
+                          : "-"}
                       </div>
-                      <div className="text-gray-600">Rs.{voucher.newBalance || "-"}</div>
-                      <div className="text-gray-600">{voucher.remarks || "-"}</div>
+                      <div className="text-gray-600">
+                        Rs.{voucher.newBalance || "-"}
+                      </div>
+                      <div className="text-gray-600">
+                        {voucher.remarks || "-"}
+                      </div>
                       <div className="flex gap-3 justify-start">
                         <button
                           onClick={() => handleEditClick(voucher)}
@@ -488,20 +507,22 @@ const handleDelete = async (id) => {
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className={`px-3 py-1 rounded-md ${currentPage === 1
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-newPrimary text-white hover:bg-newPrimary/80"
-                    }`}
+                  className={`px-3 py-1 rounded-md ${
+                    currentPage === 1
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-newPrimary text-white hover:bg-newPrimary/80"
+                  }`}
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className={`px-3 py-1 rounded-md ${currentPage === totalPages
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-newPrimary text-white hover:bg-newPrimary/80"
-                    }`}
+                  className={`px-3 py-1 rounded-md ${
+                    currentPage === totalPages
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-newPrimary text-white hover:bg-newPrimary/80"
+                  }`}
                 >
                   Next
                 </button>
@@ -581,7 +602,6 @@ const handleDelete = async (id) => {
                         <input
                           type="text"
                           value={nextReceiptId}
-
                           className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
                         />
@@ -598,7 +618,9 @@ const handleDelete = async (id) => {
                           value={cashData.customer}
                           onChange={(e) => {
                             const selectedId = e.target.value;
-                            const selectedCustomer = customers.find((c) => c._id === selectedId);
+                            const selectedCustomer = customers.find(
+                              (c) => c._id === selectedId
+                            );
 
                             setCashData({
                               ...cashData,
@@ -665,14 +687,13 @@ const handleDelete = async (id) => {
                           type="text"
                           value={Math.max(0, Math.round(cashData.newBalance))} // prevent negative display
                           readOnly
-                          className={`w-full p-3 border rounded-md ${cashData.newBalance < 0
+                          className={`w-full p-3 border rounded-md ${
+                            cashData.newBalance < 0
                               ? "bg-red-100 text-red-600"
                               : "bg-gray-100"
-                            }`}
+                          }`}
                         />
                       </div>
-
-
                     </div>
                     {/* Remarks Field */}
                     <div>
@@ -745,7 +766,6 @@ const handleDelete = async (id) => {
                         />
                       </div>
                     </div>
-
 
                     {/* Account Holder & Amount */}
                     <div className="flex gap-4">
