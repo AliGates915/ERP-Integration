@@ -450,7 +450,9 @@ const FbrPaymentReceipt = () => {
                       key={voucher._id}
                       className="grid grid-cols-1 lg:grid-cols-[0.4fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
-                      <div className="text-gray-600">{index + 1}</div>
+                      <div className="text-gray-600">
+                        {indexOfFirstRecord + index + 1}
+                      </div>
                       <div className="text-gray-600">{voucher.receiptId}</div>
                       <div className="text-gray-600">
                         {voucher.customer?.customerName ||

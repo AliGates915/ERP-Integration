@@ -244,24 +244,32 @@ const FbrDeliveryChallan = () => {
   };
 
   // ✅ Helper function to convert "16-Oct-2025" → "2025-10-16"
-const formatToISODate = (dateStr) => {
-  if (!dateStr) return "";
-  if (dateStr.includes("T")) return dateStr.split("T")[0]; // already ISO
+  const formatToISODate = (dateStr) => {
+    if (!dateStr) return "";
+    if (dateStr.includes("T")) return dateStr.split("T")[0]; // already ISO
 
-  const months = {
-    Jan: "01", Feb: "02", Mar: "03", Apr: "04",
-    May: "05", Jun: "06", Jul: "07", Aug: "08",
-    Sep: "09", Oct: "10", Nov: "11", Dec: "12",
+    const months = {
+      Jan: "01",
+      Feb: "02",
+      Mar: "03",
+      Apr: "04",
+      May: "05",
+      Jun: "06",
+      Jul: "07",
+      Aug: "08",
+      Sep: "09",
+      Oct: "10",
+      Nov: "11",
+      Dec: "12",
+    };
+
+    const parts = dateStr.split("-");
+    if (parts.length === 3) {
+      const [day, mon, year] = parts;
+      return `${year}-${months[mon]}-${day.padStart(2, "0")}`;
+    }
+    return "";
   };
-
-  const parts = dateStr.split("-");
-  if (parts.length === 3) {
-    const [day, mon, year] = parts;
-    return `${year}-${months[mon]}-${day.padStart(2, "0")}`;
-  }
-  return "";
-};
-
 
   const handleEditClick = (challan) => {
     setEditingChallan(challan);
@@ -269,11 +277,11 @@ const formatToISODate = (dateStr) => {
 
     // ✅ DC basic info
     setDcNo(challan.dcNo || "");
-   setDate(formatToISODate(challan.dcDate));
+    setDate(formatToISODate(challan.dcDate));
 
     // ✅ Booking order info
     setOrderNo(challan.bookingOrder?._id || "");
-   setOrderDate(formatToISODate(challan.bookingOrder?.orderDate));
+    setOrderDate(formatToISODate(challan.bookingOrder?.orderDate));
 
     // ✅ Customer and delivery details
     setOrderDetails({
@@ -526,7 +534,8 @@ const formatToISODate = (dateStr) => {
         <div className="rounded-xl shadow border border-gray-200 overflow-hidden">
           <div className="overflow-y-auto lg:overflow-x-auto max-h-[900px]">
             <div className="min-w-[1400px]">
-              <div className="hidden lg:grid grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+              <div className="hidden lg:grid grid-cols-[0.4fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+                <div>SR</div>
                 <div>DC No</div>
                 <div>Date</div>
                 <div>Order No</div>
@@ -542,19 +551,22 @@ const formatToISODate = (dateStr) => {
                 {loading ? (
                   <TableSkeleton
                     rows={currentRecords.length || 5}
-                    cols={9}
-                    className="lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]"
+                    cols={10}
+                    className="lg:grid-cols-[0.4fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]"
                   />
                 ) : currentRecords.length === 0 ? (
                   <div className="text-center py-4 text-gray-500 bg-white">
                     No delivery challans found.
                   </div>
                 ) : (
-                  currentRecords.map((challan) => (
+                  currentRecords.map((challan, index) => (
                     <div
                       key={challan._id}
-                      className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                      className="grid grid-cols-1 lg:grid-cols-[0.4fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
+                      <div className="text-gray-600">
+                        {indexOfFirstRecord + index + 1}
+                      </div>
                       {/* DC No */}
                       <div className="text-gray-600">{challan.dcNo}</div>
 
