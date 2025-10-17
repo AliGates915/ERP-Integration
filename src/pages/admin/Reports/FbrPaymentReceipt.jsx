@@ -25,18 +25,15 @@ const FbrPaymentReceipt = () => {
   const [bankData, setBankData] = useState({
     receiptId: "",
     date: "",
+    customer: "", // Added customer field
     bankName: "",
+    accountName: "", // Changed from accountHolderName to accountName
     accountNumber: "",
-    accountHolderName: "",
     amountReceived: 0,
     remarks: "",
   });
 
-
-
-
-  const [customers, setCustomers] = useState([
-  ]); // Example, replace with API
+  const [customers, setCustomers] = useState([]); // Example, replace with API
   const [banks, setBanks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [receiptId, setReceiptId] = useState("");
@@ -58,7 +55,6 @@ const FbrPaymentReceipt = () => {
 
   const API_URL = `${import.meta.env.VITE_API_BASE_URL}/payment-receipt-voucher`;
 
-  
   // Fixed fetchVouchers - remove useCallback or add proper dependencies
   const fetchVouchers = async () => {
     try {
@@ -101,7 +97,6 @@ const FbrPaymentReceipt = () => {
     fetchCustomers();
   }, []);
 
-
   const fetchBanks = async () => {
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/payment-receipt-voucher`);
@@ -114,7 +109,7 @@ const FbrPaymentReceipt = () => {
         .map(v => ({
           bankName: v.bankSection.bankName,
           accountNumber: v.bankSection.accountNumber,
-          accountHolderName: v.bankSection.accountHolderName,
+          accountName: v.bankSection.accountName, // Updated to accountName
         }))
         .filter((b, index, self) =>
           index === self.findIndex(t => t.bankName === b.bankName)
@@ -169,7 +164,16 @@ const FbrPaymentReceipt = () => {
     setReceiptId("");
     setCustomerName("");
     setBalance("");
-    setBankData("")
+    setBankData({
+      receiptId: "",
+      date: "",
+      customer: "",
+      bankName: "",
+      accountName: "", // Updated to accountName
+      accountNumber: "",
+      amountReceived: 0,
+      remarks: "",
+    });
     setMode("");
     setDate("");
     setReceivedBy(userInfo.employeeName || "");
@@ -226,10 +230,11 @@ const handleEditClick = (voucher) => {
     setBankData({
       receiptId: voucher.receiptId || "",
       date: voucher.date ? voucher.date.split("T")[0] : "",
-      amountReceived: voucher.amountReceived || "",
+      customer: voucher.customer?._id || "",
       bankName: voucher.bankSection?.bankName || "",
+      accountName: voucher.bankSection?.accountName || "", // Updated to accountName
       accountNumber: voucher.bankSection?.accountNumber || "",
-      accountHolderName: voucher.bankSection?.accountHolderName || "",
+      amountReceived: voucher.amountReceived || "",
       remarks: voucher.remarks || "",
     });
   }
@@ -256,11 +261,12 @@ const handleSubmit = async (e) => {
         receiptId: editingVoucher ? bankData.receiptId : nextReceiptId,
         date: bankData.date || new Date().toISOString().split("T")[0],
         mode: "Bank",
+        customer: bankData.customer,
         amountReceived: bankData.amountReceived,
         bankSection: {
           bankName: bankData.bankName,
+          accountName: bankData.accountName, // Updated to accountName
           accountNumber: bankData.accountNumber,
-          accountHolderName: bankData.accountHolderName,
         },
         remarks: bankData.remarks,
       };
@@ -300,9 +306,6 @@ const handleSubmit = async (e) => {
     toast.error(error.response?.data?.message || "Server error while saving voucher.");
   }
 };
-
-
-
 
 const handleDelete = async (id) => {
   const swalWithTailwindButtons = Swal.mixin({
@@ -369,7 +372,6 @@ const handleDelete = async (id) => {
       }
     });
 };
-
 
   // Pagination logic - UPDATED to use filteredVouchers
   const indexOfLastRecord = currentPage * recordsPerPage;
@@ -444,7 +446,7 @@ const handleDelete = async (id) => {
                       className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
                       <div className="text-gray-600">{voucher.receiptId}</div>
-                      <div className="text-gray-600">{voucher.customer?.customerName || voucher.bankSection.accountHolderName || "-"}</div>
+                      <div className="text-gray-600">{voucher.customer?.customerName || voucher.bankSection.accountName || "-"}</div>
                       <div className="text-gray-600">Rs.{voucher.amountReceived || "-"}</div>
                       <div className="text-gray-600">{voucher.mode}</div>
                       <div className="text-gray-600">
@@ -580,7 +582,6 @@ const handleDelete = async (id) => {
                         <input
                           type="text"
                           value={nextReceiptId}
-
                           className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
                         />
@@ -670,8 +671,6 @@ const handleDelete = async (id) => {
                             }`}
                         />
                       </div>
-
-
                     </div>
                     {/* Remarks Field */}
                     <div>
@@ -697,20 +696,43 @@ const handleDelete = async (id) => {
                 {/* Bank Form */}
                 {paymentType === "Bank" && (
                   <div className="space-y-4">
-                    {/* Bank Name & Account Number */}
+
+                    {/* Customer & Bank Name */}
                     <div className="flex gap-4">
-                      {/* Bank Name */}
+                      <div className="flex-1">
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Customer <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={bankData.customer}
+                          onChange={(e) =>
+                            setBankData({
+                              ...bankData,
+                              customer: e.target.value,
+                            })
+                          }
+                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        >
+                          <option value="">Select Customer</option>
+                          {customers.map((c) => (
+                            <option key={c._id} value={c._id}>
+                              {c.customerName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                       <div className="flex-1">
                         <label className="block text-gray-700 font-medium mb-2">
                           Bank Name <span className="text-red-500">*</span>
                         </label>
                         <select
-                          value={bankData?.bankName || ""} // ensure controlled value
+                          value={bankData.bankName}
                           onChange={(e) =>
-                            setBankData((prev) => ({
-                              ...prev,
+                            setBankData({
+                              ...bankData,
                               bankName: e.target.value,
-                            }))
+                            })
                           }
                           className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
@@ -723,20 +745,40 @@ const handleDelete = async (id) => {
                           ))}
                         </select>
                       </div>
+                    </div>
 
-                      {/* Account Number */}
+                    {/* Account Name & Account Number */}
+                    <div className="flex gap-4">
                       <div className="flex-1">
                         <label className="block text-gray-700 font-medium mb-2">
-                          A/C Number <span className="text-red-500">*</span>
+                          Account Name <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
-                          value={bankData?.accountNumber || ""} // ensure controlled input
+                          value={bankData.accountName}
                           onChange={(e) =>
-                            setBankData((prev) => ({
-                              ...prev,
+                            setBankData({
+                              ...bankData,
+                              accountName: e.target.value,
+                            })
+                          }
+                          placeholder="Enter Account Name"
+                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Account No. <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={bankData.accountNumber}
+                          onChange={(e) =>
+                            setBankData({
+                              ...bankData,
                               accountNumber: e.target.value,
-                            }))
+                            })
                           }
                           placeholder="Enter Account Number"
                           className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -745,31 +787,11 @@ const handleDelete = async (id) => {
                       </div>
                     </div>
 
-
-                    {/* Account Holder & Amount */}
+                    {/* Amount Received & Remarks */}
                     <div className="flex gap-4">
                       <div className="flex-1">
                         <label className="block text-gray-700 font-medium mb-2">
-                          Account Holder Name{" "}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={bankData.accountHolderName}
-                          onChange={(e) =>
-                            setBankData({
-                              ...bankData,
-                              accountHolderName: e.target.value,
-                            })
-                          }
-                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          required
-                        />
-                      </div>
-
-                      <div className="flex-1">
-                        <label className="block text-gray-700 font-medium mb-2">
-                          Amount <span className="text-red-500">*</span>
+                          Amount Received <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="number"
@@ -784,25 +806,23 @@ const handleDelete = async (id) => {
                           required
                         />
                       </div>
-                    </div>
-
-                    {/* Remarks Field */}
-                    <div>
-                      <label className="block text-gray-700 font-medium mb-2">
-                        Remarks
-                      </label>
-                      <textarea
-                        value={bankData.remarks}
-                        onChange={(e) =>
-                          setBankData({
-                            ...bankData,
-                            remarks: e.target.value,
-                          })
-                        }
-                        placeholder="Enter any remarks or notes"
-                        className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows="3"
-                      />
+                      <div className="flex-1">
+                        <label className="block text-gray-700 font-medium mb-2">
+                          Remarks
+                        </label>
+                        <input
+                          value={bankData.remarks}
+                          onChange={(e) =>
+                            setBankData({
+                              ...bankData,
+                              remarks: e.target.value,
+                            })
+                          }
+                          placeholder="Enter any remarks or notes"
+                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          rows="3"
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
