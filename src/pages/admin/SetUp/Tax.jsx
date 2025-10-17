@@ -54,7 +54,6 @@ const Tax = () => {
       setLoading(true);
       const data = await api.get("/taxes");
       setTaxes(data);
- 
     } catch (error) {
       console.error("Error fetching module data:", error);
       setTaxes([]); // fallback to empty array
@@ -105,7 +104,7 @@ const Tax = () => {
 
     setLoading(true);
     const payload = { taxName, value };
-  
+
     try {
       let res;
       if (editingTax) {
@@ -159,8 +158,6 @@ const Tax = () => {
   };
 
   const handleDelete = (id) => {
-   
-
     const swalWithTailwindButtons = Swal.mixin({
       customClass: {
         actions: "space-x-2",
@@ -242,7 +239,8 @@ const Tax = () => {
         <div className="rounded-xl shadow border border-gray-200 overflow-hidden">
           <div className="overflow-y-auto lg:overflow-x-auto max-h-[900px]">
             <div className="min-w-[600px]">
-              <div className="hidden lg:grid grid-cols-[1fr_1fr_1fr] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+              <div className="hidden lg:grid grid-cols-[0.2fr_1fr_1fr_1fr] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+                <div>SR</div>
                 <div>Tax Name</div>
                 <div>Value (%)</div>
                 <div>Actions</div>
@@ -252,19 +250,20 @@ const Tax = () => {
                 {loading ? (
                   <TableSkeleton
                     rows={recordsPerPage}
-                    cols={3}
-                    className="lg:grid-cols-[1fr_1fr_1fr]"
+                    cols={4}
+                    className="lg:grid-cols-[0.2fr_1fr_1fr_1fr]"
                   />
                 ) : taxes.length === 0 ? (
                   <div className="text-center py-4 text-gray-500 bg-white">
                     No taxes found.
                   </div>
                 ) : (
-                  taxes.map((tax) => (
+                  taxes.map((tax, index) => (
                     <div
                       key={tax._id}
-                      className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                      className="grid grid-cols-1 lg:grid-cols-[0.2fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
+                      <div className="text-gray-600">{index + 1}</div>
                       <div className="text-gray-600">{tax?.taxName}</div>
                       <div className="text-gray-600">{tax?.value}</div>
                       <div className="flex gap-3 justify-start">

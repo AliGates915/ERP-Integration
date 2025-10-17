@@ -53,7 +53,6 @@ const DeliveryChallan = () => {
   const sliderRef = useRef(null);
   const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
 
-
   // Delivery challan search
   useEffect(() => {
     if (!searchTerm || !searchTerm.startsWith("DC-")) {
@@ -413,7 +412,7 @@ const DeliveryChallan = () => {
                 {loading ? (
                   <TableSkeleton
                     rows={recordsPerPage}
-                    cols={9}
+                    cols={10}
                     className="lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]"
                   />
                 ) : currentRecords.length === 0 ? (

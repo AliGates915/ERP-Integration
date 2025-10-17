@@ -95,7 +95,6 @@ const CustomerList = () => {
       setLoading(true);
       const res = await axios.get(`${API_URL}`);
       setCustomerList(res.data);
-    
     } catch (error) {
       console.error("Failed to fetch Customers", error);
     } finally {
@@ -161,7 +160,7 @@ const CustomerList = () => {
       paymentTerms: paymentTerms === "CreditCard" ? "Credit" : paymentTerms,
       creditTime: paymentTerms === "CreditCard" ? creditTime : undefined,
       creditLimit: paymentTerms === "CreditCard" ? creditLimit : undefined,
-      status: 'Pending',
+      status: "Pending",
     };
 
     try {
@@ -285,12 +284,8 @@ const CustomerList = () => {
       <CommanHeader />
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-newPrimary">
-            Customers List
-          </h1>
-          <p className="text-gray-500 text-sm">
-            Manage your customer details
-          </p>
+          <h1 className="text-2xl font-bold text-newPrimary">Customers List</h1>
+          <p className="text-gray-500 text-sm">Manage your customer details</p>
         </div>
         <button
           className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-newPrimary/90"
@@ -303,7 +298,8 @@ const CustomerList = () => {
       <div className="rounded-xl border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <div className="min-w-[1100px]">
-            <div className="hidden lg:grid grid-cols-[100px_1.5fr_1fr_1.5fr_2fr_1fr_1fr_100px_auto] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+            <div className="hidden lg:grid grid-cols-[80px_100px_1.5fr_1fr_1.5fr_2fr_1fr_1fr_100px_auto] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+              <div>SR</div>
               <div>ID</div>
               <div>Name</div>
               <div>Contact</div>
@@ -319,24 +315,24 @@ const CustomerList = () => {
               {loading ? (
                 <TableSkeleton
                   rows={customerList.length > 0 ? customerList.length : 5}
-                  cols={userInfo?.isAdmin ? 9 : 8}
-                  className="lg:grid-cols-[100px_1.5fr_1fr_1.5fr_2fr_1fr_1fr_100px_auto]"
+                  cols={userInfo?.isAdmin ? 10 : 8}
+                  className="lg:grid-cols-[80px_100px_1.5fr_1fr_1.5fr_2fr_1fr_1fr_100px_auto]"
                 />
               ) : customerList.length === 0 ? (
                 <div className="text-center py-4 text-gray-500 bg-white">
                   No customers found.
                 </div>
               ) : (
-                customerList?.map((c) => (
+                customerList?.map((c, index) => (
                   <>
                     <div
                       key={c._id}
-                      className="hidden lg:grid grid-cols-[100px_1.5fr_1fr_1.5fr_2fr_1fr_1fr_100px_auto] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                      className="hidden lg:grid grid-cols-[80px_100px_1.5fr_1fr_1.5fr_2fr_1fr_1fr_100px_auto] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
-                      <div className="font-medium text-gray-900">
-                        {c._id?.slice(0, 6)}
-                      </div>
-                      <div className="text-gray-700">{c.customerName}</div>
+                      <div className="text-gray-600">{index + 1}</div>{" "}
+                      {/* SR Number */}
+                      <div className="text-gray-600">{c._id?.slice(0, 6)}</div>
+                      <div className="text-gray-600">{c.customerName}</div>
                       <div className="text-gray-600">{c.contactPerson}</div>
                       <div className="text-gray-600">{c.email}</div>
                       <div className="text-gray-600 truncate">{c.address}</div>
@@ -641,7 +637,7 @@ const CustomerList = () => {
                   </div>
                 </div>
               )}
-            
+
               <button
                 className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-newPrimary/80 w-full"
                 onClick={handleSave}

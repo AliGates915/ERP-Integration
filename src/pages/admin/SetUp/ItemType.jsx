@@ -76,7 +76,6 @@ const ItemType = () => {
       setLoading(true);
       const res = await axios.get(`${API_URL}`);
       setItemTypeList(res.data); // store actual categories array
-     
     } catch (error) {
       console.error("Failed to fetch Supplier", error);
     } finally {
@@ -96,7 +95,6 @@ const ItemType = () => {
         `${import.meta.env.VITE_API_BASE_URL}/categories/list`
       );
       setCategoryList(res.data); // store actual categories array
-     
     } catch (error) {
       console.error("Failed to fetch categories", error);
     } finally {
@@ -113,7 +111,6 @@ const ItemType = () => {
       categoryId: itemCategory,
       itemTypeName: manufacturerName,
     };
-  
 
     try {
       const { token } = userInfo || {};

@@ -527,8 +527,8 @@ const FbrBookingOrders = () => {
                 {loading ? (
                   <TableSkeleton
                     rows={currentRecords.length || 5}
-                    cols={8}
-                    className="lg:grid-cols-8"
+                    cols={9}
+                    className="lg:grid-cols-[0.4fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]"
                   />
                 ) : currentRecords.length === 0 ? (
                   <div className="text-center py-4 text-gray-500 bg-white">
