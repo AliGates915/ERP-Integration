@@ -241,6 +241,7 @@ useEffect(() => {
   const handleAddInvoice = () => {
     resetForm();
     setIsSliderOpen(true);
+    setInvoiceDate(new Date().toISOString().split("T")[0]);
   };
 
   const handleEditClick = (invoice) => {
@@ -945,7 +946,7 @@ async function handleDownlode(invoice) {
                   </h3>
                   <div className="border border-gray-200 rounded-lg overflow-hidden">
                     {/* Header */}
-                    <div className="grid grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr] bg-gray-200 text-gray-600 text-sm font-semibold uppercase border-b border-gray-300">
+                    <div className="grid grid-cols-[60px_1fr_1fr_1fr_1fr_1fr] bg-gray-200 text-gray-600 text-sm font-semibold uppercase border-b border-gray-300">
                       <div className="px-4 py-2 border-r border-gray-300">
                         SR#.
                       </div>
@@ -971,13 +972,13 @@ async function handleDownlode(invoice) {
                         No items available for this DC No.
                       </div>
                     ) : (
-                      items.map((item) => (
+                      items.map((item,i) => (
                         <div
                           key={item.srNo}
-                          className="grid grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr] text-sm text-gray-700 bg-gray-100 even:bg-white border-t border-gray-300"
+                          className="grid grid-cols-[60px_1fr_1fr_1fr_1fr_1fr] text-sm text-gray-700 bg-gray-100 even:bg-white border-t border-gray-300"
                         >
                           <div className="px-4 py-2 border-r border-gray-300 ">
-                            {item.srNo}
+                            {i+1}
                           </div>
                           <div className="px-4 py-2 border-r border-gray-300 ">
                             {item.DcNo}
@@ -1112,10 +1113,11 @@ async function handleDownlode(invoice) {
                         <input
                           type="number"
                           value={tax.value}
+                          readOnly
                           onChange={(e) =>
                             handleTaxChange(index, "value", e.target.value)
                           }
-                          className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                          className="w-full p-3 border bg-gray-50 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
                           placeholder="Enter value"
                         />
                       </div>
