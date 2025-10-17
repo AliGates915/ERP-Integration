@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
+
 import {
   Table,
   TableHeader,
@@ -45,6 +46,7 @@ import HeaderSkeleton from "./HeaderSkeleton";
 import SummaryCardSkeleton from "./SummaryCardSkeleton";
 import ChartSkeleton from "./ChartSkeleton";
 import DasboardTableSkelton from "./DasboardTableSkelton";
+import { api } from "../../context/ApiService";
 
 const AdminDashboard = () => {
   const [customers, setCustomers] = useState(0);
@@ -65,6 +67,11 @@ const AdminDashboard = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const dropdownRef = useRef(null);
   const [search, setSearch] = useState("");
+  const [customerCount, setCustomerCount] = useState([]);
+  const [totalProducts, setTotalProducts] = useState([]);
+  const [totalStaff, setTotalStaff] = useState([]);
+  const [totalSales, setTotalSales] = useState([]);
+  const [totalBooking, setTotalBooking] = useState([]);
   const dummyBookings = [
     {
       id: 1,
@@ -151,6 +158,127 @@ const AdminDashboard = () => {
     Pending: "bg-amber-100 text-amber-800",
     Denied: "bg-rose-100 text-rose-800",
   };
+
+  // fetch Customer Count
+  const fetchCustomerCount = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${base}/dashboard/customers-count`, {
+        headers: {
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+      });
+      setCustomerCount(response.data);
+      // console.log("Customers:", response.data);
+    } catch (error) {
+      console.error("Failed to fetch customer list", error);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+    }
+  }, [userInfo.token, base]);
+
+  useEffect(() => {
+    fetchCustomerCount();
+  }, [fetchCustomerCount]);
+  // console.log({ customerCount });
+
+  // fetch Total Products
+  const fetchTotalProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${base}/dashboard/product-count`, {
+        headers: {
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+      });
+      setTotalProducts(response.data);
+      console.log("Products:", response.data);
+    } catch (error) {
+      console.error("Failed to fetch customer list", error);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTotalProducts();
+  }, [fetchTotalProducts]);
+
+  // fetch Total Staff
+  const fetchTotalStaff = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${base}/dashboard/staff-count`, {
+        headers: {
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+      });
+      setTotalStaff(response.data);
+      console.log("Staff:", response.data);
+    } catch (error) {
+      console.error("Failed to fetch customer list", error);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTotalStaff();
+  }, [fetchTotalStaff]);
+
+  // fetch Total Sales
+  const fetchTotalSales = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${base}/dashboard/sales-count`, {
+        headers: {
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+      });
+      setTotalSales(response.data);
+      console.log("Sales:", response.data);
+    } catch (error) {
+      console.error("Failed to fetch Total Sales", error);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTotalSales();
+  }, [fetchTotalSales]);
+
+  // fetch Total Sales
+  const fetchTotalBookings = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${base}/dashboard/order-count`, {
+        headers: {
+          Authorization: `Bearer ${userInfo.token}`,
+        },
+      });
+      setTotalBooking(response.data);
+      console.log("Booking:", response.data);
+    } catch (error) {
+      console.error("Failed to fetch Total Bookings", error);
+    } finally {
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTotalBookings();
+  }, [fetchTotalBookings]);
 
   // Update time every minute
   useEffect(() => {
@@ -431,7 +559,7 @@ const AdminDashboard = () => {
   const summaryData = [
     {
       name: "Total Customers",
-      value: customers,
+      value: customerCount.count,
       icon: <Users size={24} />,
       change: "+12%",
       color: "bg-blue-100 text-blue-600",
@@ -439,7 +567,7 @@ const AdminDashboard = () => {
     },
     {
       name: "Total Products",
-      value: items,
+      value: totalProducts.count,
       icon: <Package size={24} />,
       change: "+5%",
       color: "bg-green-100 text-green-600",
@@ -447,7 +575,7 @@ const AdminDashboard = () => {
     },
     {
       name: "Total Staff",
-      value: users,
+      value: totalStaff.count,
       icon: <UserCheck size={24} />,
       change: "+2%",
       color: "bg-purple-100 text-purple-600",
@@ -455,23 +583,23 @@ const AdminDashboard = () => {
     },
     {
       name: "Total Sales",
-      value: sales,
+      value: totalSales.totalSales,
       icon: <CreditCard size={24} />,
       change: "+18%",
       color: "bg-amber-100 text-amber-600",
       border: "border-l-4 border-amber-500",
     },
-    {
-      name: "Total Revenue",
-      value: `$${revenue.toLocaleString()}`,
-      icon: <DollarSign size={24} />,
-      change: "+15%",
-      color: "bg-emerald-100 text-emerald-600",
-      border: "border-l-4 border-emerald-500",
-    },
+    // {
+    //   name: "Total Revenue",
+    //   value: `$${revenue.toLocaleString()}`,
+    //   icon: <DollarSign size={24} />,
+    //   change: "+15%",
+    //   color: "bg-emerald-100 text-emerald-600",
+    //   border: "border-l-4 border-emerald-500",
+    // },
     {
       name: "Bookings",
-      value: booking,
+      value: totalBooking.count,
       icon: <Calendar size={24} />,
       change: "-3%",
       color: "bg-rose-100 text-rose-600",
