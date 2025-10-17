@@ -1,19 +1,9 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import axios from "axios";
 
+
 import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "../../components/ui/table";
-import { HashLoader } from "react-spinners";
-import {
-  PieChart,
-  Pie,
-  Cell,
+ 
   BarChart,
   Bar,
   XAxis,
@@ -32,13 +22,8 @@ import {
   UserCheck,
   Calendar,
   CreditCard,
-  DollarSign,
   PieChart as PieChartIcon,
-  Bell,
-  X,
-  Sun,
-  Moon,
-  Cloud,
+
 } from "lucide-react";
 import CommanHeader from "../../components/CommanHeader";
 
@@ -46,7 +31,7 @@ import HeaderSkeleton from "./HeaderSkeleton";
 import SummaryCardSkeleton from "./SummaryCardSkeleton";
 import ChartSkeleton from "./ChartSkeleton";
 import DasboardTableSkelton from "./DasboardTableSkelton";
-import { api } from "../../context/ApiService";
+
 
 const AdminDashboard = () => {
   const [customers, setCustomers] = useState(0);
@@ -171,7 +156,7 @@ const AdminDashboard = () => {
       setCustomerCount(response.data);
       // console.log("Customers:", response.data);
     } catch (error) {
-      console.error("Failed to fetch customer count", error);
+      console.error("Failed to fetch customer list", error);
     } finally {
       setTimeout(() => {
         setLoading(false);
@@ -194,9 +179,9 @@ const AdminDashboard = () => {
         },
       });
       setTotalProducts(response.data);
-      // console.log("Products:", response.data);
+      console.log("Products:", response.data);
     } catch (error) {
-      console.error("Failed to fetch total products", error);
+      console.error("Failed to fetch customer list", error);
     } finally {
       setTimeout(() => {
         setLoading(false);
@@ -218,9 +203,9 @@ const AdminDashboard = () => {
         },
       });
       setTotalStaff(response.data);
-      // console.log("Staff:", response.data);
+      console.log("Staff:", response.data);
     } catch (error) {
-      console.error("Failed to fetch total staff", error);
+      console.error("Failed to fetch customer list", error);
     } finally {
       setTimeout(() => {
         setLoading(false);
@@ -242,7 +227,7 @@ const AdminDashboard = () => {
         },
       });
       setTotalSales(response.data);
-      // console.log("Sales:", response.data);
+      console.log("Sales:", response.data);
     } catch (error) {
       console.error("Failed to fetch Total Sales", error);
     } finally {
@@ -256,7 +241,7 @@ const AdminDashboard = () => {
     fetchTotalSales();
   }, [fetchTotalSales]);
 
-  // fetch Total Bookings
+  // fetch Total Sales
   const fetchTotalBookings = useCallback(async () => {
     try {
       setLoading(true);
@@ -266,7 +251,7 @@ const AdminDashboard = () => {
         },
       });
       setTotalBooking(response.data);
-      // console.log("Booking:", response.data);
+      console.log("Booking:", response.data);
     } catch (error) {
       console.error("Failed to fetch Total Bookings", error);
     } finally {
@@ -493,68 +478,8 @@ const AdminDashboard = () => {
   }, []);
 
   // ✅ Mark single notification as read
-  const clearNotification = async (id) => {
-    try {
-      await axios.put(`${base}/notifications/${id}/read`);
-      setNotifications((prev) => prev.filter((n) => n._id !== id));
-    } catch (err) {
-      console.error("Clear failed:", err);
-    }
-  };
 
   // ✅ Mark all notifications as read
-  const clearAll = async () => {
-    try {
-      await axios.put(`${base}/notifications/mark-all`, {
-        headers: {
-          Authorization: `Bearer ${userInfo.token}`,
-        },
-      });
-      setNotifications([]);
-    } catch (err) {
-      console.error("Clear all failed:", err);
-    }
-  };
-
-  // Format time for display
-  const formatTime = (date) => {
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  };
-
-  // Format date for display
-  const formatDate = (date) => {
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  // Get greeting based on time of day
-  const getGreeting = () => {
-    const hour = currentTime.getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 17) return "Good Afternoon";
-    return "Good Evening";
-  };
-
-  // Get appropriate icon based on time of day
-  const getGreetingIcon = () => {
-    const hour = currentTime.getHours();
-    if (hour < 12) return <Sun className="text-amber-500" size={24} />;
-    if (hour < 17) return <Cloud className="text-blue-400" size={24} />;
-    return <Moon className="text-indigo-500" size={24} />;
-  };
-  const data = [
-    { day: "22th", thisWeek: 100, lastWeek: 60 },
-    { day: "23th", thisWeek: 120, lastWeek: 80 },
-    { day: "24th", thisWeek: 160, lastWeek: 70 },
-    { day: "25th", thisWeek: 155, lastWeek: 65 },
-    { day: "26th", thisWeek: 170, lastWeek: 75 },
-    { day: "27th", thisWeek: 177, lastWeek: 77 },
-    { day: "28th", thisWeek: 150, lastWeek: 90 },
-  ];
 
   const summaryData = [
     {
@@ -616,11 +541,7 @@ const AdminDashboard = () => {
     { month: "NOV", thisYear: 2600, lastYear: 1500 },
     { month: "DEC", thisYear: 3000, lastYear: 2000 },
   ];
-  const statusColors = {
-    Completed: "bg-green-100 text-green-800",
-    Pending: "bg-amber-100 text-amber-800",
-    Refunded: "bg-rose-100 text-rose-800",
-  };
+
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
@@ -634,14 +555,7 @@ const AdminDashboard = () => {
     return null;
   };
 
-  // if (loading) {
-  //   return (
-  //     <div className="flex flex-col justify-center items-center h-[80vh]">
-  //       <HashLoader color="#84CF16" />
-  //       <span className="ml-4 text-gray-500 mt-4">Loading ERP...</span>
-  //     </div>
-  //   );
-  // }
+ 
 
   return (
     <div className="p-4 w-full bg-gray-50 min-h-screen">
