@@ -34,6 +34,7 @@ const FbrPaymentReceipt = () => {
   });
 
   const [customers, setCustomers] = useState([]); // Example, replace with API
+  const [customersBank, setCustomersBank] = useState([]); // Example, replace with API
   const [banks, setBanks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [receiptId, setReceiptId] = useState("");
@@ -53,8 +54,9 @@ const FbrPaymentReceipt = () => {
   const sliderRef = useRef(null);
   const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
 
-  const API_URL = `${import.meta.env.VITE_API_BASE_URL
-    }/payment-receipt-voucher`;
+  const API_URL = `${
+    import.meta.env.VITE_API_BASE_URL
+  }/payment-receipt-voucher`;
 
   // Fixed fetchVouchers - remove useCallback or add proper dependencies
   const fetchVouchers = async () => {
@@ -82,7 +84,7 @@ const FbrPaymentReceipt = () => {
     try {
       setLoading(true);
       const res = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/customers/status`
+        `${import.meta.env.VITE_API_BASE_URL}/customers/isBank`
       );
       setCustomers(res.data);
     } catch (error) {
@@ -99,37 +101,78 @@ const FbrPaymentReceipt = () => {
     fetchCustomers();
   }, []);
 
-  const fetchBanks = async () => {
+  const fetchBanksByCustomer = async (customerId) => {
+    if (!customerId) return;
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/payment-receipt-voucher`
+        `${import.meta.env.VITE_API_BASE_URL}/banks/customer/${customerId}`
       );
-      const vouchers = res.data?.data || [];
-      console.log("Res ", res.data.data);
 
-      // Extract unique bank names from vouchers that have a bankSection
-      const uniqueBanks = vouchers
-        .filter((v) => v.bankSection)
-        .map((v) => ({
-          bankName: v.bankSection.bankName,
-          accountNumber: v.bankSection.accountNumber,
-          accountName: v.bankSection.accountName, // Updated to accountName
-        }))
-        .filter(
-          (b, index, self) =>
-            index === self.findIndex((t) => t.bankName === b.bankName)
-        );
+      const banksData = res.data?.data || [];
+      setCustomersBank(banksData);
 
-      setBanks(uniqueBanks);
+      console.log("Banks for customer:", banksData);
+
+      // 🧩 Auto-fill if only one bank
+      if (banksData.length === 1) {
+        const single = banksData[0];
+        setBankData((prev) => ({
+          ...prev,
+          bankName: single.bankName,
+          accountName: single.accountName,
+          accountNumber: single.accountNumber,
+        }));
+      } else {
+        // Multiple banks — clear fields, wait for selection
+        setBankData((prev) => ({
+          ...prev,
+          bankName: "",
+          accountName: "",
+          accountNumber: "",
+        }));
+      }
     } catch (error) {
-      console.error("Failed to fetch bank data:", error);
-      toast.error("Failed to fetch bank data");
-      setBanks([]);
+      console.error("Failed to fetch banks for customer:", error);
+      setCustomersBank([]);
     }
   };
+
   useEffect(() => {
-    fetchBanks();
+    fetchBanksByCustomer();
   }, []);
+  console.log({ customersBank });
+
+  // const fetchBanks = async () => {
+  //   try {
+  //     const res = await axios.get(
+  //       `${import.meta.env.VITE_API_BASE_URL}/payment-receipt-voucher`
+  //     );
+  //     const vouchers = res.data?.data || [];
+  //     console.log("Res ", res.data.data);
+
+  //     // Extract unique bank names from vouchers that have a bankSection
+  //     const uniqueBanks = vouchers
+  //       .filter((v) => v.bankSection)
+  //       .map((v) => ({
+  //         bankName: v.bankSection.bankName,
+  //         accountNumber: v.bankSection.accountNumber,
+  //         accountName: v.bankSection.accountName, // Updated to accountName
+  //       }))
+  //       .filter(
+  //         (b, index, self) =>
+  //           index === self.findIndex((t) => t.bankName === b.bankName)
+  //       );
+
+  //     setBanks(uniqueBanks);
+  //   } catch (error) {
+  //     console.error("Failed to fetch bank data:", error);
+  //     toast.error("Failed to fetch bank data");
+  //     setBanks([]);
+  //   }
+  // };
+  // useEffect(() => {
+  //   fetchBanks();
+  // }, []);
   // FIXED: Voucher search - doesn't modify main vouchers state
   useEffect(() => {
     if (!searchTerm) {
@@ -213,11 +256,13 @@ const FbrPaymentReceipt = () => {
   // Handlers for form and table actions
   const handleAddVoucher = () => {
     resetForm();
+    setCashData({ ...cashData, date: new Date().toISOString().split("T")[0] });
     setIsSliderOpen(true);
   };
 
-
   const handleEditClick = (voucher) => {
+    console.log({voucher});
+    
     setEditingVoucher(voucher); // Keep the full object (must include _id)
     setErrors({});
     setIsSliderOpen(true);
@@ -232,23 +277,24 @@ const FbrPaymentReceipt = () => {
         newBalance: voucher.newBalance || "",
         remarks: voucher.remarks || "",
       });
-    } else {
-      setPaymentType("Bank");
-      setBankData({
-        receiptId: voucher.receiptId || "",
-        date: voucher.date ? voucher.date.split("T")[0] : "",
-        customer: voucher.customer?._id || "",
-        bankName: voucher.bankSection?.bankName || "",
-        accountName: voucher.bankSection?.accountName || "",
-        accountNumber: voucher.bankSection?.accountNumber || "",
-        amountReceived: voucher.amountReceived || "",
-        remarks: voucher.remarks || "",
-      });
-    }
+  } else {
+  setPaymentType("Bank");
+  setBankData({
+    receiptId: voucher.receiptId || "",
+    date: voucher.date ? voucher.date.split("T")[0] : "",
+    customer: voucher.customer?._id || "",
+    bankName: voucher.bankSection?.bankName || "",
+    accountName: voucher.bankSection?.accountHolderName || "",
+    accountNumber: voucher.bankSection?.accountNumber || "",
+    amountReceived: voucher.amountReceived || "",
+    remarks: voucher.remarks || "",
+  });
+
+  // ✅ Add this line to prefetch banks for selected customer
+  fetchBanksByCustomer(voucher.customer?._id);
+}
+
   };
-
-
-
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -275,7 +321,7 @@ const FbrPaymentReceipt = () => {
           bankSection: {
             bankName: bankData.bankName,
             accountNumber: bankData.accountNumber,
-            accountHolderName: bankData.accountHolderName,
+             accountHolderName: bankData.accountName, 
           },
           remarks: bankData.remarks,
         };
@@ -307,14 +353,11 @@ const FbrPaymentReceipt = () => {
       // Refresh and close form
       await fetchVouchers();
       resetForm();
-
     } catch (error) {
       console.error("Error submitting payment receipt:", error);
       toast.error("Failed to save payment receipt");
     }
   };
-
-
 
   // 🗑️ Delete Voucher
   const handleDelete = async (id) => {
@@ -379,8 +422,7 @@ const FbrPaymentReceipt = () => {
       );
     }
   };
-
-
+console.log({vouchers});
 
   // Pagination logic - UPDATED to use filteredVouchers
   const indexOfLastRecord = currentPage * recordsPerPage;
@@ -465,8 +507,14 @@ const FbrPaymentReceipt = () => {
                       </div>
                       <div className="text-gray-600">{voucher.receiptId}</div>
 
-                      <div className="text-gray-600">{voucher.customer?.customerName || voucher.bankSection.accountName || "-"}</div>
-                      <div className="text-gray-600">Rs.{voucher.amountReceived || "-"}</div>
+                      <div className="text-gray-600">
+                        {voucher.customer?.customerName ||
+                          voucher.bankSection.accountHolderName ||
+                          "-"}
+                      </div>
+                      <div className="text-gray-600">
+                        Rs.{voucher.amountReceived || "-"}
+                      </div>
 
                       <div className="text-gray-600">{voucher.mode}</div>
                       <div className="text-gray-600">
@@ -515,20 +563,22 @@ const FbrPaymentReceipt = () => {
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className={`px-3 py-1 rounded-md ${currentPage === 1
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-newPrimary text-white hover:bg-newPrimary/80"
-                    }`}
+                  className={`px-3 py-1 rounded-md ${
+                    currentPage === 1
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-newPrimary text-white hover:bg-newPrimary/80"
+                  }`}
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className={`px-3 py-1 rounded-md ${currentPage === totalPages
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-newPrimary text-white hover:bg-newPrimary/80"
-                    }`}
+                  className={`px-3 py-1 rounded-md ${
+                    currentPage === totalPages
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-newPrimary text-white hover:bg-newPrimary/80"
+                  }`}
                 >
                   Next
                 </button>
@@ -693,10 +743,11 @@ const FbrPaymentReceipt = () => {
                           type="text"
                           value={Math.max(0, Math.round(cashData.newBalance))} // prevent negative display
                           readOnly
-                          className={`w-full p-3 border rounded-md ${cashData.newBalance < 0
-                            ? "bg-red-100 text-red-600"
-                            : "bg-gray-100"
-                            }`}
+                          className={`w-full p-3 border rounded-md ${
+                            cashData.newBalance < 0
+                              ? "bg-red-100 text-red-600"
+                              : "bg-gray-100"
+                          }`}
                         />
                       </div>
                     </div>
@@ -724,7 +775,6 @@ const FbrPaymentReceipt = () => {
                 {/* Bank Form */}
                 {paymentType === "Bank" && (
                   <div className="space-y-4">
-
                     {/* Customer & Bank Name */}
                     <div className="flex gap-4">
                       <div className="flex-1">
@@ -733,12 +783,15 @@ const FbrPaymentReceipt = () => {
                         </label>
                         <select
                           value={bankData.customer}
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            const customerId = e.target.value;
                             setBankData({
                               ...bankData,
-                              customer: e.target.value,
-                            })
-                          }
+                              customer: customerId,
+                              bankName: "",
+                            });
+                            fetchBanksByCustomer(customerId); // ✅ move API call here
+                          }}
                           className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
                         >
@@ -754,24 +807,58 @@ const FbrPaymentReceipt = () => {
                         <label className="block text-gray-700 font-medium mb-2">
                           Bank Name <span className="text-red-500">*</span>
                         </label>
-                        <select
-                          value={bankData.bankName}
-                          onChange={(e) =>
-                            setBankData({
-                              ...bankData,
-                              bankName: e.target.value,
-                            })
-                          }
-                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          required
-                        >
-                          <option value="">Select Bank</option>
-                          {banks.map((b, index) => (
-                            <option key={index} value={b.bankName}>
-                              {b.bankName}
-                            </option>
-                          ))}
-                        </select>
+
+                        {customersBank.length === 1 ? (
+                          // ✅ Show input field if only one bank
+                          <input
+                            type="text"
+                            value={bankData.bankName}
+                            readOnly
+                            className="w-full p-3 border rounded-md bg-gray-100"
+                          />
+                        ) : (
+                          // ✅ Show select field if multiple banks
+                          <select
+                            value={bankData.bankName}
+                            onChange={async (e) => {
+                              const selectedBank = e.target.value;
+                              setBankData({
+                                ...bankData,
+                                bankName: selectedBank,
+                              });
+
+                              try {
+                                const res = await axios.get(
+                                  `${import.meta.env.VITE_API_BASE_URL}/banks/${
+                                    bankData.customer
+                                  }/${selectedBank}`
+                                );
+                                const bankInfo = res.data?.data || {};
+
+                                setBankData((prev) => ({
+                                  ...prev,
+                                  accountName: bankInfo.accountName || "",
+                                  accountNumber: bankInfo.accountNumber || "",
+                                }));
+                              } catch (err) {
+                                console.error(
+                                  "Failed to fetch selected bank info",
+                                  err
+                                );
+                                toast.error("Could not load bank details");
+                              }
+                            }}
+                            className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                          >
+                            <option value="">Select Bank</option>
+                            {customersBank.map((b, index) => (
+                              <option key={index} value={b.bankName}>
+                                {b.bankName}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                       </div>
                     </div>
 
@@ -779,7 +866,7 @@ const FbrPaymentReceipt = () => {
                     <div className="flex gap-4">
                       <div className="flex-1">
                         <label className="block text-gray-700 font-medium mb-2">
-                          Account Name <span className="text-red-500">*</span>
+                          Account Holder Name <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -791,7 +878,7 @@ const FbrPaymentReceipt = () => {
                             })
                           }
                           placeholder="Enter Account Name"
-                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full p-3 border rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
                         />
                       </div>
@@ -810,7 +897,7 @@ const FbrPaymentReceipt = () => {
                             })
                           }
                           placeholder="Enter Account Number"
-                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full p-3 border rounded-md bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
                         />
                       </div>
@@ -820,7 +907,8 @@ const FbrPaymentReceipt = () => {
                     <div className="flex gap-4">
                       <div className="flex-1">
                         <label className="block text-gray-700 font-medium mb-2">
-                          Amount Received <span className="text-red-500">*</span>
+                          Amount Received{" "}
+                          <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="number"
