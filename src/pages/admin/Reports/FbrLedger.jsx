@@ -42,8 +42,18 @@ const FbrLedger = () => {
     try {
       setLoading(true);
       const response = await api.get("/customer-ledger");
-      setLedgerEntries(response.data);
-      console.log(response.data);
+
+      // Remove decimals from numeric fields
+      const roundedData = response.data.map((entry) => ({
+        ...entry,
+        Paid: Math.round(parseFloat(entry.Paid) || 0),
+        Received: Math.round(parseFloat(entry.Received) || 0),
+        Balance: Math.round(parseFloat(entry.Balance) || 0),
+        amount: Math.round(parseFloat(entry.amount) || 0),
+      }));
+
+      setLedgerEntries(roundedData);
+      console.log(roundedData);
     } catch (error) {
       console.error("Failed to fetch FBR Ledger", error);
     } finally {
@@ -408,31 +418,31 @@ const FbrLedger = () => {
         </div>
         <div className="flex gap-6">
           {/* Left Filter Section */}
-          <div className="w-1/3">
+          <div className="w-full">
             <div className="space-y-5">
-              {/* Customer Selection */}
-              <div>
-                <label className="block text-gray-700 font-medium mb-2">
-                  Customer Name <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={selectedCustomer}
-                  onChange={(e) => setSelectedCustomer(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
-                  required
-                >
-                  <option value="">Select Customer</option>
-                  {customerList.map((cust) => (
-                    <option key={cust._id} value={cust._id}>
-                      {cust.customerName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               <div className="flex gap-5">
+                {/* Customer Selection */}
+                <div className="w-[400px]">
+                  <label className="block text-gray-700 font-medium mb-2">
+                    Customer Name <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={selectedCustomer}
+                    onChange={(e) => setSelectedCustomer(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                    required
+                  >
+                    <option value="">Select Customer</option>
+                    {customerList.map((cust) => (
+                      <option key={cust._id} value={cust._id}>
+                        {cust.customerName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 {/* Date From */}
-                <div className="w-1/2">
+                <div className="w-[200px]">
                   <label className="block text-gray-700 font-medium mb-2">
                     Date From
                   </label>
@@ -445,7 +455,7 @@ const FbrLedger = () => {
                 </div>
 
                 {/* Date To */}
-                <div className="w-1/2">
+                <div className="w-[200px]">
                   <label className="block text-gray-700 font-medium mb-2">
                     Date To
                   </label>
@@ -468,97 +478,102 @@ const FbrLedger = () => {
           {/* Selection Form */}
 
           <div className="rounded-xl shadow border border-gray-200 overflow-hidden mt-6">
-            <div className="overflow-y-auto lg:overflow-x-auto max-h-[900px]">
-              <div className="min-w-full custom-scrollbar">
-                {/* Table Header */}
-                <div className="hidden lg:grid grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
-                  <div>SR</div>
-                  <div>Date</div>
-                  <div>ID</div>
-                  <div>Description</div>
-                  <div>Paid</div>
-                  <div>Received</div>
-                  <div>Balance</div>
-                </div>
+            {selectedCustomer ? (
+              <div className="overflow-y-auto lg:overflow-x-auto max-h-[900px]">
+                <div className="min-w-full custom-scrollbar">
+                  {/* Table Header */}
+                  <div className="hidden lg:grid grid-cols-[0.2fr_0.5fr_0.5fr_2.5fr_repeat(3,0.7fr)] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+                    <div>SR</div>
+                    <div>Date</div>
+                    <div>ID</div>
+                    <div>Description</div>
+                    <div>Paid</div>
+                    <div>Received</div>
+                    <div>Balance</div>
+                  </div>
 
-                {/* Table Rows */}
-                <div className="flex flex-col divide-y divide-gray-100">
-                  {loading ? (
-                    <div className="text-center py-4 text-gray-500 bg-white">
-                      Loading...
-                    </div>
-                  ) : ledgerEntries.length === 0 ? (
-                    <div className="text-center py-4 text-gray-500 bg-white">
-                      No ledger entries found.
-                    </div>
-                  ) : (
-                    <>
-                      {ledgerEntries.map((entry, index) => (
-                        <div
-                          key={entry.id || index}
-                          className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
-                        >
-                          <div className="text-gray-600">{index + 1}</div>
-                          <div className="text-gray-600">{entry.Date}</div>
-                          <div className="text-gray-600">{entry.ID}</div>
-                          <div className="text-gray-600">
-                            {entry.Description}
-                          </div>
-                          <div className="text-gray-600">{entry.Paid}</div>
-                          <div className="text-gray-600">{entry.Received}</div>
-                          <div className="text-gray-600">{entry.Balance}</div>
-                        </div>
-                      ))}
-
-                      {/* Totals Row */}
-                      <div className="hidden lg:grid grid-cols-[1fr_1fr_1fr_1fr_1fr_1fr_1fr] justify-items-start gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
-                        {/* Empty columns for alignment */}
-                        <div className="col-span-4"></div>
-
-                        {/* Total Paid */}
-                        <div className="text-blue-700 text-center">
-                          Total Paid:{" "}
-                          <span className="font-bold">
-                            {filteredLedger
-                              .reduce(
-                                (sum, e) => sum + (parseFloat(e.paid) || 0),
-                                0
-                              )
-                              .toFixed(2)}
-                          </span>
-                        </div>
-
-                        {/* Total Received */}
-                        <div className="text-green-700 text-center">
-                          Total Received:{" "}
-                          <span className="font-bold">
-                            {filteredLedger
-                              .reduce(
-                                (sum, e) => sum + (parseFloat(e.received) || 0),
-                                0
-                              )
-                              .toFixed(2)}
-                          </span>
-                        </div>
-
-                        {/* Total Balance */}
-                        <div className="text-red-700 text-center">
-                          Total Balance:{" "}
-                          <span className="font-bold">
-                            {filteredLedger
-                              .reduce(
-                                (sum, e) => sum + (parseFloat(e.balance) || 0),
-                                0
-                              )
-                              .toFixed(2)}
-                          </span>
-                        </div>
+                  {/* Table Rows */}
+                  <div className="flex flex-col divide-y divide-gray-100">
+                    {loading ? (
+                      <div className="text-center py-4 text-gray-500 bg-white">
+                        Loading...
                       </div>
-                    </>
-                  )}
+                    ) : ledgerEntries.length === 0 ? (
+                      <div className="text-center py-4 text-gray-500 bg-white">
+                        No ledger entries found.
+                      </div>
+                    ) : (
+                      <>
+                        {ledgerEntries.map((entry, index) => (
+                          <div
+                            key={entry.id || index}
+                            className="grid grid-cols-[0.2fr_0.5fr_0.5fr_2.5fr_repeat(3,0.7fr)] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                          >
+                            <div className="text-gray-600">{index + 1}</div>
+                            <div className="text-gray-600">{entry.Date}</div>
+                            <div className="text-gray-600">{entry.ID}</div>
+                            <div className="text-gray-600">
+                              {entry.Description}
+                            </div>
+                            <div className="text-gray-600">{entry.Paid}</div>
+                            <div className="text-gray-600">
+                              {entry.Received}
+                            </div>
+                            <div className="text-gray-600">{entry.Balance}</div>
+                          </div>
+                        ))}
+
+                        {/* Totals Row */}
+                        <div className="hidden lg:grid grid-cols-[0.2fr_0.5fr_0.5fr_2.5fr_repeat(3,0.7fr)] justify-items-start gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+                          <div className="col-span-4"></div>
+
+                          {/* Calculate totals */}
+                          <div className="text-blue-700 text-center">
+                            Total Paid:{" "}
+                            <span className="font-bold">
+                              {Math.round(
+                                ledgerEntries.reduce(
+                                  (sum, e) => sum + (parseFloat(e.Paid) || 0),
+                                  0
+                                )
+                              )}
+                            </span>
+                          </div>
+                          <div className="text-green-700 text-center">
+                            Total Received:{" "}
+                            <span className="font-bold">
+                              {Math.round(
+                                ledgerEntries.reduce(
+                                  (sum, e) =>
+                                    sum + (parseFloat(e.Received) || 0),
+                                  0
+                                )
+                              )}
+                            </span>
+                          </div>
+                          <div className="text-red-700 text-center">
+                            Total Balance:{" "}
+                            <span className="font-bold">
+                              {Math.round(
+                                ledgerEntries.reduce(
+                                  (sum, e) =>
+                                    sum + (parseFloat(e.Balance) || 0),
+                                  0
+                                )
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-6 text-gray-500 bg-white rounded-lg mt-6">
+                Please select a customer to view ledger entries.
+              </div>
+            )}
 
             {/* Pagination Controls (Optional) */}
             {totalPages > 1 && (

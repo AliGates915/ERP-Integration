@@ -125,10 +125,11 @@ const CustomerList = () => {
       department, // Added department
       ntn,
       gst,
-      openingBalanceDate, // Added opening balance date
-      balanceReceived: paymentTerms === "Credit" ? balanceReceived : undefined, // Added balance received
-      paymentTerms,
-      status,
+
+      paymentTerms: paymentTerms === "CreditCard" ? "Credit" : paymentTerms,
+      creditTime: paymentTerms === "CreditCard" ? creditTime : undefined,
+      creditLimit: paymentTerms === "CreditCard" ? creditLimit : undefined,
+      status: 'Pending',
     };
 
     try {
@@ -598,6 +599,38 @@ const CustomerList = () => {
                   </label>
                 </div>
               </div>
+
+              {paymentTerms === "CreditCard" && (
+                <div className="flex gap-4">
+                  <div className="w-1/2">
+                    <label className="block text-gray-700 font-medium">
+                      Credit Time Limit{" "}
+                      <span className="text-newPrimary">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={creditTime}
+                      onChange={(e) => setCreditTime(e.target.value)}
+                      className="w-full p-2 border rounded"
+                      placeholder="Enter time limit (days)"
+                    />
+                  </div>
+                  <div className="w-1/2">
+                    <label className="block text-gray-700 font-medium">
+                      Credit Cash Limit{" "}
+                      <span className="text-newPrimary">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={creditLimit}
+                      onChange={(e) => setCreditLimit(e.target.value)}
+                      className="w-full p-2 border rounded"
+                      placeholder="Enter cash limit"
+                    />
+                  </div>
+                </div>
+              )}
+
             
               <button
                 className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-newPrimary/80 w-full"

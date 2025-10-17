@@ -267,26 +267,68 @@ const FbrBookingOrders = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const formatToISODate = (dateStr) => {
+    if (!dateStr) return "";
+    if (dateStr.includes("T")) return dateStr.split("T")[0]; // already ISO
+
+    const months = {
+      Jan: "01",
+      Feb: "02",
+      Mar: "03",
+      Apr: "04",
+      May: "05",
+      Jun: "06",
+      Jul: "07",
+      Aug: "08",
+      Sep: "09",
+      Oct: "10",
+      Nov: "11",
+      Dec: "12",
+    };
+
+    const parts = dateStr.split("-");
+    if (parts.length === 3) {
+      const [day, mon, year] = parts;
+      return `${year}-${months[mon]}-${day.padStart(2, "0")}`;
+    }
+    return "";
+  };
+
   const handleAddBookingOrder = () => {
     resetForm();
+    setOrderDate(new Date().toISOString().split("T")[0]);
     setIsSliderOpen(true);
   };
 
   const handleEditClick = (order) => {
+    console.log({ order });
+
     setEditingOrder(order);
     setOrderNo(order.orderNo || "");
-    setOrderDate(order.orderDate ? order.orderDate.split("T")[0] : ""); // ✅ format date
-    setCustomer(order.customer?._id || ""); // ✅ set ID for select dropdown
+    setOrderDate(formatToISODate(order.orderDate));
+    setCustomer(order.customer?._id || "");
     setPerson(order.person || "");
     setPhone(order.customer?.phoneNumber || "");
     setAddress(order.customer?.address || "");
     setBalance(order.customer?.balance || "");
     setDeliveryAddress(order.deliveryAddress || "");
     setOrderType(order.orderType || "");
-    setDeliveryDate(order.deliveryDate ? order.deliveryDate.split("T")[0] : "");
+    setDeliveryDate(formatToISODate(order.deliveryDate));
     setMode(order.mode || "");
     setPaymentMethod(order.paymentMethod || "");
-    setItemsList(order.products || []); // ✅ use `products` instead of `items`
+
+    // ✅ Fix the products list mapping
+    const formattedItems =
+      order.products?.map((p) => ({
+        name: p.name || "",
+        rate: p.rate || p.invoiceRate || 0,
+        qty: p.orderedQty || p.qty || 0, // 👈 ensure qty is filled
+        total: p.total || (p.rate || 0) * (p.orderedQty || 0),
+        inStock: p.inStock || 0,
+        details: p.details || "",
+      })) || [];
+
+    setItemsList(formattedItems); // ✅ Now Qty will show
     setTotalWeight(order.totalWeight || 0);
     setTotalAmount(order.totalAmount || 0);
     setRemarks(order.remarks || "");
@@ -433,11 +475,11 @@ const FbrBookingOrders = () => {
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
   };
-const handleView = (order) => {
-  setSelectedOrder(order);
-  setIsView(true);
-};
-console.log({bookingOrders});
+  const handleView = (order) => {
+    setSelectedOrder(order);
+    setIsView(true);
+  };
+  console.log({ bookingOrders });
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
@@ -469,12 +511,14 @@ console.log({bookingOrders});
         <div className="rounded-xl shadow border border-gray-200 overflow-hidden">
           <div className="overflow-y-auto lg:overflow-x-auto max-h-[900px]">
             <div className="min-w-[1400px]">
-              <div className="hidden lg:grid grid-cols-7 gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+              <div className="hidden lg:grid grid-cols-[0.4fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] gap-4 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+                <div>SR</div>
                 <div>Order No</div>
                 <div>Customer</div>
                 <div>Order Date</div>
                 <div>Delivery Date</div>
-                <div>Order Type</div>
+                <div>Total</div>
+                <div>Status</div>
                 <div>Payment Method</div>
                 <div>Actions</div>
               </div>
@@ -483,19 +527,22 @@ console.log({bookingOrders});
                 {loading ? (
                   <TableSkeleton
                     rows={currentRecords.length || 5}
-                    cols={7}
-                    className="lg:grid-cols-7"
+                    cols={8}
+                    className="lg:grid-cols-8"
                   />
                 ) : currentRecords.length === 0 ? (
                   <div className="text-center py-4 text-gray-500 bg-white">
                     No booking orders found.
                   </div>
                 ) : (
-                  currentRecords.map((order) => (
+                  currentRecords.map((order, index) => (
                     <div
                       key={order._id}
-                      className="grid grid-cols-1 lg:grid-cols-7 items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                      className="grid lg:grid grid-cols-[0.4fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] items-center gap-4 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
+                      <div className="text-gray-600">
+                        {indexOfFirstRecord + index + 1}
+                      </div>
                       <div className="text-gray-600">{order.orderNo}</div>
                       <div className="text-gray-600">
                         {order?.customer?.customerName || "N/A"}
@@ -508,8 +555,28 @@ console.log({bookingOrders});
                         {new Date(order.deliveryDate).toLocaleDateString() ||
                           "N/A"}
                       </div>
-                      <div className="text-gray-600">
-                        {order.orderType || "N/A"}
+                      {/* ✅ Total */}
+                      <div className="text-gray-600 font-medium">
+                        {order.products && order.products.length > 0
+                          ? order.products
+                              .reduce((sum, item) => sum + (item.total || 0), 0)
+                              .toLocaleString()
+                          : 0}
+                      </div>
+
+                      {/* ✅ Status */}
+                      <div
+                        className={`font-semibold ${
+                          order.status === "Delivered"
+                            ? "text-green-600"
+                            : order.status === "Dispatched"
+                            ? "text-red-600"
+                            : order.status === "Cancelled"
+                            ? "text-red-600"
+                            : "text-amber-600" // default → Pending or anything else
+                        }`}
+                      >
+                        {order.status || "Pending"}
                       </div>
                       <div className="text-gray-600">
                         {order.paymentMethod || "N/A"}
@@ -547,7 +614,7 @@ console.log({bookingOrders});
           {totalPages > 1 && (
             <div className="flex justify-between my-4 px-10">
               <div className="text-sm text-gray-600">
-                Showing {indexOfLastRecord + 1} to{" "}
+                Showing {indexOfFirstRecord + 1} to{" "}
                 {Math.min(indexOfLastRecord, bookingOrders.length)} of{" "}
                 {bookingOrders.length} records
               </div>
@@ -858,7 +925,7 @@ console.log({bookingOrders});
                   </div>
                 </div>
 
-                <div className="border bg-gray-100 p-4 rounded-lg space-y-4">
+                <div className="border p-4 rounded-lg space-y-4">
                   {/* Line 1: Product, Rate, Qty, Total */}
                   <div className="flex gap-4">
                     <div className="flex-1 min-w-0">
@@ -976,7 +1043,9 @@ console.log({bookingOrders});
                     <table className="w-full border border-gray-200 rounded-lg overflow-hidden">
                       <thead className="bg-gray-100 text-gray-600 text-sm">
                         <tr>
-                          <th className="px-4 py-2 border-b">Sr #</th>
+                          <th className="px-2 py-2 border-b w-14 text-center">
+                            Sr #
+                          </th>
                           <th className="px-4 py-2 border-b">Item</th>
                           <th className="px-4 py-2 border-b">Specifications</th>
                           <th className="px-4 py-2 border-b">Stock</th>
@@ -989,7 +1058,7 @@ console.log({bookingOrders});
                       <tbody className="text-gray-700 text-sm">
                         {itemsList.map((item, idx) => (
                           <tr key={idx} className="hover:bg-gray-50">
-                            <td className="px-4 py-2 border-b text-center">
+                            <td className="px-2 py-2 border-b w-14 text-center">
                               {idx + 1}
                             </td>
                             <td className="px-4 py-2 border-b text-center">
@@ -1050,16 +1119,15 @@ console.log({bookingOrders});
                 </button>
               </form>
             </div>
-           
           </div>
         )}
-      {isView && selectedOrder && (
-              <ViewModel
-                data={selectedOrder}
-                type="bookingOrder" // 👈 You can define a new case for booking orders inside ViewModel
-                onClose={() => setIsView(false)}
-              />
-            )}
+        {isView && selectedOrder && (
+          <ViewModel
+            data={selectedOrder}
+            type="bookingOrder" // 👈 You can define a new case for booking orders inside ViewModel
+            onClose={() => setIsView(false)}
+          />
+        )}
         <style jsx>{`
           .custom-scrollbar::-webkit-scrollbar {
             width: 6px;

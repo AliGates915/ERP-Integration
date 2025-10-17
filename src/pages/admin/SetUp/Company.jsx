@@ -217,12 +217,12 @@ const Company = () => {
             Manage your company information
           </p>
         </div>
-        <button
+        {/* <button
           onClick={handleAdd}
           className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-newPrimary/90"
         >
           + Add Company
-        </button>
+        </button> */}
       </div>
 
       {/* Table */}
@@ -341,7 +341,6 @@ const Company = () => {
                   />
                 </div>
                 <div className="w-[200px]">
-                  
                   <div
                     className={`relative w-[85px] h-[85px] ${
                       !logo && "border-2 border-dashed border-newPrimary"

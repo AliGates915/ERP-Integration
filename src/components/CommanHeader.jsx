@@ -31,18 +31,14 @@ const navigate=useNavigate()
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [salesRes, revenueRes, pendingRes, notifRes] = await Promise.all([
-          // axios.get(`${base}/saleInvoices/count`),
-          // axios.get(`${base}/saleInvoices/total-revenue`),
-          // axios.get(`${base}/bookings/pending`),
+        const [ notifRes] = await Promise.all([
+        
           axios.get(`${base}/notifications`, {
             headers: { Authorization: `Bearer ${userInfo?.token}` },
           }),
         ]);
 
-        setSales(salesRes.data?.total ?? 0);
-        setRevenue(revenueRes.data?.totalRevenue ?? 0);
-        setBookingPending(pendingRes.data?.total ?? 0);
+   
         setNotifications(notifRes.data || []);
       } catch (err) {
         console.error("Header data fetch failed:", err);

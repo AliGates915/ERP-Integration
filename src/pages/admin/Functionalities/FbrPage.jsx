@@ -59,11 +59,11 @@ const setupChildren = [
     label: "Manufacture",
     icon: <FaIndustry />,
   },
-  {
-    to: "/admin/supplier",
-    label: "Supplier",
-    icon: <FaTruck />,
-  },
+  // {
+  //   to: "/admin/supplier",
+  //   label: "Supplier",
+  //   icon: <FaTruck />,
+  // },
   {
     to: "/admin/shelve-location",
     label: "Shelve Location",
