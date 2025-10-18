@@ -18,6 +18,7 @@ const FbrLedger = () => {
   const [amount, setAmount] = useState("");
   const [transactionDate, setTransactionDate] = useState("");
   const [transactionType, setTransactionType] = useState("");
+  const [dateRange, setDateRange] = useState("thisMonth");
 
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -88,49 +89,48 @@ const FbrLedger = () => {
 
   // fetch Date
   // ✅ Dynamic fetch by date and customer
-const fetchDate = useCallback(async () => {
-  if (!selectedCustomer) return; // no customer selected yet
+  const fetchDate = useCallback(async () => {
+    if (!selectedCustomer) return; // no customer selected yet
 
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    // Build dynamic query params
-    let query = `/customer-ledger?customer=${selectedCustomer}`;
-    if (dateFrom) query += `&from=${dateFrom}`;
-    if (dateTo) query += `&to=${dateTo}`;
+      // Build dynamic query params
+      let query = `/customer-ledger?customer=${selectedCustomer}`;
+      if (dateFrom) query += `&from=${dateFrom}`;
+      if (dateTo) query += `&to=${dateTo}`;
 
-    const response = await api.get(query);
+      const response = await api.get(query);
 
-    // ✅ Store the ledger results instead of overwriting date state
-    setLedgerEntries(response.data?.data || response.data || []);
+      // ✅ Store the ledger results instead of overwriting date state
+      setLedgerEntries(response.data?.data || response.data || []);
 
-    console.log("Filtered Ledger (Date Range):", response.data);
-  } catch (error) {
-    console.error("Failed to fetch ledger by date", error);
-  } finally {
-    setTimeout(() => setLoading(false), 1000);
-  }
-}, [selectedCustomer, dateFrom, dateTo]);
+      console.log("Filtered Ledger (Date Range):", response.data);
+    } catch (error) {
+      console.error("Failed to fetch ledger by date", error);
+    } finally {
+      setTimeout(() => setLoading(false), 1000);
+    }
+  }, [selectedCustomer, dateFrom, dateTo]);
 
-
-useEffect(() => {
-  if (selectedCustomer) {
-    fetchDate();
-  }
-}, [selectedCustomer, dateFrom, dateTo, fetchDate]);
+  useEffect(() => {
+    if (selectedCustomer) {
+      fetchDate();
+    }
+  }, [selectedCustomer, dateFrom, dateTo, fetchDate]);
 
   // Filter ledger data based on selected customer and date range
- const filteredLedger = ledgerEntries.filter((entry) => {
-  const entryDate = new Date(entry.date);
-  const from = dateFrom ? new Date(dateFrom) : null;
-  const to = dateTo ? new Date(dateTo) : null;
+  const filteredLedger = ledgerEntries.filter((entry) => {
+    const entryDate = new Date(entry.date);
+    const from = dateFrom ? new Date(dateFrom) : null;
+    const to = dateTo ? new Date(dateTo) : null;
 
-  return (
-    entry.customerId === selectedCustomer &&
-    (!from || entryDate >= from) &&
-    (!to || entryDate <= to)
-  );
-});
+    return (
+      entry.customerId === selectedCustomer &&
+      (!from || entryDate >= from) &&
+      (!to || entryDate <= to)
+    );
+  });
 
   // Simulate fetching ledger entries
   const fetchLedgerEntries = useCallback(async () => {
@@ -432,6 +432,38 @@ useEffect(() => {
                         {cust.customerName}
                       </option>
                     ))}
+                  </select>
+                </div>
+
+                {/* Date Range */}
+                <div className="w-[250px]">
+                  <label className="block text-gray-700 font-medium mb-2">
+                    Date Range
+                  </label>
+                  <select
+                    value={dateRange}
+                    onChange={(e) => setDateRange(e.target.value)}
+                    className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-newPrimary"
+                  >
+                    <option value="">Select Range</option>
+                    <option value="all">All Dates</option>
+                    <option value="custom">Custom</option>
+                    <option value="today">Today</option>
+                    <option value="thisWeek">This Week</option>
+                    <option value="thisMonth">This Month</option>
+                    <option value="lastMonth">Last Month</option>
+                    <option value="currentFY">Current Financial Year</option>
+                    <option value="lastFY">Last Financial Year</option>
+                    <option value="since30">Since 30 Days Ago</option>
+                    <option value="since60">Since 60 Days Ago</option>
+                    <option value="since90">Since 90 Days Ago</option>
+                    <option value="since365">Since 365 Days Ago</option>
+                    <option value="nextMonth">Next Month</option>
+                    <option value="nextFY">Next Financial Year</option>
+                    <option value="q1">Quarter 1</option>
+                    <option value="q2">Quarter 2</option>
+                    <option value="q3">Quarter 3</option>
+                    <option value="q4">Quarter 4</option>
                   </select>
                 </div>
 

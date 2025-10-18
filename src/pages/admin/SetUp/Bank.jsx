@@ -130,10 +130,7 @@ const Bank = () => {
   };
 
   const validateForm = () => {
-    if (!customer) {
-      toast.error("Please select a customer");
-      return false;
-    }
+   
     if (!bankName) {
       toast.error("Please select a bank name");
       return false;
@@ -154,7 +151,6 @@ const Bank = () => {
     if (!validateForm()) return;
 
     const formData = {
-      customer, // Store customer ID
       bankName,
       accountName,
       accountNumber:accountNo,
@@ -176,7 +172,7 @@ const Bank = () => {
         toast.success("Bank added successfully");
       }
       fetchBankList();
-      setCustomer("");
+      
       setBankName("");
       setAccountName("");
       setAccountNo("");
@@ -191,9 +187,10 @@ const Bank = () => {
 
   // Edit Bank
   const handleEdit = (bank) => {
+    console.log({bank});
+    
     setIsEdit(true);
     setEditId(bank._id);
-    setCustomer(bank.customer?._id || "");
     setBankName(bank.bankName || "");
     setAccountName(bank.accountName || "");
     setAccountNo(bank.accountNumber || "");
@@ -279,12 +276,12 @@ const Bank = () => {
       <div className="rounded-xl border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <div className="min-w-[800px]">
-            <div className="hidden lg:grid grid-cols-[80px_1.5fr_1.5fr_1.5fr_auto] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
+            <div className="hidden lg:grid grid-cols-[80px_1.5fr_1.5fr_1.5fr_1.5fr] gap-6 bg-gray-100 py-3 px-6 text-xs font-semibold text-gray-600 uppercase sticky top-0 z-10 border-b border-gray-200">
               <div>SR#</div>
-              <div>Customer Name</div>
               <div>Bank Name</div>
-              <div>Account No.</div>
-              {userInfo?.isAdmin && <div className="text-right">Actions</div>}
+              <div>Account Holder Name</div>
+                 <div>Account No.</div>
+              {userInfo?.isAdmin && <div className={`${loading ? "":"text-right"}`}>Actions</div>}
             </div>
 
             <div className="flex flex-col divide-y divide-gray-100 max-h-[400px] overflow-y-auto">
@@ -292,7 +289,7 @@ const Bank = () => {
                 <TableSkeleton
                   rows={bankList.length > 0 ? bankList.length : 5}
                   cols={userInfo?.isAdmin ? 5 : 4}
-                  className="lg:grid-cols-[80px_1.5fr_1.5fr_1.5fr_auto]"
+                  className="lg:grid-cols-[80px_1.5fr_1.5fr_1.5fr_1.5fr]"
                 />
               ) : bankList.length === 0 ? (
                 <div className="text-center py-4 text-gray-500 bg-white">
@@ -303,11 +300,11 @@ const Bank = () => {
                   <>
                     <div
                       key={b._id}
-                      className="hidden lg:grid grid-cols-[80px_1.5fr_1.5fr_1.5fr_auto] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
+                      className="hidden lg:grid grid-cols-[80px_1.5fr_1.5fr_1.5fr_1.5fr] items-center gap-6 px-6 py-4 text-sm bg-white hover:bg-gray-50 transition"
                     >
                       <div className=" text-gray-900">{index + 1}</div>
-                      <div className="text-gray-700">{b.customer?.customerName || "N/A"}</div>
                       <div className="text-gray-600">{b.bankName}</div>
+                      <div className="text-gray-600">{b.accountName}</div>
                       <div className="text-gray-600">{b.accountNumber}</div>
                       {userInfo?.isAdmin && (
                         <div className="flex justify-end gap-3">
@@ -331,9 +328,7 @@ const Bank = () => {
                       key={`mobile-${b._id}`}
                       className="lg:hidden bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4"
                     >
-                      <h3 className="font-semibold text-gray-800">
-                        {b.customer?.customerName || "N/A"}
-                      </h3>
+                    
                       <p className="text-sm text-gray-600">SR#: {index + 1}</p>
                       <p className="text-sm text-gray-600">Bank Name: {b.bankName}</p>
                       <p className="text-sm text-gray-600">Account No.: {b.accountNo}</p>
@@ -366,7 +361,7 @@ const Bank = () => {
         <div className="fixed inset-0 bg-gray-600/50 flex items-center justify-center z-50">
           <div
             ref={sliderRef}
-            className="w-full md:w-[800px] bg-white rounded-2xl shadow-2xl overflow-y-auto max-h-[90vh]"
+            className="w-full md:w-[500px] bg-white rounded-2xl shadow-2xl overflow-y-auto max-h-[90vh]"
           >
             <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white rounded-t-2xl">
               <h2 className="text-xl font-bold text-newPrimary">
@@ -390,24 +385,7 @@ const Bank = () => {
 
             <div className="space-y-4 p-4 md:p-6">
               <div className="flex gap-4">
-                <div className="flex-1 min-w-0">
-                  <label className="block text-gray-700 font-medium">
-                    Customer <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={customer}
-                    onChange={(e) => setCustomer(e.target.value)}
-                    className="w-full p-2 border rounded"
-                    required
-                  >
-                    <option value="">Select Customer</option>
-                    {customerList.map((c) => (
-                      <option key={c._id} value={c._id}>
-                        {c.customerName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+          
                 <div className="flex-1 min-w-0">
                   <label className="block text-gray-700 font-medium">
                     Bank Name <span className="text-red-500">*</span>
