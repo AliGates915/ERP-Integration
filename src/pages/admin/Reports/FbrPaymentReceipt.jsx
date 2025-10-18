@@ -73,7 +73,9 @@ const FbrPaymentReceipt = () => {
       setVouchers([]);
       setFilteredVouchers([]);
     } finally {
-      setLoading(false);
+     setTimeout(() => {
+       setLoading(false);
+     }, 2000);
     }
   };
 
@@ -100,6 +102,8 @@ const FbrPaymentReceipt = () => {
   useEffect(() => {
     fetchCustomers();
   }, []);
+
+  
 
   const fetchBanksByCustomer = async (customerId) => {
     if (!customerId) return;
@@ -267,17 +271,30 @@ const FbrPaymentReceipt = () => {
     setErrors({});
     setIsSliderOpen(true);
 
-    if (voucher.mode === "Cash") {
-      setPaymentType("Cash");
-      setCashData({
-        receiptId: voucher.receiptId || "",
-        date: voucher.date ? voucher.date.split("T")[0] : "",
-        customer: voucher.customer?._id || "",
-        amountReceived: voucher.amountReceived || "",
-        newBalance: voucher.newBalance || "",
-        remarks: voucher.remarks || "",
-      });
-  } else {
+   if (voucher.mode === "Cash") {
+  setPaymentType("Cash");
+
+  // 🧠 Safe parse date
+  let formattedDate = "";
+  if (voucher.date?.includes("T")) {
+    formattedDate = voucher.date.split("T")[0];
+  } else if (voucher.date?.includes("-")) {
+    // e.g. "02-Oct-2025" → convert to YYYY-MM-DD
+    const parsed = new Date(voucher.date);
+    if (!isNaN(parsed)) formattedDate = parsed.toISOString().split("T")[0];
+  }
+
+  setCashData({
+    receiptId: voucher.receiptId || "",
+    date: formattedDate,
+    customer: voucher.customer?._id || "",
+    balance: voucher.customer?.balance || 0, // ✅ FIXED
+    amountReceived: voucher.amountReceived || 0,
+    newBalance: voucher.newBalance || 0,
+    remarks: voucher.remarks || "",
+  });
+
+} else {
   setPaymentType("Bank");
   setBankData({
     receiptId: voucher.receiptId || "",
@@ -289,9 +306,18 @@ const FbrPaymentReceipt = () => {
     amountReceived: voucher.amountReceived || "",
     remarks: voucher.remarks || "",
   });
-
-  // ✅ Add this line to prefetch banks for selected customer
-  fetchBanksByCustomer(voucher.customer?._id);
+if (voucher.customer?._id) {
+  fetchBanksByCustomer(voucher.customer._id);
+} else {
+  // 🧠 No customer info? just show the saved bank directly
+  setCustomersBank([
+    {
+      bankName: voucher.bankSection?.bankName,
+      accountName: voucher.bankSection?.accountHolderName,
+      accountNumber: voucher.bankSection?.accountNumber,
+    },
+  ]);
+}
 }
 
   };
@@ -657,7 +683,7 @@ console.log({vouchers});
                         </label>
                         <input
                           type="text"
-                          value={nextReceiptId}
+                          value={editingVoucher ? editingVoucher.receiptId : nextReceiptId}
                           className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
                         />
