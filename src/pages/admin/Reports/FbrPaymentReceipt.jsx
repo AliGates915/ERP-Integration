@@ -33,9 +33,9 @@ const FbrPaymentReceipt = () => {
     remarks: "",
   });
 
-  const [customers, setCustomers] = useState([]); 
-  const [customersCash, setCustomersCash] = useState([]); 
-  const [customersBank, setCustomersBank] = useState([]); 
+  const [customers, setCustomers] = useState([]);
+  const [customersCash, setCustomersCash] = useState([]);
+  const [customersBank, setCustomersBank] = useState([]);
   const [banks, setBanks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [receiptId, setReceiptId] = useState("");
@@ -74,9 +74,9 @@ const FbrPaymentReceipt = () => {
       setVouchers([]);
       setFilteredVouchers([]);
     } finally {
-     setTimeout(() => {
-       setLoading(false);
-     }, 2000);
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
     }
   };
 
@@ -104,10 +104,9 @@ const FbrPaymentReceipt = () => {
     fetchCustomers();
   }, []);
 
-
   // fetch cusomers from cash
 
-    const fetchCustomersCash = async () => {
+  const fetchCustomersCash = async () => {
     try {
       setLoading(true);
       const res = await axios.get(
@@ -127,7 +126,6 @@ const FbrPaymentReceipt = () => {
   useEffect(() => {
     fetchCustomersCash();
   }, []);
-  
 
   const fetchBanksByCustomer = async (customerId) => {
     if (!customerId) return;
@@ -237,28 +235,38 @@ const FbrPaymentReceipt = () => {
 
   // Reset form fields
   const resetForm = () => {
-    setReceiptId("");
-    setCustomerName("");
-    setBalance("");
-    setBankData({
-      receiptId: "",
-      date: "",
-      customer: "",
-      bankName: "",
-      accountName: "", // Updated to accountName
-      accountNumber: "",
-      amountReceived: 0,
-      remarks: "",
-    });
-    setMode("");
-    setDate("");
-    setReceivedBy(userInfo.employeeName || "");
-    setStatus("");
-    setRemarks("");
-    setEditingVoucher(null);
-    setErrors({});
-    setIsSliderOpen(false);
-  };
+  setReceiptId("");
+  setCustomerName("");
+  setBalance("");
+  setCashData({
+    receiptId: "",
+    date: "",
+    customer: "",
+    amountReceived: 0,
+    newBalance: 0,
+    remarks: "",
+  });
+  setBankData({
+    receiptId: "",
+    date: "",
+    customer: "",
+    bankName: "",
+    accountName: "",
+    accountNumber: "",
+    amountReceived: 0,
+    remarks: "",
+  });
+  setPaymentType("Cash"); // ✅ Reset radio to default
+  setMode("");
+  setDate("");
+  setReceivedBy(userInfo.employeeName || "");
+  setStatus("");
+  setRemarks("");
+  setEditingVoucher(null);
+  setErrors({});
+  setIsSliderOpen(false);
+};
+
 
   // Validate form fields
   const validateForm = () => {
@@ -289,61 +297,59 @@ const FbrPaymentReceipt = () => {
   };
 
   const handleEditClick = (voucher) => {
-    console.log({voucher});
-    
+    console.log({ voucher });
+
     setEditingVoucher(voucher); // Keep the full object (must include _id)
     setErrors({});
     setIsSliderOpen(true);
 
-   if (voucher.mode === "Cash") {
-  setPaymentType("Cash");
+    if (voucher.mode === "Cash") {
+      setPaymentType("Cash");
 
-  // 🧠 Safe parse date
-  let formattedDate = "";
-  if (voucher.date?.includes("T")) {
-    formattedDate = voucher.date.split("T")[0];
-  } else if (voucher.date?.includes("-")) {
-    // e.g. "02-Oct-2025" → convert to YYYY-MM-DD
-    const parsed = new Date(voucher.date);
-    if (!isNaN(parsed)) formattedDate = parsed.toISOString().split("T")[0];
-  }
+      // 🧠 Safe parse date
+      let formattedDate = "";
+      if (voucher.date?.includes("T")) {
+        formattedDate = voucher.date.split("T")[0];
+      } else if (voucher.date?.includes("-")) {
+        // e.g. "02-Oct-2025" → convert to YYYY-MM-DD
+        const parsed = new Date(voucher.date);
+        if (!isNaN(parsed)) formattedDate = parsed.toISOString().split("T")[0];
+      }
 
-  setCashData({
-    receiptId: voucher.receiptId || "",
-    date: formattedDate,
-    customer: voucher.customer?._id || "",
-    balance: voucher.customer?.balance || 0, // ✅ FIXED
-    amountReceived: voucher.amountReceived || 0,
-    newBalance: voucher.newBalance || 0,
-    remarks: voucher.remarks || "",
-  });
-
-} else {
-  setPaymentType("Bank");
-  setBankData({
-    receiptId: voucher.receiptId || "",
-    date: voucher.date ? voucher.date.split("T")[0] : "",
-    customer: voucher.customer?._id || "",
-    bankName: voucher.bankSection?.bankName || "",
-    accountName: voucher.bankSection?.accountHolderName || "",
-    accountNumber: voucher.bankSection?.accountNumber || "",
-    amountReceived: voucher.amountReceived || "",
-    remarks: voucher.remarks || "",
-  });
-if (voucher.customer?._id) {
-  fetchBanksByCustomer(voucher.customer._id);
-} else {
-  // 🧠 No customer info? just show the saved bank directly
-  setCustomersBank([
-    {
-      bankName: voucher.bankSection?.bankName,
-      accountName: voucher.bankSection?.accountHolderName,
-      accountNumber: voucher.bankSection?.accountNumber,
-    },
-  ]);
-}
-}
-
+      setCashData({
+        receiptId: voucher.receiptId || "",
+        date: formattedDate,
+        customer: voucher.customer?._id || "",
+        balance: voucher.customer?.balance || 0, // ✅ FIXED
+        amountReceived: voucher.amountReceived || 0,
+        newBalance: voucher.newBalance || 0,
+        remarks: voucher.remarks || "",
+      });
+    } else {
+      setPaymentType("Bank");
+      setBankData({
+        receiptId: voucher.receiptId || "",
+        date: voucher.date ? voucher.date.split("T")[0] : "",
+        customer: voucher.customer?._id || "",
+        bankName: voucher.bankSection?.bankName || "",
+        accountName: voucher.bankSection?.accountHolderName || "",
+        accountNumber: voucher.bankSection?.accountNumber || "",
+        amountReceived: voucher.amountReceived || "",
+        remarks: voucher.remarks || "",
+      });
+      if (voucher.customer?._id) {
+        fetchBanksByCustomer(voucher.customer._id);
+      } else {
+        // 🧠 No customer info? just show the saved bank directly
+        setCustomersBank([
+          {
+            bankName: voucher.bankSection?.bankName,
+            accountName: voucher.bankSection?.accountHolderName,
+            accountNumber: voucher.bankSection?.accountNumber,
+          },
+        ]);
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -371,7 +377,7 @@ if (voucher.customer?._id) {
           bankSection: {
             bankName: bankData.bankName,
             accountNumber: bankData.accountNumber,
-             accountHolderName: bankData.accountName, 
+            accountHolderName: bankData.accountName,
           },
           remarks: bankData.remarks,
         };
@@ -472,7 +478,7 @@ if (voucher.customer?._id) {
       );
     }
   };
-console.log({vouchers});
+  console.log({ vouchers });
 
   // Pagination logic - UPDATED to use filteredVouchers
   const indexOfLastRecord = currentPage * recordsPerPage;
@@ -536,7 +542,7 @@ console.log({vouchers});
               <div className="flex flex-col divide-y divide-gray-100">
                 {loading ? (
                   <TableSkeleton
-                    rows={recordsPerPage}
+                    rows={currentRecords.length || 5}
                     cols={9}
                     className="lg:grid-cols-[0.4fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr]"
                   />
@@ -659,27 +665,57 @@ console.log({vouchers});
 
               <form onSubmit={handleSubmit} className="space-y-4 p-4 md:p-6">
                 {/* Payment Type Selection */}
+                {/* Payment Type Selection */}
                 <div className="flex gap-4">
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="paymentType"
-                      value="Cash"
-                      checked={paymentType === "Cash"}
-                      onChange={(e) => setPaymentType(e.target.value)}
-                    />
-                    Cash
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="paymentType"
-                      value="Bank"
-                      checked={paymentType === "Bank"}
-                      onChange={(e) => setPaymentType(e.target.value)}
-                    />
-                    Bank
-                  </label>
+                  {!editingVoucher ? (
+                    <>
+                      {/* Show both in Add mode */}
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="paymentType"
+                          value="Cash"
+                          checked={paymentType === "Cash"}
+                          onChange={(e) => setPaymentType(e.target.value)}
+                        />
+                        Cash
+                      </label>
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="paymentType"
+                          value="Bank"
+                          checked={paymentType === "Bank"}
+                          onChange={(e) => setPaymentType(e.target.value)}
+                        />
+                        Bank
+                      </label>
+                    </>
+                  ) : paymentType === "Cash" ? (
+                    // 🟢 Show only Cash when editing a Cash voucher
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="paymentType"
+                        value="Cash"
+                        checked
+                        readOnly
+                      />
+                      Cash
+                    </label>
+                  ) : (
+                    // 🟦 Show only Bank when editing a Bank voucher
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="paymentType"
+                        value="Bank"
+                        checked
+                        readOnly
+                      />
+                      Bank
+                    </label>
+                  )}
                 </div>
 
                 {/* Cash Form */}
@@ -707,7 +743,11 @@ console.log({vouchers});
                         </label>
                         <input
                           type="text"
-                          value={editingVoucher ? editingVoucher.receiptId : nextReceiptId}
+                          value={
+                            editingVoucher
+                              ? editingVoucher.receiptId
+                              : nextReceiptId
+                          }
                           className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
                         />
@@ -916,7 +956,8 @@ console.log({vouchers});
                     <div className="flex gap-4">
                       <div className="flex-1">
                         <label className="block text-gray-700 font-medium mb-2">
-                          Account Holder Name <span className="text-red-500">*</span>
+                          Account Holder Name{" "}
+                          <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"

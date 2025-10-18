@@ -587,7 +587,7 @@ setCreditLimit(customer.creditLimit || "");
                 </div>
                 <div className="flex-1 min-w-0">
                   <label className="block text-gray-700 font-medium">
-                    Balance Received <span className="text-red-500">*</span>
+                    Opening Balance <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
