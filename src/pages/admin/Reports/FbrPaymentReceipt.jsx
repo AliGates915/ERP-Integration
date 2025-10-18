@@ -33,8 +33,9 @@ const FbrPaymentReceipt = () => {
     remarks: "",
   });
 
-  const [customers, setCustomers] = useState([]); // Example, replace with API
-  const [customersBank, setCustomersBank] = useState([]); // Example, replace with API
+  const [customers, setCustomers] = useState([]); 
+  const [customersCash, setCustomersCash] = useState([]); 
+  const [customersBank, setCustomersBank] = useState([]); 
   const [banks, setBanks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [receiptId, setReceiptId] = useState("");
@@ -103,6 +104,29 @@ const FbrPaymentReceipt = () => {
     fetchCustomers();
   }, []);
 
+
+  // fetch cusomers from cash
+
+    const fetchCustomersCash = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/customers`
+      );
+      setCustomersCash(res.data);
+    } catch (error) {
+      console.error("Failed to fetch customers:", error);
+      toast.error("Failed to fetch cash customers");
+      setVouchers([]);
+      setFilteredVouchers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCustomersCash();
+  }, []);
   
 
   const fetchBanksByCustomer = async (customerId) => {
@@ -716,7 +740,7 @@ console.log({vouchers});
                           required
                         >
                           <option value="">Select Customer</option>
-                          {customers.map((c) => (
+                          {customersCash.map((c) => (
                             <option key={c._id} value={c._id}>
                               {c.customerName}
                             </option>
