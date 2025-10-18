@@ -73,7 +73,9 @@ const FbrPaymentReceipt = () => {
       setVouchers([]);
       setFilteredVouchers([]);
     } finally {
-      setLoading(false);
+     setTimeout(() => {
+       setLoading(false);
+     }, 2000);
     }
   };
 
@@ -100,6 +102,8 @@ const FbrPaymentReceipt = () => {
   useEffect(() => {
     fetchCustomers();
   }, []);
+
+  
 
   const fetchBanksByCustomer = async (customerId) => {
     if (!customerId) return;
@@ -679,7 +683,7 @@ console.log({vouchers});
                         </label>
                         <input
                           type="text"
-                          value={nextReceiptId}
+                          value={editingVoucher ? editingVoucher.receiptId : nextReceiptId}
                           className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
                         />

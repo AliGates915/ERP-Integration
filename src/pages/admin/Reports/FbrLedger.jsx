@@ -395,13 +395,13 @@ useEffect(() => {
             </h1>
           </div>
           <div className="flex items-center gap-3">
-            <input
+            {/* <input
               type="text"
               placeholder="Enter Customer ID eg: CUS-001"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="px-3 py-2 w-[250px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-newPrimary"
-            />
+            /> */}
             {/* <button
               className="bg-newPrimary text-white px-4 py-2 rounded-lg hover:bg-newPrimary/80"
               onClick={handleAddLedgerEntry}
