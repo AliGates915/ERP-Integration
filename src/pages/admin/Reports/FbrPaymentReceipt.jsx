@@ -83,26 +83,6 @@ const FbrPaymentReceipt = () => {
   useEffect(() => {
     fetchVouchers();
   }, []); // Empty dependency array - fetch only on mount
-  const fetchCustomers = async () => {
-    try {
-      setLoading(true);
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/customers/isBank`
-      );
-      setCustomers(res.data);
-    } catch (error) {
-      console.error("Failed to fetch customers:", error);
-      toast.error("Failed to fetch customers");
-      setVouchers([]);
-      setFilteredVouchers([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCustomers();
-  }, []);
 
   // fetch cusomers from cash
 
@@ -113,6 +93,7 @@ const FbrPaymentReceipt = () => {
         `${import.meta.env.VITE_API_BASE_URL}/customers`
       );
       setCustomersCash(res.data);
+      setCustomers(res.data);
     } catch (error) {
       console.error("Failed to fetch customers:", error);
       toast.error("Failed to fetch cash customers");
@@ -127,36 +108,12 @@ const FbrPaymentReceipt = () => {
     fetchCustomersCash();
   }, []);
 
-  const fetchBanksByCustomer = async (customerId) => {
-    if (!customerId) return;
+  const fetchBanksByCustomer = async () => {
     try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/banks/customer/${customerId}`
-      );
+      const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/banks`);
 
       const banksData = res.data?.data || [];
       setCustomersBank(banksData);
-
-      console.log("Banks for customer:", banksData);
-
-      // 🧩 Auto-fill if only one bank
-      if (banksData.length === 1) {
-        const single = banksData[0];
-        setBankData((prev) => ({
-          ...prev,
-          bankName: single.bankName,
-          accountName: single.accountName,
-          accountNumber: single.accountNumber,
-        }));
-      } else {
-        // Multiple banks — clear fields, wait for selection
-        setBankData((prev) => ({
-          ...prev,
-          bankName: "",
-          accountName: "",
-          accountNumber: "",
-        }));
-      }
     } catch (error) {
       console.error("Failed to fetch banks for customer:", error);
       setCustomersBank([]);
@@ -235,38 +192,37 @@ const FbrPaymentReceipt = () => {
 
   // Reset form fields
   const resetForm = () => {
-  setReceiptId("");
-  setCustomerName("");
-  setBalance("");
-  setCashData({
-    receiptId: "",
-    date: "",
-    customer: "",
-    amountReceived: 0,
-    newBalance: 0,
-    remarks: "",
-  });
-  setBankData({
-    receiptId: "",
-    date: "",
-    customer: "",
-    bankName: "",
-    accountName: "",
-    accountNumber: "",
-    amountReceived: 0,
-    remarks: "",
-  });
-  setPaymentType("Cash"); // ✅ Reset radio to default
-  setMode("");
-  setDate("");
-  setReceivedBy(userInfo.employeeName || "");
-  setStatus("");
-  setRemarks("");
-  setEditingVoucher(null);
-  setErrors({});
-  setIsSliderOpen(false);
-};
-
+    setReceiptId("");
+    setCustomerName("");
+    setBalance("");
+    setCashData({
+      receiptId: "",
+      date: "",
+      customer: "",
+      amountReceived: 0,
+      newBalance: 0,
+      remarks: "",
+    });
+    setBankData({
+      receiptId: "",
+      date: "",
+      customer: "",
+      bankName: "",
+      accountName: "",
+      accountNumber: "",
+      amountReceived: 0,
+      remarks: "",
+    });
+    setPaymentType("Cash"); // ✅ Reset radio to default
+    setMode("");
+    setDate("");
+    setReceivedBy(userInfo.employeeName || "");
+    setStatus("");
+    setRemarks("");
+    setEditingVoucher(null);
+    setErrors({});
+    setIsSliderOpen(false);
+  };
 
   // Validate form fields
   const validateForm = () => {
@@ -297,60 +253,63 @@ const FbrPaymentReceipt = () => {
   };
 
   const handleEditClick = (voucher) => {
-    console.log({ voucher });
+  console.log({ voucher });
+  setEditingVoucher(voucher);
+  setErrors({});
+  setIsSliderOpen(true);
 
-    setEditingVoucher(voucher); // Keep the full object (must include _id)
-    setErrors({});
-    setIsSliderOpen(true);
+  if (voucher.mode === "Cash") {
+  setPaymentType("Cash");
 
-    if (voucher.mode === "Cash") {
-      setPaymentType("Cash");
+  let formattedDate = "";
+  if (voucher.date?.includes("T")) {
+    formattedDate = voucher.date.split("T")[0];
+  } else if (voucher.date?.includes("-")) {
+    const parsed = new Date(voucher.date);
+    if (!isNaN(parsed)) formattedDate = parsed.toISOString().split("T")[0];
+  }
 
-      // 🧠 Safe parse date
-      let formattedDate = "";
-      if (voucher.date?.includes("T")) {
-        formattedDate = voucher.date.split("T")[0];
-      } else if (voucher.date?.includes("-")) {
-        // e.g. "02-Oct-2025" → convert to YYYY-MM-DD
-        const parsed = new Date(voucher.date);
-        if (!isNaN(parsed)) formattedDate = parsed.toISOString().split("T")[0];
-      }
+  setCashData({
+    receiptId: voucher.receiptId || "",
+    date: formattedDate,
+    customer: voucher.customer?._id || "",
+    balance: voucher.customer?.balance || 0,   // ✅ FIXED — now included
+    amountReceived: voucher.amountReceived || 0,
+    newBalance: voucher.newBalance || 0,
+    remarks: voucher.remarks || "",
+  });
+}
+ else {
+    setPaymentType("Bank");
 
-      setCashData({
-        receiptId: voucher.receiptId || "",
-        date: formattedDate,
-        customer: voucher.customer?._id || "",
-        balance: voucher.customer?.balance || 0, // ✅ FIXED
-        amountReceived: voucher.amountReceived || 0,
-        newBalance: voucher.newBalance || 0,
-        remarks: voucher.remarks || "",
-      });
+    // ✅ FIXED MAPPING for your given API data
+    const bank = voucher.bankSection || {};
+    setBankData({
+      receiptId: voucher.receiptId || "",
+      date: voucher.date?.includes("T")
+        ? voucher.date.split("T")[0]
+        : new Date(voucher.date).toISOString().split("T")[0],
+      customer: bank.customer || "", // ✅ correct field
+      bankName: bank.bankName || "",
+      accountName: bank.accountHolderName || "",
+      accountNumber: bank.accountNumber || "",
+      amountReceived: voucher.amountReceived || 0,
+      remarks: voucher.remarks || "",
+    });
+
+    if (bank.customer) {
+      fetchBanksByCustomer(bank.customer);
     } else {
-      setPaymentType("Bank");
-      setBankData({
-        receiptId: voucher.receiptId || "",
-        date: voucher.date ? voucher.date.split("T")[0] : "",
-        customer: voucher.customer?._id || "",
-        bankName: voucher.bankSection?.bankName || "",
-        accountName: voucher.bankSection?.accountHolderName || "",
-        accountNumber: voucher.bankSection?.accountNumber || "",
-        amountReceived: voucher.amountReceived || "",
-        remarks: voucher.remarks || "",
-      });
-      if (voucher.customer?._id) {
-        fetchBanksByCustomer(voucher.customer._id);
-      } else {
-        // 🧠 No customer info? just show the saved bank directly
-        setCustomersBank([
-          {
-            bankName: voucher.bankSection?.bankName,
-            accountName: voucher.bankSection?.accountHolderName,
-            accountNumber: voucher.bankSection?.accountNumber,
-          },
-        ]);
-      }
+      setCustomersBank([
+        {
+          bankName: bank.bankName,
+          accountName: bank.accountHolderName,
+          accountNumber: bank.accountNumber,
+        },
+      ]);
     }
-  };
+  }
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -375,6 +334,7 @@ const FbrPaymentReceipt = () => {
           mode: "Bank",
           amountReceived: bankData.amountReceived,
           bankSection: {
+            customer: bankData.customer,
             bankName: bankData.bankName,
             accountNumber: bankData.accountNumber,
             accountHolderName: bankData.accountName,
@@ -910,32 +870,26 @@ const FbrPaymentReceipt = () => {
                           // ✅ Show select field if multiple banks
                           <select
                             value={bankData.bankName}
-                            onChange={async (e) => {
-                              const selectedBank = e.target.value;
-                              setBankData({
-                                ...bankData,
-                                bankName: selectedBank,
-                              });
+                            onChange={(e) => {
+                              const selectedBankName = e.target.value;
+                              const selectedBank = customersBank.find(
+                                (b) => b.bankName === selectedBankName
+                              );
 
-                              try {
-                                const res = await axios.get(
-                                  `${import.meta.env.VITE_API_BASE_URL}/banks/${
-                                    bankData.customer
-                                  }/${selectedBank}`
-                                );
-                                const bankInfo = res.data?.data || {};
-
-                                setBankData((prev) => ({
-                                  ...prev,
-                                  accountName: bankInfo.accountName || "",
-                                  accountNumber: bankInfo.accountNumber || "",
-                                }));
-                              } catch (err) {
-                                console.error(
-                                  "Failed to fetch selected bank info",
-                                  err
-                                );
-                                toast.error("Could not load bank details");
+                              if (selectedBank) {
+                                setBankData({
+                                  ...bankData,
+                                  bankName: selectedBank.bankName,
+                                  accountName: selectedBank.accountName,
+                                  accountNumber: selectedBank.accountNumber,
+                                });
+                              } else {
+                                setBankData({
+                                  ...bankData,
+                                  bankName: selectedBankName,
+                                  accountName: "",
+                                  accountNumber: "",
+                                });
                               }
                             }}
                             className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
