@@ -6,7 +6,7 @@ import { Navigate } from "react-router-dom";
 const ProtectedRoute = ({ children, role }) => {
   const [isValid, setIsValid] = useState(null);
   const user = JSON.parse(localStorage.getItem("userInfo"));
-  const API_URL = import.meta.env.VITE_API_BASE_URL;
+  const API_URL = `${import.meta.env.VITE_API_BASE_URL}/token/check`;
 
   useEffect(() => {
     const checkToken = async () => {
