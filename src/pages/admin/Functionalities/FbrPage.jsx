@@ -26,19 +26,24 @@ import CommanHeader from "../../../components/CommanHeader";
 
 // salesChildren
 const salesChildren = [
-  {
-    to: "/admin/fbr-booking-orders",
-    label: "Booking Order",
-    icon: <FaShoppingCart />,
-  },
-  {
-    to: "/admin/fbr-delivery-challan",
-    label: "Delivery Challan",
-    icon: <FaTruck />,
-  },
-  {
+  // {
+  //   to: "/admin/fbr-booking-orders",
+  //   label: "Booking Order",
+  //   icon: <FaShoppingCart />,
+  // },
+  // {
+  //   to: "/admin/fbr-delivery-challan",
+  //   label: "Delivery Challan",
+  //   icon: <FaTruck />,
+  // },
+  // {
+  //   to: "/admin/fbr-sale-invoice",
+  //   label: "Sale Invoice",
+  //   icon: <TbFileInvoice />,
+  // },
+   {
     to: "/admin/fbr-sale-invoice",
-    label: "Sale Invoice",
+    label: "Refine Sale Invoice",
     icon: <TbFileInvoice />,
   },
   { to: "/admin/fbr-sales-return", label: "Sales Return", icon: <FaUndoAlt /> },
