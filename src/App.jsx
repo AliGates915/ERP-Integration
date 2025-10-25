@@ -54,6 +54,7 @@ import FbrLedger from "./pages/admin/Reports/FbrLedger.jsx";
 import FbrReceivable from "./pages/admin/Reports/FbrReceivable.jsx";
 import FbrPage from "./pages/admin/Functionalities/FbrPage.jsx";
 import Bank from "./pages/admin/SetUp/Bank.jsx";
+import RefineSalesInvoices from "./pages/admin/Functionalities/RefineSalesInvoice.jsx";
 function AppContent() {
   return (
     <div className="max-h-screen flex flex-col bg-gray-50">
@@ -111,7 +112,8 @@ function AppContent() {
               path="fbr-delivery-challan"
               element={<FbrDeliveryChallan />}
             />
-            <Route path="fbr-sale-invoice" element={<FbrSalesInvoices />} />
+            {/* <Route path="fbr-sale-invoice" element={<FbrSalesInvoices />} /> */}
+            <Route path="fbr-sale-invoice" element={<RefineSalesInvoices />} />
             <Route path="fbr-sales-return" element={<FbrSalesReturn />} />
             <Route path="fbr-payment-receipt" element={<FbrPaymentReceipt />} />
             <Route path="fbr-ledger" element={<FbrLedger />} />
