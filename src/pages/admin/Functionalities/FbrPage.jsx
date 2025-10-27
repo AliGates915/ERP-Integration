@@ -43,7 +43,7 @@ const salesChildren = [
   // },
    {
     to: "/admin/fbr-sale-invoice",
-    label: "Refine Sale Invoice",
+    label: "Sale Invoice",
     icon: <TbFileInvoice />,
   },
   { to: "/admin/fbr-sales-return", label: "Sales Return", icon: <FaUndoAlt /> },
