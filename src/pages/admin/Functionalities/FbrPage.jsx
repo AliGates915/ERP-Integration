@@ -74,7 +74,7 @@ const setupChildren = [
     label: "Shelve Location",
     icon: <FaWarehouse />,
   },
-  { to: "/admin/item-unit", label: "Item Unit", icon: <FaBalanceScale /> },
+  // { to: "/admin/item-unit", label: "Item Unit", icon: <FaBalanceScale /> },
   {
     to: "/admin/tax",
     label: "Tax",
